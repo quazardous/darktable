@@ -67,6 +67,13 @@ else
 fi
 . "$here/lock.sh"
 heavy_lock
+
+# a branch that drifts from upstream gets harder to rebase and its PRs
+# harder to review: say so on every check (rebase recipe in PHASE0.md)
+if git -C "$src" fetch -q upstream master 2> /dev/null; then
+  behind=$(git -C "$src" rev-list --count HEAD..upstream/master)
+  [ "$behind" -gt 0 ] && echo "upstream/master is $behind commits ahead of this branch: rebase it"
+fi
 budget="${HELIOS_CHECK_BUDGET:-300}"
 out="$(mktemp -d "${TMPDIR:-/tmp}/helios-check-XXXXXX")"
 durations="$here/durations.tsv"
