@@ -2062,6 +2062,14 @@ int dt_init(int argc,
   MagickWandGenesis();
 #endif
 
+#ifdef _OPENMP
+  // InitializeMagick() resets the OpenMP thread count of this thread to the
+  // number of cores, undoing --threads: the per-thread buffers sized by
+  // dt_get_num_threads() then overflow when a pipe runs on this thread, as
+  // darktable-cli does
+  omp_set_num_threads(darktable.num_openmp_threads);
+#endif
+
 #ifdef HAVE_LIBHEIF
   dt_splash_screen_set_progress(_("initializing libheif"));
   heif_init(NULL);
