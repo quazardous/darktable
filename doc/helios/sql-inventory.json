@@ -7541,6 +7541,27 @@
    "sql": "SELECT id FROM main.images WHERE film_id = ?1 ORDER BY id LIMIT 1 OFFSET %dSELECT COUNT(*) FROM main.film_rolls SELECT id FROM main.film_rolls ORDER BY id LIMIT 1 OFFSET %d"
   },
   {
+   "file": "common/film.c",
+   "line": 631,
+   "function": "dt_film_get_by_access",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.film_rolls"
+   ],
+   "domains": [
+    "film"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT id FROM main.film_rolls ORDER BY access_timestamp DESC, id DESC"
+  },
+  {
    "file": "common/grouping.c",
    "line": 74,
    "function": "dt_grouping_remove_from_group",
@@ -9292,7 +9313,158 @@
   },
   {
    "file": "common/image.c",
-   "line": 634,
+   "line": 638,
+   "function": "dt_image_foreach_sidecar_row",
+   "call": "sqlite3_prepare_v2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.film_rolls",
+    "main.images"
+   ],
+   "domains": [
+    "film",
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT i.id, write_timestamp, version, folder, filename, flags FROM main.images i, main.film_rolls f ON i.film_id = f.id WHERE f.id = ?1 ORDER BY f.id, filename"
+  },
+  {
+   "file": "common/image.c",
+   "line": 647,
+   "function": "dt_image_foreach_sidecar_row",
+   "call": "sqlite3_prepare_v2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.film_rolls",
+    "main.images"
+   ],
+   "domains": [
+    "film",
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT i.id, write_timestamp, version, folder, filename, flags FROM main.images i, main.film_rolls f ON i.film_id = f.id ORDER BY f.id, filename"
+  },
+  {
+   "file": "common/image.c",
+   "line": 674,
+   "function": "dt_image_set_flags_list",
+   "call": "sqlite3_prepare_v2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE main.images SET flags = ?1 WHERE id = ?2"
+  },
+  {
+   "file": "common/image.c",
+   "line": 695,
+   "function": "dt_image_set_write_timestamp",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE main.images SET write_timestamp = ?2 WHERE id = ?1"
+  },
+  {
+   "file": "common/image.c",
+   "line": 709,
+   "function": "dt_image_set_thumb_state",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE main.images SET thumb_maxmip = ?2, thumb_timestamp = ?3 WHERE id = ?1"
+  },
+  {
+   "file": "common/image.c",
+   "line": 725,
+   "function": "dt_image_get_outdated_thumbs",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT id, import_timestamp, change_timestamp FROM main.images WHERE thumb_timestamp < import_timestamp OR thumb_timestamp < change_timestamp OR thumb_maxmip < ?1 ORDER BY id DESC"
+  },
+  {
+   "file": "common/image.c",
+   "line": 748,
+   "function": "dt_image_reset_thumb_state",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE main.images SET thumb_maxmip = 0, thumb_timestamp = -1"
+  },
+  {
+   "file": "common/image.c",
+   "line": 761,
    "function": "dt_image_exists",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9313,7 +9485,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 657,
+   "line": 784,
    "function": "dt_image_get_filename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9334,7 +9506,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 680,
+   "line": 807,
    "function": "_image_local_copy_full_path",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9357,7 +9529,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 747,
+   "line": 874,
    "function": "dt_image_path_append_version",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9378,7 +9550,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1144,
+   "line": 1271,
    "function": "dt_image_set_flip",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9399,7 +9571,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1162,
+   "line": 1289,
    "function": "dt_image_set_flip",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9420,7 +9592,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1180,
+   "line": 1307,
    "function": "dt_image_set_flip",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9444,7 +9616,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1214,
+   "line": 1341,
    "function": "dt_image_get_orientation",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9465,7 +9637,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1461,
+   "line": 1588,
    "function": "dt_image_set_history_end",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9486,7 +9658,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1527,
+   "line": 1654,
    "function": "_image_duplicate_with_version_ext",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9507,7 +9679,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1547,
+   "line": 1674,
    "function": "_image_duplicate_with_version_ext",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9529,7 +9701,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1574,
+   "line": 1701,
    "function": "_image_duplicate_with_version_ext",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9550,7 +9722,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1600,
+   "line": 1727,
    "function": "_image_duplicate_with_version_ext",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9572,7 +9744,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1613,
+   "line": 1740,
    "function": "_image_duplicate_with_version_ext",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9594,7 +9766,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1626,
+   "line": 1753,
    "function": "_image_duplicate_with_version_ext",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9616,7 +9788,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1651,
+   "line": 1778,
    "function": "_image_duplicate_with_version_ext",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9638,7 +9810,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1682,
+   "line": 1809,
    "function": "_image_duplicate_with_version_ext",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9659,7 +9831,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1691,
+   "line": 1818,
    "function": "_image_duplicate_with_version_ext",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9680,7 +9852,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1774,
+   "line": 1901,
    "function": "dt_image_remove",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9701,7 +9873,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 1937,
+   "line": 2064,
    "function": "_image_read_duplicates",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9722,7 +9894,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2087,
+   "line": 2214,
    "function": "_image_import_internal",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9744,7 +9916,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2124,
+   "line": 2251,
    "function": "_image_import_internal",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9765,7 +9937,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2151,
+   "line": 2278,
    "function": "_image_import_internal",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9786,7 +9958,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2184,
+   "line": 2311,
    "function": "_image_import_internal",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9807,7 +9979,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2199,
+   "line": 2326,
    "function": "_image_import_internal",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9828,7 +10000,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2298,
+   "line": 2425,
    "function": "dt_image_get_id_full_path",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9851,7 +10023,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2322,
+   "line": 2449,
    "function": "dt_image_get_id",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9872,7 +10044,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2489,
+   "line": 2616,
    "function": "dt_image_rename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9893,7 +10065,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2546,
+   "line": 2673,
    "function": "dt_image_rename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9914,7 +10086,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2763,
+   "line": 2890,
    "function": "dt_image_copy_rename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9935,7 +10107,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2824,
+   "line": 2951,
    "function": "dt_image_copy_rename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9957,7 +10129,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2854,
+   "line": 2981,
    "function": "dt_image_copy_rename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9978,7 +10150,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2880,
+   "line": 3007,
    "function": "dt_image_copy_rename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10000,7 +10172,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2892,
+   "line": 3019,
    "function": "dt_image_copy_rename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10022,7 +10194,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2904,
+   "line": 3031,
    "function": "dt_image_copy_rename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10044,7 +10216,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2922,
+   "line": 3049,
    "function": "dt_image_copy_rename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10065,7 +10237,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2940,
+   "line": 3067,
    "function": "dt_image_copy_rename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10086,7 +10258,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2948,
+   "line": 3075,
    "function": "dt_image_copy_rename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10107,7 +10279,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2962,
+   "line": 3089,
    "function": "dt_image_copy_rename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10128,7 +10300,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 2987,
+   "line": 3114,
    "function": "dt_image_copy_rename",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10149,7 +10321,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 3107,
+   "line": 3234,
    "function": "_nb_other_local_copy_for",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10170,7 +10342,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 3296,
+   "line": 3423,
    "function": "dt_image_write_sidecar_file",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10191,7 +10363,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 3335,
+   "line": 3462,
    "function": "dt_image_local_copy_synch",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10212,7 +10384,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 3601,
+   "line": 3728,
    "function": "_image_get_set_name_id",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10231,7 +10403,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 3627,
+   "line": 3754,
    "function": "_image_get_set_name_id",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10251,7 +10423,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 3701,
+   "line": 3828,
    "function": "dt_image_get_camera_id",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -10270,7 +10442,7 @@
   },
   {
    "file": "common/image.c",
-   "line": 3719,
+   "line": 3846,
    "function": "dt_image_get_camera_id",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -13915,137 +14087,7 @@
   },
   {
    "file": "control/crawler.c",
-   "line": 459,
-   "function": "_crawler_collect_items",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "control",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT COUNT(*) FROM main.images WHERE film_id = ?1"
-  },
-  {
-   "file": "control/crawler.c",
-   "line": 463,
-   "function": "_crawler_collect_items",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "control",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT COUNT(*) FROM main.images"
-  },
-  {
-   "file": "control/crawler.c",
-   "line": 485,
-   "function": "_crawler_collect_items",
-   "call": "sqlite3_prepare_v2",
-   "layer": "control",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.film_rolls",
-    "main.images"
-   ],
-   "domains": [
-    "film",
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT i.id, write_timestamp, version, folder, filename, flags FROM main.images i, main.film_rolls f ON i.film_id = f.id WHERE f.id = ?1 ORDER BY f.id, filename"
-  },
-  {
-   "file": "control/crawler.c",
-   "line": 494,
-   "function": "_crawler_collect_items",
-   "call": "sqlite3_prepare_v2",
-   "layer": "control",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.film_rolls",
-    "main.images"
-   ],
-   "domains": [
-    "film",
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT i.id, write_timestamp, version, folder, filename, flags FROM main.images i, main.film_rolls f ON i.film_id = f.id ORDER BY f.id, filename"
-  },
-  {
-   "file": "control/crawler.c",
-   "line": 600,
-   "function": "_crawler_apply_results",
-   "call": "sqlite3_prepare_v2",
-   "layer": "control",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE main.images SET flags = ?1 WHERE id = ?2"
-  },
-  {
-   "file": "control/crawler.c",
-   "line": 890,
-   "function": "dt_control_crawler_start_background",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "control",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.film_rolls"
-   ],
-   "domains": [
-    "film"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT id FROM main.film_rolls ORDER BY access_timestamp DESC, id DESC"
-  },
-  {
-   "file": "control/crawler.c",
-   "line": 1037,
+   "line": 992,
    "function": "_crawler_ensure_current_collection",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "control",
@@ -14065,90 +14107,6 @@
    ],
    "cross_schema": true,
    "sql": "SELECT i.film_id FROM memory.collected_images AS c, main.images AS i ON i.id = c.imgid GROUP BY i.film_id ORDER BY MIN(c.rowid)"
-  },
-  {
-   "file": "control/crawler.c",
-   "line": 1181,
-   "function": "_db_update_timestamp",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "control",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE main.images SET write_timestamp = ?2 WHERE id = ?1"
-  },
-  {
-   "file": "control/crawler.c",
-   "line": 1691,
-   "function": "_update_img_thumbs",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "control",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE main.images SET thumb_maxmip = ?2, thumb_timestamp = ?3 WHERE id = ?1"
-  },
-  {
-   "file": "control/crawler.c",
-   "line": 1713,
-   "function": "_update_all_thumbs",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "control",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT id, import_timestamp, change_timestamp FROM main.images WHERE thumb_timestamp < import_timestamp OR thumb_timestamp < change_timestamp OR thumb_maxmip < ?1 ORDER BY id DESC"
-  },
-  {
-   "file": "control/crawler.c",
-   "line": 1754,
-   "function": "_reinitialize_thumbs_database",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "control",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE main.images SET thumb_maxmip = 0, thumb_timestamp = -1"
   },
   {
    "file": "control/jobs/control_jobs.c",
@@ -17919,7 +17877,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_film.c",
-   "line": 36,
+   "line": 37,
    "function": "_count",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "tests",
@@ -17936,7 +17894,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_film.c",
-   "line": 92,
+   "line": 93,
    "function": "test_image_lists",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "tests",
@@ -17957,7 +17915,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_film.c",
-   "line": 94,
+   "line": 95,
    "function": "test_image_lists",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "tests",
@@ -17979,7 +17937,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_film.c",
-   "line": 105,
+   "line": 106,
    "function": "test_history_end",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "tests",
@@ -18000,7 +17958,28 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_film.c",
-   "line": 179,
+   "line": 212,
+   "function": "test_thumb_state",
+   "call": "DT_DEBUG_SQLITE3_EXEC",
+   "layer": "tests",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE main.images SET import_timestamp = 100, change_timestamp = 200"
+  },
+  {
+   "file": "tests/unittests/catalog/test_catalog_film.c",
+   "line": 275,
    "function": "test_group_members",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "tests",
