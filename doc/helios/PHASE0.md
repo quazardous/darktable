@@ -226,3 +226,22 @@ query model, of ID lists by targets.
   build while one of them runs. Each `darktable-cli` already uses every core, and a full pass under
   a parallel build took ~40 s per test instead of ~10. `integration.sh` refuses to start with less
   than 5 GB free: a full disk on 2026-10-11 left the outputs of the last tests unwritten.
+- (2026-10-11) GUI benches over D-Bus (darktable #3823): `gui_metadata.sh`, `gui_labels.sh` and
+  `gui_tags.sh` start darktable once on a private session bus (`bus_start` in
+  `tools/helios/bench/lib.sh`) and drive it with `dtlua '<lua chunk>'`, a `gdbus` call to
+  `org.darktable.service.Remote.Lua`. A Lua error comes back as `org.darktable.Error.LuaError` and
+  `dtlua` exits 1. This replaced one darktable start per step: gui_metadata 51 s to 23 s,
+  gui_labels 32 s to 15 s, gui_tags 33 s to 15-19 s. Three things the timings depend on:
+  `init_dirs` writes a fresh darktablerc without the init session; the password store is off
+  (`plugins/pwstorage/pwstorage_backend=none`), otherwise libsecret waits 25 s for a keyring that
+  does not exist in wbox; `gui_tags` hides the bottom panel, whose timeline refreshes late after
+  `collect.filter()` and failed one run in five. `darktable-cli` has no D-Bus service.
+- (2026-10-11) Thread count: `darktable-cli -t N` with N below the core count overflows per-thread
+  buffers (`dt_alloc_perthread`): `InitializeMagick` resets OpenMP to every core after `dt_init` set
+  N. Until upstream darktable-org/darktable#22438 lands, run pixel tests with N equal to the core
+  count, or on a build with the fix. `tools/helios/bench/threads_compare.sh` compares outputs across
+  thread counts.
+- (2026-10-11) Before reporting a result, follow the checklist in `AGENTS.local.md` ("Before
+  reporting anything"): a run counts only if it produced its output, a log is read only once the job
+  is finished, hashes and issue numbers are copied from `git`/`gh`, and every comparison has a
+  control run in the same conditions.
