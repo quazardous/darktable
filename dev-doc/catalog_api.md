@@ -45,12 +45,17 @@ A write applies to a **target**, a set of images resolved by the backend:
 dt_catalog_target_t dt_catalog_target_ids(const dt_imgid_t *ids, size_t n);
 dt_catalog_target_t dt_catalog_target_cursor(const dt_catalog_cursor_t *c);
 dt_catalog_target_t dt_catalog_target_selection(void);
+dt_catalog_target_t dt_catalog_target_act_on(void);
 
 dt_catalog_status_t dt_catalog_images_set_rating(const dt_catalog_target_t *t, int rating);
 dt_catalog_status_t dt_catalog_tags_attach(const dt_catalog_target_t *t, dt_tagid_t tag);
 ```
 
-The act-on logic (`common/act_on.c`) stays where it is, and produces a target.
+`dt_catalog_target_act_on()` is the set a shortcut or a module button acts on.
+It follows the act-on rules of `common/act_on.c`: the hovered image first,
+unless that is disabled in the preferences, then the selection. These are the
+same rules as `dt.gui.action_images` in Lua. It is distinct from the selection
+target, which ignores hovering.
 
 ## Cursors
 
@@ -123,11 +128,18 @@ them:
 
 About 45 functions so far; none of them had to be reshaped to fit.
 
-## Open questions
+## Lua
 
-1. Is a target over the current selection enough, or should the act-on set be
-   a target type of its own?
-2. Should presets join this API, or stay a module-side concern (`data.presets`
-   is not part of an image's catalog)?
-3. Should Lua (`src/lua/`) call this API directly, or keep calling the
-   `common/` functions it uses now?
+Lua keeps calling the `src/common/` functions, so that every caller goes
+through the same code and a breakage is fixed in one place. Those functions
+are where this API lives, so Lua does not need a layer of its own.
+
+## Open question
+
+Should presets join this API, or stay a module-side concern (`data.presets`
+is not part of an image's catalog)?
+
+## Decided on #22574
+
+- act-on is a target of its own, as above (wpferguson);
+- Lua goes through the `common/` functions (wpferguson).
