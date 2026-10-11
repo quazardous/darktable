@@ -115,6 +115,10 @@ io.open("$work/shown-dr", "w"):close()
 LUA
 status=$(session_start "dofile('$work/darkroom.lua')" "$work/shown-dr" '')
 if [ "$status" = ok ]; then
+  # park the pointer on the empty part of the right panel: left wherever
+  # wbox put it, it hovered the filmstrip, and the hover overlay of a
+  # thumbnail made two runs of the same build differ
+  ctl move 1400 700 > /dev/null
   status=$(settled_shot gui-metadata-dr "$outdir/darkroom.png")
 fi
 quit=$(session_quit)
