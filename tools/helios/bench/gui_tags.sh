@@ -5,6 +5,8 @@
 # from per-tag image counts whether the tags line is common), to compare
 # across builds with cmp <before>/lighttable.png <after>/lighttable.png
 #
+# One darktable session driven through its D-Bus Lua method (lib.sh dtlua).
+#
 # usage: tools/helios/bench/gui_tags.sh <outdir> [install prefix]
 
 set -euo pipefail
@@ -21,32 +23,8 @@ integ="$src/src/tests/integration"
 rm -rf "$outdir"
 mkdir -p "$outdir"
 export HELIOS_PREFIX="$prefix"
-init_library
+init_dirs
 cp "$integ"/images/*.{cr2,arw,raf,crw} "$work/images/"
-
-# keep the lighttable empty while setting up, see run.sh
-set_collection /helios-bench-no-such-film
-cat > "$work/setup.lua" << LUA
-local dt = require "darktable"
-local function import(name) return dt.database.import("$work/images/" .. name) end
-local cr2 = import("mire1.cr2")
-local arw = import("hlrecovery.arw")
-import("bayer4.crw")
--- shared and distinct values: the module shows a value common to the
--- selection differently from a mixed one
-local shared = dt.tags.create("helios|shared")
-local only = dt.tags.create("helios|only arw")
-dt.tags.attach(shared, cr2)
-dt.tags.attach(shared, arw)
-dt.tags.attach(only, arw)
-dt.gui.selection({cr2, arw})
-io.open("$work/ready-setup", "w"):close()
-LUA
-status=$(session "dofile('$work/setup.lua')" "$work/ready-setup" '')
-if [ "$status" != ok ]; then
-  echo "gui bench: setup session failed: $status" >&2
-  exit 1
-fi
 
 # blank the version string under the logo: it gains "-dirty" with
 # uncommitted changes
@@ -73,16 +51,42 @@ settled_shot() {
   echo "screen never settled"
 }
 
-# lighttable with the film roll and the metadata module expanded; the
-# selection is kept in the library from the setup session
-set_collection "$work/images"
+# an empty lighttable while setting up (see run.sh), then the film roll with
+# the image information module expanded on the tag rows
+set_collection /helios-bench-no-such-film
 {
   echo "plugins/lighttable/metadata_view/expanded=TRUE"
   # only the rows this bench is about; the list is longer than the screen
   echo "plugins/lighttable/metadata_view/visible=filename,tags,categories,|filmroll,|image id,|group id,|version,|full path,|local copy,|import timestamp,|change timestamp,|export timestamp,|print timestamp,|flags,|model,|maker,|lens,|aperture,|exposure,|exposure bias,|exposure program,|white balance,|flash,|metering mode,|focal length,|35mm equiv focal length,|crop factor,|focus distance,|ISO,|datetime,|width,|height,|export width,|export height,|latitude,|longitude,|elevation,|creator,|publisher,|title,|description,|rights,|notes,|version_name,|image_id,|PreservedFileName"
   echo "plugins/lighttable/images_in_row=3"
+  # no bottom panel: after dt.gui.libs.collect.filter() the timeline
+  # refreshes late, sometimes after the screen has settled
+  echo "lighttable/ui/1/bottom_visible=FALSE"
 } >> "$work/config/darktablerc"
-status=$(session_start "io.open('$work/shown-lt', 'w'):close()" "$work/shown-lt" '')
+
+status=$(dbus_session_start)
+if [ "$status" = ok ] && ! dtlua "
+local dt = require 'darktable'
+local function import(name) return dt.database.import('$work/images/' .. name) end
+local cr2 = import('mire1.cr2')
+local arw = import('hlrecovery.arw')
+import('bayer4.crw')
+-- shared and distinct values: the module shows a value common to the
+-- selection differently from a mixed one
+local shared = dt.tags.create('helios|shared')
+local only = dt.tags.create('helios|only arw')
+dt.tags.attach(shared, cr2)
+dt.tags.attach(shared, arw)
+dt.tags.attach(only, arw)
+dt.gui.selection({cr2, arw})
+local rule = dt.gui.libs.collect.new_rule()
+rule.mode = 'DT_LIB_COLLECT_MODE_AND'
+rule.item = 'DT_COLLECTION_PROP_FILMROLL'
+rule.data = '$work/images'
+dt.gui.libs.collect.filter({rule})
+return 'ok'" > /dev/null; then
+  status="setup failed"
+fi
 if [ "$status" = ok ]; then
   # keep the pointer off the thumbnails, hovering changes the images acted
   # on: click the empty left panel. Not an empty cell of the grid (clears the
@@ -94,4 +98,3 @@ quit=$(session_quit)
 [ "$status" = ok ] && status="$quit"
 echo "gui bench results in $outdir: $status"
 [ "$status" = ok ]
-
