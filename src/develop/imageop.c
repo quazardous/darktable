@@ -1605,21 +1605,8 @@ static void _init_presets(dt_iop_module_so_t *module_so)
       // to find a history entry that matches the preset params, and get
       // the module version from that.
 
-      sqlite3_stmt *stmt2;
-      DT_DEBUG_SQLITE3_PREPARE_V2
-        (dt_database_get(darktable.db),
-         "SELECT module"
-         " FROM main.history"
-         " WHERE operation = ?1 AND op_params = ?2", -1,
-         &stmt2, NULL);
-      DT_DEBUG_SQLITE3_BIND_TEXT(stmt2, 1, module_so->op, -1, SQLITE_TRANSIENT);
-      DT_DEBUG_SQLITE3_BIND_BLOB(stmt2, 2, old_params, old_params_size, SQLITE_TRANSIENT);
-
-      if(sqlite3_step(stmt2) == SQLITE_ROW)
-      {
-        old_params_version = sqlite3_column_int(stmt2, 0);
-      }
-      else
+      if(!dt_history_find_module_version(module_so->op, old_params, old_params_size,
+                                         &old_params_version))
       {
         dt_print
           (DT_DEBUG_ALWAYS,
@@ -1627,11 +1614,8 @@ static void _init_presets(dt_iop_module_so_t *module_so)
            "preset '%s'\nUntil some is found, the preset will be unavailable.\n(To make it "
            "return, please load an image that uses the preset.)",
            module_so->op, name);
-        sqlite3_finalize(stmt2);
         continue;
       }
-
-      sqlite3_finalize(stmt2);
 
       // we found an old params version.  Update the database with it.
 
@@ -1639,6 +1623,7 @@ static void _init_presets(dt_iop_module_so_t *module_so)
                "[imageop_init_presets] found version %d for '%s' preset '%s'",
                old_params_version, module_so->op, name);
 
+      sqlite3_stmt *stmt2;
       DT_DEBUG_SQLITE3_PREPARE_V2
         (dt_database_get(darktable.db),
          "UPDATE data.presets"

@@ -168,6 +168,28 @@ gboolean dt_history_check_module_exists_list(GList *hist,
                                              const char *operation,
                                              const gboolean enabled);
 
+/** number of history items of the image */
+int dt_history_count_items(const dt_imgid_t imgid);
+
+/** append an enabled history item with the first instance's priority and
+    an empty name, as the Lightroom import does */
+void dt_history_insert_item(const dt_imgid_t imgid,
+                            const int num,
+                            const int version,
+                            const char *operation,
+                            const void *params,
+                            const int params_size,
+                            const void *blend_params,
+                            const int blend_params_size,
+                            const int blend_version);
+
+/** module version of a history item of <operation> whose parameters are
+    <params>, in any image; FALSE when there is none */
+gboolean dt_history_find_module_version(const char *operation,
+                                        const void *params,
+                                        const int params_size,
+                                        int *version);
+
 /** calculate history hash and save it to database*/
 void dt_history_hash_write_from_history(const dt_imgid_t imgid,
                                         const dt_history_hash_t type);

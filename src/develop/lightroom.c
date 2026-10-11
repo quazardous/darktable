@@ -22,6 +22,7 @@
 #include "common/curve_tools.h"
 #include "common/darktable.h"
 #include "common/debug.h"
+#include "common/history.h"
 #include "common/math.h"
 #include "common/ratings.h"
 #include "common/tags.h"
@@ -327,39 +328,14 @@ static float lr2dt_clarity(const float value)
 static void dt_add_hist(const dt_imgid_t imgid, const char *operation, const dt_iop_params_t *params, const int params_size, char *imported,
                         const size_t imported_len, const int version, int *import_count)
 {
-  int32_t num = 0;
   const dt_lr_develop_blend_params_t blend_params = { 0 };
 
   //  get current num if any
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT COUNT(*) FROM main.history WHERE imgid = ?1", -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    num = sqlite3_column_int(stmt, 0);
-  }
-  sqlite3_finalize(stmt);
+  const int num = dt_history_count_items(imgid);
 
   // add new history info
-  // clang-format off
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "INSERT INTO main.history"
-                              "  (imgid, num, module, operation, op_params, enabled,"
-                              "   blendop_params, blendop_version, multi_priority, multi_name)"
-                              " VALUES (?1, ?2, ?3, ?4, ?5, 1, ?6, ?7, 0, ' ')",
-                              -1, &stmt, NULL);
-  // clang-format on
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, num);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 3, version);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 4, operation, -1, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 5, params, params_size, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 6, &blend_params, sizeof(dt_lr_develop_blend_params_t), SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 7, LRDT_BLEND_VERSION);
-
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
+  dt_history_insert_item(imgid, num, version, operation, params, params_size,
+                         &blend_params, sizeof(dt_lr_develop_blend_params_t), LRDT_BLEND_VERSION);
 
   // also bump history_end
   dt_image_sync_history_end(imgid);

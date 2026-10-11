@@ -1528,6 +1528,73 @@ gboolean dt_history_check_module_exists_list(GList *hist,
   return FALSE;
 }
 
+int dt_history_count_items(const dt_imgid_t imgid)
+{
+  int count = 0;
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "SELECT COUNT(*) FROM main.history WHERE imgid = ?1", -1, &stmt, NULL);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
+  if(sqlite3_step(stmt) == SQLITE_ROW)
+    count = sqlite3_column_int(stmt, 0);
+  sqlite3_finalize(stmt);
+  return count;
+}
+
+void dt_history_insert_item(const dt_imgid_t imgid,
+                            const int num,
+                            const int version,
+                            const char *operation,
+                            const void *params,
+                            const int params_size,
+                            const void *blend_params,
+                            const int blend_params_size,
+                            const int blend_version)
+{
+  sqlite3_stmt *stmt;
+  // clang-format off
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "INSERT INTO main.history"
+                              "  (imgid, num, module, operation, op_params, enabled,"
+                              "   blendop_params, blendop_version, multi_priority, multi_name)"
+                              " VALUES (?1, ?2, ?3, ?4, ?5, 1, ?6, ?7, 0, ' ')",
+                              -1, &stmt, NULL);
+  // clang-format on
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, num);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 3, version);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 4, operation, -1, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 5, params, params_size, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 6, blend_params, blend_params_size, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 7, blend_version);
+  sqlite3_step(stmt);
+  sqlite3_finalize(stmt);
+}
+
+gboolean dt_history_find_module_version(const char *operation,
+                                        const void *params,
+                                        const int params_size,
+                                        int *version)
+{
+  gboolean found = FALSE;
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2
+    (dt_database_get(darktable.db),
+     "SELECT module"
+     " FROM main.history"
+     " WHERE operation = ?1 AND op_params = ?2", -1,
+     &stmt, NULL);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, operation, -1, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 2, params, params_size, SQLITE_TRANSIENT);
+  if(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    *version = sqlite3_column_int(stmt, 0);
+    found = TRUE;
+  }
+  sqlite3_finalize(stmt);
+  return found;
+}
+
 GList *dt_history_duplicate(GList *hist)
 {
   GList *result = NULL;
