@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "common/debug.h"
+#include "common/history.h"
 #include "common/image.h"
 #include "common/opencl.h"
 #include "control/conf.h"
@@ -487,24 +488,13 @@ void reload_defaults(dt_iop_module_t *self)
   if(self->dev->image_storage.legacy_flip.user_flip != 0
      && self->dev->image_storage.legacy_flip.user_flip != 0xff)
   {
-    sqlite3_stmt *stmt;
-    DT_DEBUG_SQLITE3_PREPARE_V2
-      (dt_database_get(darktable.db),
-       "SELECT imgid"
-       " FROM main.history"
-       " WHERE imgid = ?1 AND operation = 'flip'",
-       -1, &stmt,
-       NULL);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, self->dev->image_storage.id);
-
-    if(sqlite3_step(stmt) != SQLITE_ROW)
+    if(!dt_history_check_module_exists(self->dev->image_storage.id, "flip", FALSE))
     {
       // convert the old legacy flip bits to a proper parameter set:
       d->orientation = merge_two_orientations
         (dt_image_orientation(&self->dev->image_storage),
          (dt_image_orientation_t)(self->dev->image_storage.legacy_flip.user_flip));
     }
-    sqlite3_finalize(stmt);
   }
 }
 

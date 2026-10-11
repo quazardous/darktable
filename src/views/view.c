@@ -70,9 +70,6 @@ void dt_view_manager_init(dt_view_manager_t *vm)
                               "INSERT OR IGNORE INTO main.selected_images (imgid)"
                               " VALUES (?1)", -1,
                               &vm->statements.make_selected, NULL);
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT num FROM main.history WHERE imgid = ?1", -1,
-                              &vm->statements.have_history, NULL);
 
   vm->module_toolbox = dt_gui_hbox();
   vm->view_toolbox = dt_gui_hbox();

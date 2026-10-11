@@ -239,7 +239,6 @@ typedef struct dt_view_manager_t
   struct
   {
     /* select num from history where imgid = ?1*/
-    sqlite3_stmt *have_history;
     /* select * from selected_images where imgid = ?1 */
     sqlite3_stmt *is_selected;
     /* delete from selected_images where imgid = ?1 */
