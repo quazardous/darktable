@@ -245,3 +245,15 @@ query model, of ID lists by targets.
   reporting anything"): a run counts only if it produced its output, a log is read only once the job
   is finished, hashes and issue numbers are copied from `git`/`gh`, and every comparison has a
   control run in the same conditions.
+- (2026-10-11) Pixel references (darktable #3786, upstream darktable-org/darktable#22589): the
+  `expected.png` files are made on TurboGit's machine with a RelWithDebInfo build, which has no
+  `-ffast-math`. TurboGit's nightly results are committed in the integration submodule
+  (`logs/YYYY/test-*.log`); the one of 2026-10-08 fails only `0178-contrast-texture`, which is
+  upstream's own failure list. Here, on base 8c64bf7ca, a `--build-type Release` build
+  (`-O3 -ffast-math`, `src/CMakeLists.txt:796`, plus `-march=native`) failed 29 tests; 18 pass on
+  RelWithDebInfo (9 only failed with `-ffast-math` and `-march=native` together, 9 with
+  `-ffast-math` alone). Of the 11 left, 0179/0180 need the spektrafilm data pack, which the
+  suite's fresh config does not have (`src/iop/spektrafilm.c:46-51`), 0178 fails upstream too, and
+  8 are just over the tolerance (avg dE 0.03-0.6, not explained). So run pixel tests on a
+  RelWithDebInfo build (build.sh's default), and judge a change by base vs branch outputs on the
+  same build (`HELIOS_KEEP_OUTPUTS`), not by `expected.png`.
