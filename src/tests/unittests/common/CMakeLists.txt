@@ -32,6 +32,15 @@ add_cmocka_test(test_dtdata
                 SOURCES test_dtdata.c
                 LINK_LIBRARIES lib_darktable cmocka)
 
+# --threads after dt_init(): darktable started without GUI, the build tree
+# layout passed in
+add_cmocka_test(test_openmp_threads
+                SOURCES test_openmp_threads.c
+                LINK_LIBRARIES lib_darktable cmocka)
+target_compile_definitions(test_openmp_threads PRIVATE
+  DT_TEST_DATADIR="${CMAKE_BINARY_DIR}/share/darktable"
+  DT_TEST_MODULEDIR="${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}/darktable")
+
 # Windows: libs have to be copied next to the executable
 if(WIN32)
     _copy_required_library(test_spektra_sim lib_darktable)
@@ -40,4 +49,5 @@ if(WIN32)
     _copy_required_library(test_fixed_strings lib_darktable)
     _copy_required_library(test_history_strings lib_darktable)
     _copy_required_library(test_dtdata lib_darktable)
+    _copy_required_library(test_openmp_threads lib_darktable)
 endif(WIN32)
