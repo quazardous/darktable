@@ -212,6 +212,11 @@ query model, of ID lists by targets.
   domain commit (budget 5 min); all GUI benches and `perf.sh` before a PR. A new bench gates nothing
   until 5 consecutive identical runs, and a bench that diverges once is fixed at the root, never
   retried.
+- (2026-10-11) Keeping up with upstream: `check.sh` fetches `upstream/master` and says how many
+  commits the branch is behind. Rebase (not merge: the series feeds upstream PRs) at the start of a
+  lot, never in the middle of one: `git rebase --exec 'cmake --build build' upstream/master`, so
+  every commit still builds, then `ctest` and `check.sh`, then push to the fork with
+  `--force-with-lease`.
 - (2026-10-11) Pixel integration tests (T2, darktable #3766): the full suite
   (`tools/helios/bench/integration.sh <prefix> <log>`, 191 tests, OpenCL off) runs once on the base
   as the reference, with its known failures recorded, then once on the branch at the end of each
