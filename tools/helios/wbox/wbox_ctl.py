@@ -19,6 +19,7 @@ is why bench/run.sh invokes it through the wbox-mcp launcher's Python.
     wbox_ctl.py status CONFIG [-s key=value ...]
     wbox_ctl.py shot   CONFIG [-s key=value ...] [--name NAME]
     wbox_ctl.py click  CONFIG [-s key=value ...] X Y
+    wbox_ctl.py move   CONFIG [-s key=value ...] X Y
     wbox_ctl.py key    CONFIG [-s key=value ...] SHORTCUT [SHORTCUT ...]
 
 Headless by default: the compositor renders offscreen and nothing appears on
@@ -131,6 +132,12 @@ def main():
         x, y = int(args[0]), int(args[1])
         _warm_up(comp, x, y)
         result = comp.click(x, y)
+    elif command == "move":
+        if len(args) != 2:
+            sys.exit("move needs X Y")
+        x, y = int(args[0]), int(args[1])
+        _warm_up(comp, x, y)
+        result = comp.mouse_move(x, y)
     elif command == "key":
         if not args:
             sys.exit("key needs at least one shortcut, e.g. alt+F12")
