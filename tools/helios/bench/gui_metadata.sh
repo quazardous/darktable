@@ -6,6 +6,8 @@
 #   <outdir>/darkroom.png    duplicate manager of an image with versions
 #                            (libs/duplicate.c)
 # Neither path is reached by the Lua scenario of run.sh.
+# One darktable session driven through its D-Bus Lua method (lib.sh dtlua),
+# instead of three --luacmd sessions with marker files.
 #
 # usage: tools/helios/bench/gui_metadata.sh <outdir> [install prefix]
 
@@ -25,34 +27,6 @@ mkdir -p "$outdir"
 export HELIOS_PREFIX="$prefix"
 init_library
 cp "$integ"/images/*.{cr2,arw,raf,crw} "$work/images/"
-
-# keep the lighttable empty while setting up, see run.sh
-set_collection /helios-bench-no-such-film
-cat > "$work/setup.lua" << LUA
-local dt = require "darktable"
-local function import(name) return dt.database.import("$work/images/" .. name) end
-local cr2 = import("mire1.cr2")
-local arw = import("hlrecovery.arw")
-import("bayer4.crw")
--- shared and distinct values: the module shows a value common to the
--- selection differently from a mixed one
-cr2.title = "shared title"
-arw.title = "shared title"
-cr2.description = "only on the cr2"
-arw.creator = "only on the arw"
-local v1 = cr2:duplicate()
-local v2 = cr2:duplicate()
-cr2.version_name = "original"
-v1.version_name = "first version"
-v2.version_name = "second version"
-dt.gui.selection({cr2, arw})
-io.open("$work/ready-setup", "w"):close()
-LUA
-status=$(session "dofile('$work/setup.lua')" "$work/ready-setup" '')
-if [ "$status" != ok ]; then
-  echo "gui bench: setup session failed: $status" >&2
-  exit 1
-fi
 
 # blank the version string under the logo: it gains "-dirty" with
 # uncommitted changes
@@ -79,14 +53,37 @@ settled_shot() {
   echo "screen never settled"
 }
 
-# lighttable with the film roll and the metadata module expanded; the
-# selection is kept in the library from the setup session
+# lighttable on the film roll of the images, metadata module expanded,
+# duplicate manager expanded for the darkroom part
 set_collection "$work/images"
 {
   echo "plugins/lighttable/metadata/expanded=TRUE"
   echo "plugins/lighttable/images_in_row=3"
+  echo "plugins/darkroom/duplicate/expanded=TRUE"
 } >> "$work/config/darktablerc"
-status=$(session_start "io.open('$work/shown-lt', 'w'):close()" "$work/shown-lt" '')
+
+status=$(dbus_session_start)
+if [ "$status" = ok ] && ! dtlua "
+local dt = require 'darktable'
+local function import(name) return dt.database.import('$work/images/' .. name) end
+local cr2 = import('mire1.cr2')
+local arw = import('hlrecovery.arw')
+import('bayer4.crw')
+-- shared and distinct values: the module shows a value common to the
+-- selection differently from a mixed one
+cr2.title = 'shared title'
+arw.title = 'shared title'
+cr2.description = 'only on the cr2'
+arw.creator = 'only on the arw'
+local v1 = cr2:duplicate()
+local v2 = cr2:duplicate()
+cr2.version_name = 'original'
+v1.version_name = 'first version'
+v2.version_name = 'second version'
+dt.gui.selection({cr2, arw})
+return 'ok'" > /dev/null; then
+  status="setup failed"
+fi
 if [ "$status" = ok ]; then
   # keep the pointer off the thumbnails, hovering changes the images acted
   # on: click the empty left panel. Not an empty cell of the grid (clears the
@@ -94,26 +91,17 @@ if [ "$status" = ok ]; then
   ctl click 150 600 > /dev/null
   status=$(settled_shot gui-metadata-lt "$outdir/lighttable.png")
 fi
-quit=$(session_quit)
-[ "$status" = ok ] && status="$quit"
-if [ "$status" != ok ]; then
-  echo "gui bench results in $outdir: lighttable: $status"
-  exit 1
-fi
-
-# darkroom on the cr2, duplicate manager expanded
-echo "plugins/darkroom/duplicate/expanded=TRUE" >> "$work/config/darktablerc"
-cat > "$work/darkroom.lua" << LUA
-local dt = require "darktable"
+if [ "$status" = ok ] && ! dtlua "
+local dt = require 'darktable'
 for _, img in ipairs(dt.database) do
-  if img.filename == "mire1.cr2" and img.duplicate_index == 0 then
+  if img.filename == 'mire1.cr2' and img.duplicate_index == 0 then
     dt.gui.selection({img})
   end
 end
 dt.gui.current_view(dt.gui.views.darkroom)
-io.open("$work/shown-dr", "w"):close()
-LUA
-status=$(session_start "dofile('$work/darkroom.lua')" "$work/shown-dr" '')
+return 'ok'" > /dev/null; then
+  status="darkroom switch failed"
+fi
 if [ "$status" = ok ]; then
   # park the pointer on the empty part of the right panel: left wherever
   # wbox put it, it hovered the filmstrip, and the hover overlay of a
