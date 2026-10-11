@@ -56,6 +56,9 @@ dtlua() {
 # Prints "ok" or what went wrong; darktable is left running.
 dbus_session_start() {
   bus_start
+  # see init_dirs: no password store on the private bus
+  grep -q '^plugins/pwstorage/pwstorage_backend=' "$work/config/darktablerc" 2> /dev/null \
+    || echo "plugins/pwstorage/pwstorage_backend=none" >> "$work/config/darktablerc"
   ctl down > /dev/null 2>&1 || true
   env $(bus_env) "$wbox_python" "$src/tools/helios/wbox/wbox_ctl.py" up "$wbox_config" \
     -s name=darktable-bench > "$work/wbox-up.json"
@@ -133,6 +136,23 @@ RC
 # first session of a fresh library: let darktable create its config. A
 # fresh config also resets the collection on first start
 # (libs/collect.c gui_reset), so set_collection only sticks after it.
+# init_dirs: a fresh bench directory without starting darktable. The first
+# dbus_session_start creates darktablerc and the library, as any first run
+# does; only the settings the bench needs are written beforehand
+init_dirs() {
+  rm -rf "$work"
+  mkdir -p "$work/config" "$work/cache" "$work/images"
+  export HELIOS_CONFIGDIR="$work/config"
+  export HELIOS_CACHEDIR="$work/cache"
+  export HELIOS_DT_LOG="$work/darktable.log"
+  : > "$work/config/darktablerc"
+  # no password store: on the bench's private bus, libsecret waits 25 s for a
+  # Secret Service that never comes
+  echo "plugins/pwstorage/pwstorage_backend=none" >> "$work/config/darktablerc"
+  # see init_library for why the thumbnail crawler stays off
+  [ -n "${HELIOS_BENCH_RACY:-}" ] || echo "backthumbs_mipsize=never" >> "$work/config/darktablerc"
+}
+
 init_library() {
   rm -rf "$work"
   mkdir -p "$work/config" "$work/cache" "$work/images"

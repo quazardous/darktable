@@ -25,7 +25,7 @@ integ="$src/src/tests/integration"
 rm -rf "$outdir"
 mkdir -p "$outdir"
 export HELIOS_PREFIX="$prefix"
-init_library
+init_dirs
 cp "$integ"/images/*.{cr2,arw,raf,crw} "$work/images/"
 
 # blank the version string under the logo: it gains "-dirty" with
