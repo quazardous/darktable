@@ -198,6 +198,23 @@ jobs:
           git config submodule.src/tests/integration.update none
           git submodule update
           cd -
+      # the catalog unit tests import a few raw files from the integration
+      # test images; fetch only images/ of the pinned commit, not the 3.5 GB
+      # history of the whole test repository
+      - name: Get the integration test images for the unit tests
+        if: matrix.target == 'build'
+        run: |
+          cd src
+          url=$(git config -f .gitmodules submodule.src/tests/integration.url)
+          sha=$(git ls-tree HEAD src/tests/integration | awk '{ print $3 }')
+          cd src/tests/integration
+          git init -q
+          git remote add origin "$url"
+          git sparse-checkout set --no-cone /images/
+          git fetch -q --depth 1 --filter=blob:none origin "$sha"
+          git checkout -q FETCH_HEAD
+          du -sh images
+          cd -
       - name: Build and Install
         run: |
           cmake -E make_directory "${BUILD_DIR}";
