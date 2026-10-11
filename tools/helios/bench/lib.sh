@@ -43,7 +43,9 @@ bus_env() {
 # error on stderr with status 1
 dtlua() {
   local out
+  # a long chunk (a whole scenario) needs more than gdbus' 25 s default
   if ! out=$(env $(bus_env) gdbus call --session --dest org.darktable.service --object-path /darktable \
+               --timeout "${HELIOS_DTLUA_TIMEOUT:-25}" \
                --method org.darktable.service.Remote.Lua "$1" 2>&1); then
     echo "$out" >&2
     return 1
