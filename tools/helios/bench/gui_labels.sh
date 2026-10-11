@@ -6,6 +6,8 @@
 # This covers the thumbnail code paths (dtgtk/thumbnail.c) that the Lua
 # scenario never reaches, since run.sh keeps the lighttable empty.
 #
+# One darktable session driven through its D-Bus Lua method (lib.sh dtlua).
+#
 # usage: tools/helios/bench/gui_labels.sh <outdir> [install prefix]
 
 set -euo pipefail
@@ -22,19 +24,29 @@ integ="$src/src/tests/integration"
 rm -rf "$outdir"
 mkdir -p "$outdir"
 export HELIOS_PREFIX="$prefix"
-init_library
+init_dirs
 cp "$integ"/images/*.{cr2,arw,raf,crw} "$work/images/"
 
-# keep the lighttable empty while labeling, see run.sh
+# three thumbnails per row, overlays always shown. The overlay key is per table mode (DT_THUMBTABLE_MODE_FILEMANAGER is
+# 1) and per thumbnail size category (dtgtk/thumbtable.c
+# _thumbs_get_prefs_size); DT_THUMBNAIL_OVERLAYS_ALWAYS_NORMAL is 3.
+# an empty lighttable while labeling (see run.sh): thumbnails loading
+# meanwhile could revert a rating (darktable #22569)
 set_collection /helios-bench-no-such-film
-cat > "$work/labels.lua" << LUA
-local dt = require "darktable"
-local function import(name) return dt.database.import("$work/images/" .. name) end
-local cr2 = import("mire1.cr2")
-local arw = import("hlrecovery.arw")
-local crw = import("bayer4.crw")
-local raf = import("mire1-xtrans.raf")
-local raf4 = import("xtransIV.raf")
+{
+  echo "plugins/lighttable/images_in_row=3"
+  for size in 0 1 2 3 4; do echo "plugins/lighttable/overlays/1/$size=3"; done
+} >> "$work/config/darktablerc"
+
+status=$(dbus_session_start)
+if [ "$status" = ok ] && ! dtlua "
+local dt = require 'darktable'
+local function import(name) return dt.database.import('$work/images/' .. name) end
+local cr2 = import('mire1.cr2')
+local arw = import('hlrecovery.arw')
+local crw = import('bayer4.crw')
+local raf = import('mire1-xtrans.raf')
+local raf4 = import('xtransIV.raf')
 cr2.red = true
 cr2.rating = 5
 arw.yellow = true
@@ -49,25 +61,20 @@ raf.green = true
 raf.blue = true
 raf.purple = true
 raf.rating = 1
-io.open("$work/labeled", "w"):close()
-LUA
-status=$(session "dofile('$work/labels.lua')" "$work/labeled" '')
-if [ "$status" != ok ]; then
-  echo "gui bench: labeling session failed: $status" >&2
-  exit 1
+return 'ok'" > /dev/null; then
+  status="labeling failed"
 fi
-
-# show the film roll, three thumbnails per row, overlays always shown. The
-# overlay key is per table mode (DT_THUMBTABLE_MODE_FILEMANAGER is 1) and
-# per thumbnail size category (dtgtk/thumbtable.c _thumbs_get_prefs_size);
-# DT_THUMBNAIL_OVERLAYS_ALWAYS_NORMAL is 3.
-set_collection "$work/images"
-{
-  echo "plugins/lighttable/images_in_row=3"
-  for size in 0 1 2 3 4; do echo "plugins/lighttable/overlays/1/$size=3"; done
-} >> "$work/config/darktablerc"
-
-status=$(session_start "io.open('$work/shown', 'w'):close()" "$work/shown" '')
+# then show the film roll of the images
+if [ "$status" = ok ] && ! dtlua "
+local dt = require 'darktable'
+local rule = dt.gui.libs.collect.new_rule()
+rule.mode = 'DT_LIB_COLLECT_MODE_AND'
+rule.item = 'DT_COLLECTION_PROP_FILMROLL'
+rule.data = '$work/images'
+dt.gui.libs.collect.filter({rule})
+return 'ok'" > /dev/null; then
+  status="collection change failed"
+fi
 if [ "$status" = ok ]; then
   # keep the pointer off the thumbnails: hovering shows a tooltip and
   # highlights the thumbnail. This spot is the empty sixth cell.
