@@ -54,8 +54,9 @@ return #dt.database" > /dev/null
   dtlua "
 local dt = require 'darktable'
 dt.gui.selection($sel)
-dt.gui.action('lib/image/remove', '', 'activate', 1.0)
-return 'ok'" > /dev/null || echo "case $n: action failed"
+-- dt.gui.action(path, instance, element, effect, speed)
+return tostring(dt.gui.action('lib/image/remove', 0, '', 'activate', 1.0))" \
+    | sed "s/^/case $n: action returned /" || echo "case $n: action failed"
   sleep 5
   local left
   left=$(dtlua "return #(require 'darktable').database")
