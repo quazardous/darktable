@@ -8538,7 +8538,70 @@
   },
   {
    "file": "common/history.c",
-   "line": 1595,
+   "line": 1535,
+   "function": "dt_history_count_items",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT COUNT(*) FROM main.history WHERE imgid = ?1"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1556,
+   "function": "dt_history_insert_item",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "INSERT"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "INSERT INTO main.history (imgid, num, module, operation, op_params, enabled, blendop_params, blendop_version, multi_priority, multi_name) VALUES (?1, ?2, ?3, ?4, ?5, 1, ?6, ?7, 0, ' ')"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1581,
+   "function": "dt_history_find_module_version",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT module FROM main.history WHERE operation = ?1 AND op_params = ?2"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1662,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8559,7 +8622,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1612,
+   "line": 1679,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8580,7 +8643,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1649,
+   "line": 1716,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8601,7 +8664,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1678,
+   "line": 1745,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8622,7 +8685,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1759,
+   "line": 1826,
    "function": "dt_history_hash_write_from_history",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8644,7 +8707,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1782,
+   "line": 1849,
    "function": "dt_history_hash_write",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8666,7 +8729,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1810,
+   "line": 1877,
    "function": "dt_history_hash_read",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8687,7 +8750,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1865,
+   "line": 1932,
    "function": "dt_history_hash_is_mipmap_synced",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8708,7 +8771,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1887,
+   "line": 1954,
    "function": "dt_history_hash_set_mipmap",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8729,7 +8792,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1903,
+   "line": 1970,
    "function": "dt_history_hash_unset_mipmap",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8750,7 +8813,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1932,
+   "line": 1999,
    "function": "dt_history_hash_get_status",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -14687,28 +14750,7 @@
   },
   {
    "file": "develop/imageop.c",
-   "line": 1609,
-   "function": "_init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT module FROM main.history WHERE operation = ?1 AND op_params = ?2"
-  },
-  {
-   "file": "develop/imageop.c",
-   "line": 1642,
+   "line": 1627,
    "function": "_init_presets",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14729,7 +14771,7 @@
   },
   {
    "file": "develop/imageop.c",
-   "line": 1703,
+   "line": 1688,
    "function": "_init_presets",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14750,7 +14792,7 @@
   },
   {
    "file": "develop/imageop.c",
-   "line": 1775,
+   "line": 1760,
    "function": "_init_presets",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14771,7 +14813,7 @@
   },
   {
    "file": "develop/imageop.c",
-   "line": 1814,
+   "line": 1799,
    "function": "_iop_preferences_changed",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14792,7 +14834,7 @@
   },
   {
    "file": "develop/imageop.c",
-   "line": 1837,
+   "line": 1822,
    "function": "_init_presets_actions",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14813,7 +14855,7 @@
   },
   {
    "file": "develop/imageop.c",
-   "line": 1929,
+   "line": 1914,
    "function": "_iop_set_darktable_iop_table",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14831,48 +14873,6 @@
    ],
    "cross_schema": false,
    "sql": "(\\\"%s\\\",\\\"%s\\\"),INSERT INTO memory.darktable_iop_names (operation, name) VALUES %s"
-  },
-  {
-   "file": "develop/lightroom.c",
-   "line": 335,
-   "function": "dt_add_hist",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT COUNT(*) FROM main.history WHERE imgid = ?1"
-  },
-  {
-   "file": "develop/lightroom.c",
-   "line": 346,
-   "function": "dt_add_hist",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "INSERT"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "INSERT INTO main.history (imgid, num, module, operation, op_params, enabled, blendop_params, blendop_version, multi_priority, multi_name) VALUES (?1, ?2, ?3, ?4, ?5, 1, ?6, ?7, 0, ' ')"
   },
   {
    "file": "develop/masks/masks.c",
@@ -16065,27 +16065,6 @@
    ],
    "cross_schema": false,
    "sql": "SELECT imgid FROM main.selected_images"
-  },
-  {
-   "file": "iop/flip.c",
-   "line": 491,
-   "function": "reload_defaults",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "iop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT imgid FROM main.history WHERE imgid = ?1 AND operation = 'flip'"
   },
   {
    "file": "libs/collect.c",
@@ -18020,6 +17999,48 @@
    "sql": "DELETE FROM main.selected_images"
   },
   {
+   "file": "tests/unittests/catalog/test_catalog_history.c",
+   "line": 34,
+   "function": "_count_history",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "tests",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT COUNT(*) FROM main.history WHERE imgid = ?1"
+  },
+  {
+   "file": "tests/unittests/catalog/test_catalog_history.c",
+   "line": 54,
+   "function": "test_insert_and_count",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "tests",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT num, module, enabled, blendop_version, multi_priority, multi_name FROM main.history WHERE imgid = ?1 AND operation = 'flip'"
+  },
+  {
    "file": "tests/unittests/catalog/test_catalog_metadata.c",
    "line": 86,
    "function": "test_definition_lifecycle",
@@ -18522,27 +18543,6 @@
    ],
    "cross_schema": false,
    "sql": "INSERT OR IGNORE INTO main.selected_images (imgid) VALUES (?1)"
-  },
-  {
-   "file": "views/view.c",
-   "line": 73,
-   "function": "dt_view_manager_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT num FROM main.history WHERE imgid = ?1"
   }
  ],
  "triggers": [
