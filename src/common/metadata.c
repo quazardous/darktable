@@ -865,6 +865,45 @@ void dt_metadata_set_list(const GList *imgs, GList *key_value, const gboolean un
   }
 }
 
+int dt_metadata_get_distinct_counts(const char *images, int *counts, const int n)
+{
+  gchar *columns = NULL;
+  int ncol = 0;
+  dt_pthread_mutex_lock(&darktable.metadata_threadsafe);
+  for(GList *iter = dt_metadata_get_list(); iter && ncol < n; iter = iter->next)
+  {
+    const dt_metadata_t *metadata = iter->data;
+    if(!metadata->internal)
+    {
+      dt_util_str_cat(&columns,
+                      "%s(SELECT COUNT(DISTINCT IFNULL(value,''))"
+                      " FROM images"
+                      " LEFT JOIN meta_data"
+                      "   ON meta_data.id = images.id"
+                      "      AND key = %d WHERE images.id in (%s))",
+                      ncol ? ", " : "",
+                      metadata->key,
+                      images);
+      ncol++;
+    }
+  }
+  dt_pthread_mutex_unlock(&darktable.metadata_threadsafe);
+  if(!ncol) return 0;
+
+  gchar *query = g_strdup_printf("SELECT %s", columns);
+  g_free(columns);
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  g_free(query);
+  if(sqlite3_step(stmt) == SQLITE_ROW)
+    for(int i = 0; i < ncol; i++)
+      counts[i] = sqlite3_column_int(stmt, i);
+  else
+    ncol = 0;
+  sqlite3_finalize(stmt);
+  return ncol;
+}
+
 GList *dt_metadata_get_counts(const char *images)
 {
   GList *counts = NULL;

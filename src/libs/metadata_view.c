@@ -533,99 +533,63 @@ void gui_update(dt_lib_module_t *self)
   {
     if(!images) images = dt_act_on_get_query(FALSE);
 
-    gchar *metadata_subquery = g_strdup("");
-    dt_pthread_mutex_lock(&darktable.metadata_threadsafe);
-    for(GList *iter = dt_metadata_get_list(); iter; iter = iter->next)
+    // the image column counted for each field: a field left out of this
+    // table is DT_IMAGE_ATTR_NONE, always shown as "various values"
+    static const dt_image_attr_t md_attr[md_xmp_metadata] =
     {
-      dt_metadata_t *metadata = (dt_metadata_t *)iter->data;
+      [md_internal_filmroll] = DT_IMAGE_ATTR_FILM,
+      [md_internal_imgid] = DT_IMAGE_ATTR_NONE,
+      [md_internal_groupid] = DT_IMAGE_ATTR_GROUP,
+      [md_internal_filename] = DT_IMAGE_ATTR_FILENAME,
+      [md_internal_version] = DT_IMAGE_ATTR_VERSION,
+      [md_internal_fullpath] = DT_IMAGE_ATTR_PATH,
+      [md_internal_local_copy] = DT_IMAGE_ATTR_LOCAL_COPY,
+      [md_internal_import_timestamp] = DT_IMAGE_ATTR_IMPORT_TIMESTAMP,
+      [md_internal_change_timestamp] = DT_IMAGE_ATTR_CHANGE_TIMESTAMP,
+      [md_internal_export_timestamp] = DT_IMAGE_ATTR_EXPORT_TIMESTAMP,
+      [md_internal_print_timestamp] = DT_IMAGE_ATTR_PRINT_TIMESTAMP,
+      [md_internal_flags] = DT_IMAGE_ATTR_FLAGS,
+      [md_exif_model] = DT_IMAGE_ATTR_MODEL,
+      [md_exif_maker] = DT_IMAGE_ATTR_MAKER,
+      [md_exif_lens] = DT_IMAGE_ATTR_LENS,
+      [md_exif_aperture] = DT_IMAGE_ATTR_APERTURE,
+      [md_exif_exposure] = DT_IMAGE_ATTR_EXPOSURE,
+      [md_exif_exposure_bias] = DT_IMAGE_ATTR_EXPOSURE_BIAS,
+      [md_exif_exposure_program] = DT_IMAGE_ATTR_EXPOSURE_PROGRAM,
+      [md_exif_whitebalance] = DT_IMAGE_ATTR_WHITEBALANCE,
+      [md_exif_flash] = DT_IMAGE_ATTR_FLASH,
+      [md_exif_metering_mode] = DT_IMAGE_ATTR_METERING_MODE,
+      [md_exif_focal_length] = DT_IMAGE_ATTR_FOCAL_LENGTH,
+      [md_exif_focal_length_ff] = DT_IMAGE_ATTR_FOCAL_LENGTH_AND_CROP,
+      [md_exif_crop_factor] = DT_IMAGE_ATTR_CROP,
+      [md_exif_focus_distance] = DT_IMAGE_ATTR_FOCUS_DISTANCE,
+      [md_exif_iso] = DT_IMAGE_ATTR_ISO,
+      [md_exif_datetime] = DT_IMAGE_ATTR_DATETIME,
+      [md_exif_width] = DT_IMAGE_ATTR_WIDTH,
+      [md_exif_height] = DT_IMAGE_ATTR_HEIGHT,
+      [md_width] = DT_IMAGE_ATTR_OUTPUT_WIDTH,
+      [md_height] = DT_IMAGE_ATTR_OUTPUT_HEIGHT,
+      [md_geotagging_lat] = DT_IMAGE_ATTR_LATITUDE,
+      [md_geotagging_lon] = DT_IMAGE_ATTR_LONGITUDE,
+      [md_geotagging_ele] = DT_IMAGE_ATTR_ALTITUDE,
+      // set from the tag counts below
+      [md_tag_names] = DT_IMAGE_ATTR_NONE,
+      [md_categories] = DT_IMAGE_ATTR_NONE,
+    };
 
-      if(!metadata->internal)
-      {
-        dt_util_str_cat(&metadata_subquery,
-                        "(SELECT COUNT(DISTINCT IFNULL(value,''))"
-                        " FROM images"
-                        " LEFT JOIN meta_data"
-                        "   ON meta_data.id = images.id"
-                        "      AND key = %d WHERE images.id in (%s)), ",
-                        metadata->key,
-                        images);
-      }
-    }
-    dt_pthread_mutex_unlock(&darktable.metadata_threadsafe);
-
-    if(strlen(metadata_subquery) > 0)
+    int *counts = g_malloc0((md_xmp_metadata + d->metadata_count) * sizeof(int));
+    if(dt_image_get_distinct_counts(images, md_attr, md_xmp_metadata, counts))
     {
-      // remove last comma
-      gchar *c;
-      if((c = g_strrstr(metadata_subquery, ", ")) != NULL)
-        *c = '\0';
-    }
-
-    sqlite3_stmt *stmt = NULL;
-    // We have to maintain a correspondence between the list of fields in this SQL query
-    // and the list of metadata fields defined by the enum and _labels[] array above.
-    // clang-format off
-    gchar *query = g_strdup_printf("SELECT COUNT(DISTINCT film_id), "
-                                   "2, " //id always different
-                                   "COUNT(DISTINCT group_id), "
-                                   "COUNT(DISTINCT filename), "
-                                   "COUNT(DISTINCT version), "
-                                   "COUNT(DISTINCT film_id || '/' || filename), " //path
-                                   "COUNT(DISTINCT flags & 2048), " //local copy
-                                   "COUNT(DISTINCT import_timestamp), "
-                                   "COUNT(DISTINCT change_timestamp), "
-                                   "COUNT(DISTINCT export_timestamp), "
-                                   "COUNT(DISTINCT print_timestamp), "
-                                   "COUNT(DISTINCT flags), "
-                                   "COUNT(DISTINCT model_id), "
-                                   "COUNT(DISTINCT maker_id), "
-                                   "COUNT(DISTINCT lens_id), "
-                                   "COUNT(DISTINCT aperture), "
-                                   "COUNT(DISTINCT exposure), "
-                                   "COUNT(DISTINCT IFNULL(exposure_bias, '')), "
-                                   "COUNT(DISTINCT IFNULL(exposure_program_id, '')), "
-                                   "COUNT(DISTINCT IFNULL(whitebalance_id, '')), "
-                                   "COUNT(DISTINCT IFNULL(flash_id, '')), "
-                                   "COUNT(DISTINCT IFNULL(metering_mode_id, '')), "
-                                   "COUNT(DISTINCT focal_length), "
-                                   "COUNT(DISTINCT focal_length) + COUNT(DISTINCT crop), "
-                                   "COUNT(DISTINCT crop), "
-                                   "COUNT(DISTINCT focus_distance), "
-                                   "COUNT(DISTINCT iso), "
-                                   "COUNT(DISTINCT datetime_taken), "
-                                   "COUNT(DISTINCT width), "
-                                   "COUNT(DISTINCT height), "
-                                   "COUNT(DISTINCT IFNULL(output_width, '')), " //exported width
-                                   "COUNT(DISTINCT IFNULL(output_height, '')), " //exported height
-                                   "COUNT(DISTINCT IFNULL(latitude, '')), "
-                                   "COUNT(DISTINCT IFNULL(longitude, '')), "
-                                   "COUNT(DISTINCT IFNULL(altitude, '')), "
-                                   "2, "  // placeholder for tags
-                                   "2, "  // placeholder for categories
-                                   "%s "  // metadata_subquery
-                                   "FROM main.images "
-                                   "WHERE id IN (%s)",
-                                   metadata_subquery, images);
-    // clang-format on
-
-    g_free(metadata_subquery);
-
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-
-    g_free(query);
-
-    if(sqlite3_step(stmt) == SQLITE_ROW)
-    {
+      dt_metadata_get_distinct_counts(images, counts + md_xmp_metadata, d->metadata_count);
       for(int32_t md = 0; md < md_xmp_metadata + d->metadata_count; md++)
       {
-        const int md_count = sqlite3_column_int(stmt, md);
         if(md == md_exif_focal_length_ff)
-          skip[md] = md_count > 2;
+          skip[md] = counts[md] > 2;
         else
-          skip[md] = md_count > 1;
+          skip[md] = counts[md] > 1;
       }
     }
-    sqlite3_finalize(stmt);
+    g_free(counts);
 
     // Tags and categories management
     gboolean same_tags = TRUE;
