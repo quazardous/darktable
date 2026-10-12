@@ -53,6 +53,10 @@ dt_filmid_t dt_film_import(const char *dirname);
 void dt_film_set_query(const dt_filmid_t id);
 /** get id associated with filmroll */
 dt_filmid_t dt_film_get_id(const char *folder);
+/** a film roll whose folder matches with SQL LIKE (ASCII case ignored, % and
+    _ in folder act as wildcards), as the collect module's folder tree
+    compares; NO_FILMID when none. dt_film_get_id() compares exactly */
+dt_filmid_t dt_film_get_id_like(const char *folder);
 /** removes this film and all its images from db. */
 void dt_film_remove(const dt_filmid_t id);
 /** checks if film is empty */
@@ -79,6 +83,16 @@ void dt_film_remove_empty();
 GList *dt_film_get_image_ids(const dt_filmid_t filmid);
 // initialize film folder status
 void dt_film_set_folder_status();
+/** TRUE when a film roll lives at the folder or below it, as a node of the
+    folders tree exists */
+gboolean dt_film_folder_exists(const char *folder);
+/** the film roll folder closest to folder: the folder itself, else its
+    nearest film roll ancestor, else its nearest film roll descendant.
+    Newly allocated, NULL when there is none */
+gchar *dt_film_folder_for(const char *folder);
+/** move the film rolls at old_path and below it to new_path: a film roll
+    at old_path becomes new_path, one below keeps its path under it */
+void dt_film_relocate_folder(const char *old_path, const char *new_path);
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

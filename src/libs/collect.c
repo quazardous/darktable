@@ -479,55 +479,13 @@ static void _view_popup_menu_onSearchFilmroll(GSimpleAction *action,
   // run the dialog
   if(gtk_native_dialog_run(GTK_NATIVE_DIALOG(filechooser)) == GTK_RESPONSE_ACCEPT)
   {
-    gint id = -1;
-    sqlite3_stmt *stmt;
-    gchar *query = NULL;
-
     gchar *uri = NULL;
     uri = gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(filechooser));
     new_path = g_filename_from_uri(uri, NULL, NULL);
     g_free(uri);
     if(new_path)
     {
-      gchar *old = NULL;
-
-      gchar *q_tree_path = g_strdup_printf("%s%%", tree_path);
-      query = "SELECT id, folder FROM main.film_rolls WHERE folder LIKE ?1";
-      DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-      DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, q_tree_path, -1, SQLITE_TRANSIENT);
-      g_free(q_tree_path);
-      q_tree_path = NULL;
-      query = NULL;
-
-      while(sqlite3_step(stmt) == SQLITE_ROW)
-      {
-        id = sqlite3_column_int(stmt, 0);
-        old = (gchar *)sqlite3_column_text(stmt, 1);
-
-        query = g_strdup("UPDATE main.film_rolls SET folder=?1 WHERE id=?2");
-
-        gchar trailing[1024] = { 0 };
-        gchar final[1024] = { 0 };
-
-        if(g_strcmp0(old, tree_path))
-        {
-          g_strlcpy(trailing, old + strlen(tree_path) + 1, sizeof(trailing));
-          g_snprintf(final, sizeof(final), "%s/%s", new_path, trailing);
-        }
-        else
-        {
-          g_strlcpy(final, new_path, sizeof(final));
-        }
-
-        sqlite3_stmt *stmt2;
-        DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt2, NULL);
-        DT_DEBUG_SQLITE3_BIND_TEXT(stmt2, 1, final, -1, SQLITE_STATIC);
-        DT_DEBUG_SQLITE3_BIND_INT(stmt2, 2, id);
-        sqlite3_step(stmt2);
-        sqlite3_finalize(stmt2);
-      }
-      sqlite3_finalize(stmt);
-      g_free(query);
+      dt_film_relocate_folder(tree_path, new_path);
 
       /* reset filter so that view isn't empty */
       dt_view_filtering_reset(darktable.view_manager, FALSE);
@@ -1312,21 +1270,13 @@ static GtkTreeModel *_create_filtered_model(GtkTreeModel *model,
     {
       if(level > 0)
       {
-        sqlite3_stmt *stmt = NULL;
         gchar *pth = NULL;
-        int id = -1;
         // Check if this path also matches a filmroll
         gtk_tree_model_get(model, &iter, DT_LIB_COLLECT_COL_PATH, &pth, -1);
-        DT_DEBUG_SQLITE3_PREPARE_V2
-          (dt_database_get(darktable.db),
-           "SELECT id FROM main.film_rolls WHERE folder LIKE ?1", -1, &stmt, NULL);
-        DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, pth, -1, SQLITE_TRANSIENT);
-        if(sqlite3_step(stmt) == SQLITE_ROW) id = sqlite3_column_int(stmt, 0);
-        sqlite3_finalize(stmt);
-
+        const dt_filmid_t id = dt_film_get_id_like(pth);
         g_free(pth);
 
-        if(id != -1)
+        if(dt_is_valid_filmid(id))
         {
           // we go back to the parent, in order to show this folder
           if(!gtk_tree_model_iter_parent(model, &child, &iter)) level = 0;
@@ -2944,81 +2894,6 @@ void gui_reset(dt_lib_module_t *self)
                              DT_COLLECTION_PROP_UNDEF, NULL);
 }
 
-// Returns TRUE if the folder still corresponds to at least one film roll,
-// either directly or as an ancestor of one. This mirrors the folders tree,
-// where a node exists as long as a film roll lives at or below it.
-static gboolean _folder_exists(const char *folder)
-{
-  if(!folder || !*folder) return FALSE;
-
-  gboolean exists = FALSE;
-  sqlite3_stmt *stmt = NULL;
-  gchar *child = g_strconcat(folder, G_DIR_SEPARATOR_S, "%", NULL);
-  DT_DEBUG_SQLITE3_PREPARE_V2
-    (dt_database_get(darktable.db),
-     "SELECT 1 FROM main.film_rolls WHERE folder = ?1 OR folder LIKE ?2 LIMIT 1",
-     -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, folder, -1, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 2, child, -1, SQLITE_TRANSIENT);
-  if(sqlite3_step(stmt) == SQLITE_ROW) exists = TRUE;
-  sqlite3_finalize(stmt);
-  g_free(child);
-  return exists;
-}
-
-// Resolve a folder path to the film roll that best corresponds to it, so
-// that switching from the folders to the film roll view keeps the user near
-// where they were instead of forcing them to retraverse the tree.
-// Returns a newly allocated film roll folder path, or NULL if none exists.
-// Preference order: an exact match (1:1), else the closest film roll that
-// contains the folder (nearest ancestor), else the closest film roll
-// contained in the folder (nearest descendant).
-static gchar *_filmroll_for_folder(const char *folder)
-{
-  if(!folder || !*folder) return NULL;
-
-  gchar *result = NULL;
-  sqlite3_stmt *stmt = NULL;
-
-  // 1:1 exact match
-  DT_DEBUG_SQLITE3_PREPARE_V2
-    (dt_database_get(darktable.db),
-     "SELECT folder FROM main.film_rolls WHERE folder = ?1", -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, folder, -1, SQLITE_TRANSIENT);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-    result = g_strdup((const char *)sqlite3_column_text(stmt, 0));
-  sqlite3_finalize(stmt);
-  if(result) return result;
-
-  // closest containing film roll (nearest ancestor)
-  DT_DEBUG_SQLITE3_PREPARE_V2
-    (dt_database_get(darktable.db),
-     "SELECT folder FROM main.film_rolls"
-     " WHERE ?1 LIKE folder || ?2"
-     " ORDER BY LENGTH(folder) DESC LIMIT 1", -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, folder, -1, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 2, G_DIR_SEPARATOR_S "%", -1, SQLITE_TRANSIENT);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-    result = g_strdup((const char *)sqlite3_column_text(stmt, 0));
-  sqlite3_finalize(stmt);
-  if(result) return result;
-
-  // closest contained film roll (nearest descendant)
-  gchar *child_pattern = g_strconcat(folder, G_DIR_SEPARATOR_S, "%", NULL);
-  DT_DEBUG_SQLITE3_PREPARE_V2
-    (dt_database_get(darktable.db),
-     "SELECT folder FROM main.film_rolls"
-     " WHERE folder LIKE ?1"
-     " ORDER BY LENGTH(folder) ASC LIMIT 1", -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, child_pattern, -1, SQLITE_TRANSIENT);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-    result = g_strdup((const char *)sqlite3_column_text(stmt, 0));
-  sqlite3_finalize(stmt);
-  g_free(child_pattern);
-
-  return result;
-}
-
 // Strip the folders-collection suffixes (`*`, `|%`, trailing separator or
 // `%`) from a rule value to recover a plain filesystem path. Returns a
 // newly allocated string.
@@ -3062,10 +2937,10 @@ static gboolean _fixup_stale_selection(dt_lib_collect_t *d)
 
   // a folder node survives as long as a film roll lives at or under it, so we
   // only repoint when it has vanished entirely; film rolls are an exact match
-  // and _filmroll_for_folder() returns the path unchanged while it exists.
-  if(property != DT_COLLECTION_PROP_FOLDERS || !_folder_exists(folder))
+  // and dt_film_folder_for() returns the path unchanged while it exists.
+  if(property != DT_COLLECTION_PROP_FOLDERS || !dt_film_folder_exists(folder))
   {
-    gchar *closest = _filmroll_for_folder(folder);
+    gchar *closest = dt_film_folder_for(folder);
     if(g_strcmp0(closest, folder) != 0)
     {
       dt_conf_set_string(confname, closest ? closest : "");
@@ -3112,7 +2987,7 @@ static void combo_changed(GtkWidget *combo,
      && has_text)
   {
     gchar *folder = _folder_plain_path(cur_text);
-    resolved_filmroll = _filmroll_for_folder(folder);
+    resolved_filmroll = dt_film_folder_for(folder);
     g_free(folder);
   }
 

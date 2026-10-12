@@ -312,6 +312,49 @@ static void test_group_members(void **state)
   assert_int_equal(_count("SELECT COUNT(*) FROM main.selected_images"), 2);
 }
 
+static void test_folder_lookups(void **state)
+{
+  gchar *parent = g_path_get_dirname(DT_TEST_IMAGES);
+  gchar *missing = g_build_filename(DT_TEST_IMAGES, "no-such-dir", NULL);
+
+  // the film roll's folder and its ancestors are nodes of the folders tree
+  assert_true(dt_film_folder_exists(DT_TEST_IMAGES));
+  assert_true(dt_film_folder_exists(parent));
+  assert_false(dt_film_folder_exists(missing));
+  assert_false(dt_film_folder_exists(""));
+
+  // closest film roll: the folder itself, from a parent its descendant,
+  // from inside it the film roll that contains it
+  gchar *f = dt_film_folder_for(DT_TEST_IMAGES);
+  assert_string_equal(f, DT_TEST_IMAGES);
+  g_free(f);
+  f = dt_film_folder_for(parent);
+  assert_string_equal(f, DT_TEST_IMAGES);
+  g_free(f);
+  f = dt_film_folder_for(missing);
+  assert_string_equal(f, DT_TEST_IMAGES);
+  g_free(f);
+
+  const dt_filmid_t id = dt_film_get_id_like(DT_TEST_IMAGES);
+  assert_true(dt_is_valid_filmid(id));
+  assert_int_equal(id, dt_film_get_id(DT_TEST_IMAGES));
+
+  // relocate there and back
+  gchar *moved = g_build_filename(parent, "moved-images", NULL);
+  dt_film_relocate_folder(DT_TEST_IMAGES, moved);
+  gchar *folder = dt_film_get_folder(id);
+  assert_string_equal(folder, moved);
+  g_free(folder);
+  dt_film_relocate_folder(moved, DT_TEST_IMAGES);
+  folder = dt_film_get_folder(id);
+  assert_string_equal(folder, DT_TEST_IMAGES);
+  g_free(folder);
+
+  g_free(moved);
+  g_free(missing);
+  g_free(parent);
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -322,6 +365,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_image_range),
     cmocka_unit_test(test_sidecar_rows),
     cmocka_unit_test(test_image_flags_and_stamps),
+    cmocka_unit_test(test_folder_lookups),
     cmocka_unit_test(test_thumb_state),
     cmocka_unit_test(test_film_by_access),
     cmocka_unit_test(test_jobs_queries),
