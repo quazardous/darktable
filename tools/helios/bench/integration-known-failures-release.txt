@@ -1,0 +1,34 @@
+# pixel tests that fail against expected.png on a Release build (-O3
+# -ffast-math, src/CMakeLists.txt:796) of the unmodified base here: the
+# RelWithDebInfo list plus 18 that only -ffast-math (some with
+# -march=native) breaks (darktable #3786). Upstream's references come from
+# a RelWithDebInfo build.
+0018-perspective-corr          # -ffast-math
+0019-color-mapping             # -ffast-math
+0032-watermark                 # font rendering: anti-aliasing of the watermark text
+0035-multiple-modules          # -ffast-math
+0043-dithering-fs              # -ffast-math
+0058-defringe                  # -ffast-math
+0059-grain                     # -ffast-math
+0077-croprotate-keystone       # -ffast-math
+0084-cacorrect                 # -ffast-math
+0096-lensfun                   # diffuse numeric drift between machines (lensfun, libm)
+0097-sigmoid                   # diffuse numeric drift between machines (libm)
+0100-invert-xtrans             # -ffast-math
+0103-almost-all                # "not stable across computers" per the suite itself
+0110-perspective-bilinear      # -ffast-math
+0111-perspective-lanczos2      # -ffast-math
+0112-perspective-lanczos3      # -ffast-math
+0113-resample-bilinear         # -ffast-math
+0120-blending-rgb-scene-2      # -ffast-math
+0136-posterize                 # -ffast-math
+0151-sigmoid-no-hue-preservation # as 0097
+0161-overlay-modules-before-after # -ffast-math
+0168-lut3d-srgb-pyramid        # saturated colors: LUT interpolation, lcms2/libm
+0169-lut3d-adobe-trilinear     # as 0168
+0170-lut3d-prophoto-tetrahedral # as 0168
+0172-capture-dual-rcd          # -ffast-math
+0176-color-harmonizer          # -ffast-math
+0178-contrast-texture          # fails in upstream's own nightly
+0179-spektrafilm               # float threshold: grain draws flip along iso-lines
+0180-spektrafilm-simple        # needs the spektrafilm data pack in the user data dir
