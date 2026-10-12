@@ -344,6 +344,25 @@ gboolean dt_collection_date_range(const dt_collection_properties_t prop,
                                   int64_t *min,
                                   int64_t *max);
 
+typedef struct dt_collection_text_count_t
+{
+  char *text;
+  int count;
+  int flags; // the image flags of one image of the group, where listed
+} dt_collection_text_count_t;
+
+void dt_collection_text_count_free(gpointer data);
+
+/** the images matching where counted per file name without its extension,
+    in file name order. Free with g_list_free_full(list,
+    dt_collection_text_count_free) */
+GList *dt_collection_filename_counts(const char *where);
+
+/** the images matching where counted per upper-case extension (".CR2"),
+    with the flags of one image of each, in extension order. Free with
+    g_list_free_full(list, dt_collection_text_count_free) */
+GList *dt_collection_extension_counts(const char *where);
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

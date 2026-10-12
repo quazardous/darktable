@@ -3487,6 +3487,69 @@ gboolean dt_collection_date_range(const dt_collection_properties_t prop,
   return found;
 }
 
+void dt_collection_text_count_free(gpointer data)
+{
+  dt_collection_text_count_t *c = data;
+  g_free(c->text);
+  g_free(c);
+}
+
+// how do we separate filename and extension directly in sqlite :
+// starting example : 'nice.bird.cr2'
+// replace(filename, '.', '') => nicebirdcr2 (remove all the point)
+// rtrim(filename, replace(filename, '.', '')) => nice.bird. (remove ending chars presents in 'nice.bird.cr2' and
+// 'nicebirdcr2') rtrim(rtrim(filename, replace(filename, '.', '')), '.') => nice.bird (remove ending '.')
+// replace(filename, rtrim(filename, replace(filename, '.', '')), '.') => .cr2 (replace the filename part by a
+// '.')
+static GList *_text_counts(const char *query)
+{
+  GList *counts = NULL;
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    const char *text = (const char *)sqlite3_column_text(stmt, 0);
+    if(text == NULL) continue; // safeguard against degenerated db entries
+    dt_collection_text_count_t *c = g_new(dt_collection_text_count_t, 1);
+    c->text = g_strdup(text);
+    c->count = sqlite3_column_int(stmt, 1);
+    c->flags = sqlite3_column_count(stmt) > 2 ? sqlite3_column_int(stmt, 2) : 0;
+    counts = g_list_prepend(counts, c);
+  }
+  sqlite3_finalize(stmt);
+  return g_list_reverse(counts);
+}
+
+GList *dt_collection_filename_counts(const char *where)
+{
+  // clang-format off
+  gchar *query = g_strdup_printf("SELECT rtrim(rtrim(filename, replace(filename, '.', '')), '.') AS fn, COUNT(*) AS count"
+                                 " FROM main.images AS mi"
+                                 " WHERE %s"
+                                 " GROUP BY fn"
+                                 " ORDER BY filename",
+                                 where);
+  // clang-format on
+  GList *counts = _text_counts(query);
+  g_free(query);
+  return counts;
+}
+
+GList *dt_collection_extension_counts(const char *where)
+{
+  // clang-format off
+  gchar *query = g_strdup_printf("SELECT upper(replace(filename, rtrim(filename, replace(filename, '.', '')), '.')) AS ext, COUNT(*) AS count, flags"
+                                 " FROM main.images AS mi"
+                                 " WHERE %s"
+                                 " GROUP BY ext"
+                                 " ORDER BY ext",
+                                 where);
+  // clang-format on
+  GList *counts = _text_counts(query);
+  g_free(query);
+  return counts;
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

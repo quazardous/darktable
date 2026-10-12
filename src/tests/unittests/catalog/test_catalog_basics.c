@@ -24,6 +24,7 @@
 #include "catalog_fixture.h"
 #include "common/collection.h"
 #include "common/colorlabels.h"
+#include "common/image.h"
 #include "common/metadata.h"
 #include "common/tags.h"
 
@@ -160,6 +161,32 @@ static void test_date_counts(void **state)
   assert_null(dt_collection_date_counts(DT_COLLECTION_PROP_IMPORT_TIMESTAMP, "mi.id < 0"));
 }
 
+static void test_filename_counts(void **state)
+{
+  // mire1.cr2, hlrecovery.arw, bayer4.crw
+  GList *names = dt_collection_filename_counts("1=1");
+  assert_int_equal(g_list_length(names), 3);
+  gboolean mire = FALSE;
+  for(GList *l = names; l; l = g_list_next(l))
+  {
+    const dt_collection_text_count_t *c = l->data;
+    assert_int_equal(c->count, 1);
+    if(!g_strcmp0(c->text, "mire1")) mire = TRUE;
+  }
+  assert_true(mire);
+  g_list_free_full(names, dt_collection_text_count_free);
+
+  GList *exts = dt_collection_extension_counts("1=1");
+  assert_int_equal(g_list_length(exts), 3);
+  for(GList *l = exts; l; l = g_list_next(l))
+  {
+    const dt_collection_text_count_t *c = l->data;
+    assert_true(c->text[0] == '.' && g_ascii_isupper(c->text[1]));
+    assert_true(c->flags & DT_IMAGE_RAW);
+  }
+  g_list_free_full(exts, dt_collection_text_count_free);
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -169,6 +196,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_numeric_counts),
     cmocka_unit_test(test_flag_counts),
     cmocka_unit_test(test_date_counts),
+    cmocka_unit_test(test_filename_counts),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }
