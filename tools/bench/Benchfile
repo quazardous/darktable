@@ -30,6 +30,9 @@ run = [
   # uploaded files arrive without their execute bit (config file stores
   # them 0664, and COPY keeps the mode); glycin runs bwrap
   "chmod 755 /usr/local/bin/bwrap",
+  # branches older than DT_SRC (tools/bench/job before d78da2c13) build
+  # from /src, the repository-mode checkout: point it at the job's own
+  "ln -s /work/darktable /src",
   # wbox drives darktable in a headless labwc for the benches
   """python3 -m venv /opt/wbox \
  && /opt/wbox/bin/pip install --quiet "git+https://github.com/quazardous/wbox-mcp.git\"""",
