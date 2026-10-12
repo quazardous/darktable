@@ -59,5 +59,10 @@ case "${1:-}" in
                  <(sed 's/#.*//' "$bench/integration-known-failures.txt" | awk 'NF { print $1 }' | sort -u))
          [ -z "$new" ] || { echo "new failures: $new"; exit 1; }
          echo "pixel-fast: ${#tests[@]} tests, no new failure" ;;
+  # the fast subset at several OpenMP thread counts, and with -t 4 on 2
+  # CPUs, each compared pixel by pixel with -t 4 (darktable #3807)
+  threads) need_build
+         mapfile -t tests < <(sed 's/#.*//' "$bench/integration-fast.txt" | awk 'NF { print $1 }')
+         "$bench/threads_compare.sh" "$prefix" /out/threads t4 t1 t2 t8 cpus2 -- "${tests[@]}" ;;
   *) echo "unknown job: ${1:-}"; exit 2 ;;
 esac

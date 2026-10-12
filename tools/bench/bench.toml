@@ -85,6 +85,15 @@ timeout = "1h"
 provision = "tar -C /src/src/tests/integration --exclude=.git --exclude=.venv -cf - . | tar -C /volume -xf -"
 timeout = "20m"
 
+# the fast subset at 1, 2, 4 and 8 OpenMP threads and with -t 4 on two
+# CPUs, compared pixel by pixel with -t 4 (darktable #3807)
+[jobs.threads]
+cores = 8
+memory = "4g"
+command = "/src/tools/bench/job threads"
+mounts = { build = "/build" }
+timeout = "1h"
+
 # timings: alone on the machine
 [jobs.perf]
 cores = 4
