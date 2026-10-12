@@ -3369,6 +3369,55 @@ gboolean dt_collection_numeric_range(const dt_collection_numeric_t prop,
   return found;
 }
 
+void dt_collection_rating_counts(const char *where, int counts[7])
+{
+  memset(counts, 0, 7 * sizeof(int));
+  // clang-format off
+  gchar *query = g_strdup_printf("SELECT CASE WHEN (flags & 8) == 8 THEN -1 ELSE (flags & 7) END AS rating,"
+                                 " COUNT(*) AS count"
+                                 " FROM main.images AS mi"
+                                 " WHERE %s"
+                                 " GROUP BY rating"
+                                 " ORDER BY rating",
+                                 where);
+  // clang-format on
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    const int val = sqlite3_column_int(stmt, 0);
+    const int count = sqlite3_column_int(stmt, 1);
+    if(val < 6 && val >= -1) counts[val + 1] += count;
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+}
+
+void dt_collection_local_copy_counts(const char *where, int counts[2])
+{
+  counts[0] = counts[1] = 0;
+  // clang-format off
+  gchar *query = g_strdup_printf("SELECT CASE "
+                                 "         WHEN (flags & %d) THEN 0"
+                                 "         ELSE 1"
+                                 "       END as lcp, COUNT(*) AS count"
+                                 " FROM main.images AS mi "
+                                 " WHERE %s"
+                                 " GROUP BY lcp ORDER BY lcp ASC",
+                                 DT_IMAGE_LOCAL_COPY, where);
+  // clang-format on
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    const int i = sqlite3_column_int(stmt, 0);
+    const int count = sqlite3_column_int(stmt, 1);
+    counts[i] = count;
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

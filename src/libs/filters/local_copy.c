@@ -95,28 +95,8 @@ static gboolean _local_copy_update(dt_lib_filtering_rule_t *rule)
 
   rule->manual_widget_set++;
   _widgets_local_copy_t *local_copy = (_widgets_local_copy_t *)rule->w_specific;
-  char query[1024] = { 0 };
-  // clang-format off
-  g_snprintf(query, sizeof(query),
-                   "SELECT CASE "
-                   "         WHEN (flags & %d) THEN 0"
-                   "         ELSE 1"
-                   "       END as lcp, COUNT(*) AS count"
-                   " FROM main.images AS mi "
-                   " WHERE %s"
-                   " GROUP BY lcp ORDER BY lcp ASC",
-                   DT_IMAGE_LOCAL_COPY, rule->lib->last_where_ext);
-  // clang-format on
   int counts[2] = { 0 };
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-  while(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    const int i = sqlite3_column_int(stmt, 0);
-    const int count = sqlite3_column_int(stmt, 1);
-    counts[i] = count;
-  }
-  sqlite3_finalize(stmt);
+  dt_collection_local_copy_counts(rule->lib->last_where_ext, counts);
 
   for(int i = 0; i < 2; i++)
   {

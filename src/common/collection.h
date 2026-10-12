@@ -318,6 +318,14 @@ gboolean dt_collection_numeric_range(const dt_collection_numeric_t prop,
                                      double *min,
                                      double *max);
 
+/** the images matching where counted per rating: counts[0] the rejected,
+    counts[1] the unrated, counts[2..6] one to five stars */
+void dt_collection_rating_counts(const char *where, int counts[7]);
+
+/** the images matching where with a local copy (counts[0]) and without
+    (counts[1]) */
+void dt_collection_local_copy_counts(const char *where, int counts[2]);
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

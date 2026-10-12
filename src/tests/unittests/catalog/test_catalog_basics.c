@@ -121,6 +121,24 @@ static void test_numeric_counts(void **state)
   assert_null(dt_collection_numeric_counts(DT_COLLECTION_NUMERIC_ISO, "mi.id < 0"));
 }
 
+static void test_flag_counts(void **state)
+{
+  int ratings[7], lcp[2];
+  dt_collection_rating_counts("1=1", ratings);
+  int total = 0;
+  for(int i = 0; i < 7; i++) total += ratings[i];
+  assert_int_equal(total, 3);
+
+  // the fixture's images have no local copy
+  dt_collection_local_copy_counts("1=1", lcp);
+  assert_int_equal(lcp[0], 0);
+  assert_int_equal(lcp[1], 3);
+
+  // nothing matches: all zero, not left over from the previous call
+  dt_collection_rating_counts("mi.id < 0", ratings);
+  for(int i = 0; i < 7; i++) assert_int_equal(ratings[i], 0);
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -128,6 +146,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_tags),
     cmocka_unit_test(test_metadata),
     cmocka_unit_test(test_numeric_counts),
+    cmocka_unit_test(test_flag_counts),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }
