@@ -25,6 +25,7 @@
 #include "common/collection.h"
 #include "common/colorlabels.h"
 #include "common/metadata.h"
+#include "common/selection.h"
 #include "common/tags.h"
 
 static void test_colorlabels(void **state)
@@ -135,6 +136,19 @@ static void test_collected_rows(void **state)
   assert_int_equal(dt_collection_imgid_at_rowid(999999), NO_IMGID);
 }
 
+static void test_selected_navigation(void **state)
+{
+  dt_collection_memory_update();
+  dt_selection_set_folder_images(DT_TEST_IMAGES); // the three images, rows 1-3
+  assert_int_equal(dt_collection_selected_rowid_first(), 1);
+  assert_int_equal(dt_collection_selected_rowid_before(3, 1), 2);
+  assert_int_equal(dt_collection_selected_rowid_before(1, 5), -1);
+  assert_int_equal(dt_collection_selected_count_after(1), 2);
+  assert_int_equal(dt_collection_selected_rowid_after(1, 1), 2);
+  assert_int_equal(dt_collection_selected_rowid_after(3, 1), -1);
+  assert_int_equal(dt_collection_count_after(1), 2);
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -144,6 +158,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_list_rows),
     cmocka_unit_test(test_tree_rows),
     cmocka_unit_test(test_collected_rows),
+    cmocka_unit_test(test_selected_navigation),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }
