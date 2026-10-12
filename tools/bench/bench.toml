@@ -1,6 +1,8 @@
-# darktable's jobs on the bench box (mcu, darktable aiball #3887): what each
-# job runs and the rights it requests. The box refuses a job that requests
-# more than the project's ceiling, set by the box admin.
+# darktable's jobs on a bench box (the mcu repository): what each job runs
+# and what it requests: threads (cores), an estimate of its memory, the
+# exclusive resources it needs, network, mounts, a timeout. The box refuses
+# a job that requests more than the project's ceiling, set by its admin,
+# and learns each job's real memory peak.
 containerfile = "tools/bench/image/Containerfile"
 
 [cache]
@@ -8,51 +10,65 @@ build = "the build tree and the installed prefix, kept for incremental builds"
 ccache = "the compiler cache"
 
 [jobs.build]
-class = "correctness"
+cores = 6
+memory = "4g"
 command = "/src/tools/bench/job build"
 mounts = { build = "/build", ccache = "/ccache" }
 timeout = "1h"
 
 [jobs.ctest]
-class = "correctness"
+cores = 2
+memory = "2g"
 command = "/src/tools/bench/job ctest"
 mounts = { build = "/build" }
 timeout = "30m"
 
 # the equivalence and GUI benches compare outputs, not durations, but they
-# diverge under CPU load (late writes), so they run alone like timing jobs
+# diverge under CPU load (late writes): they hold the whole machine
 [jobs.run]
-class = "timing"
+cores = 4
+memory = "3g"
+exclusive = ["machine"]
 command = "/src/tools/bench/job run"
 mounts = { build = "/build" }
 timeout = "20m"
 
 [jobs.gui-labels]
-class = "timing"
+cores = 4
+memory = "3g"
+exclusive = ["machine"]
 command = "/src/tools/bench/job gui-labels"
 mounts = { build = "/build" }
 timeout = "20m"
 
 [jobs.gui-metadata]
-class = "timing"
+cores = 4
+memory = "3g"
+exclusive = ["machine"]
 command = "/src/tools/bench/job gui-metadata"
 mounts = { build = "/build" }
 timeout = "20m"
 
 [jobs.gui-tags]
-class = "timing"
+cores = 4
+memory = "3g"
+exclusive = ["machine"]
 command = "/src/tools/bench/job gui-tags"
 mounts = { build = "/build" }
 timeout = "20m"
 
-# each pixel test already takes every core it is given through OpenMP
+# the pixel suite pins OpenMP to 4 threads (its run script), and its
+# results are compared output against output: it holds the whole machine
 [jobs.pixel]
-class = "timing"
+cores = 4
+memory = "4g"
+exclusive = ["machine"]
 command = "/src/tools/bench/job pixel"
 mounts = { build = "/build" }
 timeout = "2h"
 
 [volumes.darktable-cli]
+cores = 6
 provision = "/src/tools/bench/job install-to /volume"
 mounts = { build = "/build", ccache = "/ccache" }
 timeout = "1h"
