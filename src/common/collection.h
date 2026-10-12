@@ -326,6 +326,11 @@ void dt_collection_rating_counts(const char *where, int counts[7]);
     (counts[1]) */
 void dt_collection_local_copy_counts(const char *where, int counts[2]);
 
+/** among the images matching where that belong to a duplicated file (same
+    film roll and file name), the originals, i.e. the lowest version
+    (counts[0]), and the duplicates (counts[1]) */
+void dt_collection_duplicate_counts(const char *where, int counts[2]);
+
 typedef struct dt_collection_date_count_t
 {
   int64_t value; // a GDateTime-based timestamp, too wide for a double

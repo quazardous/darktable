@@ -205,6 +205,22 @@ static void test_misc_counts(void **state)
   assert_null(dt_collection_misc_counts(DT_COLLECTION_PROP_TAG, "1=1"));
 }
 
+// last in the list: it adds a duplicate, which the totals above do not expect
+static void test_duplicate_counts(void **state)
+{
+  int dups[2];
+  dt_collection_duplicate_counts("1=1", dups);
+  assert_int_equal(dups[0], 0);
+  assert_int_equal(dups[1], 0);
+
+  const dt_imgid_t cr2 = dt_test_catalog_image("mire1.cr2");
+  const dt_imgid_t dup = dt_image_duplicate(cr2);
+  assert_true(dt_is_valid_imgid(dup));
+  dt_collection_duplicate_counts("1=1", dups);
+  assert_int_equal(dups[0], 1);
+  assert_int_equal(dups[1], 1);
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -216,6 +232,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_date_counts),
     cmocka_unit_test(test_filename_counts),
     cmocka_unit_test(test_misc_counts),
+    cmocka_unit_test(test_duplicate_counts),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }

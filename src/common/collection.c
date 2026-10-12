@@ -3645,6 +3645,42 @@ GList *dt_collection_misc_counts(const dt_collection_properties_t prop,
   return g_list_reverse(counts);
 }
 
+void dt_collection_duplicate_counts(const char *where, int counts[2])
+{
+  counts[0] = counts[1] = 0;
+  // clang-format off
+  gchar *query = g_strdup_printf("SELECT CASE "
+                                 "         WHEN dups.min_version = version THEN 0"
+                                 "         ELSE 1"
+                                 "       END AS orig"
+                                 "     , COUNT(*) AS count"
+                                 " FROM main.images AS mi"
+                                 " JOIN ("
+                                 "   SELECT film_id AS f_id"
+                                 "        , filename"
+                                 "        , MIN(version) AS min_version"
+                                 "   FROM main.images"
+                                 "   GROUP BY f_id"
+                                 "          , filename"
+                                 "   HAVING COUNT(*) > 1"
+                                 " ) dups ON mi.film_id = dups.f_id AND mi.filename = dups.filename"
+                                 " WHERE %s"
+                                 " GROUP BY orig"
+                                 " ORDER BY orig ASC",
+                                 where);
+  // clang-format on
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    const int i = sqlite3_column_int(stmt, 0);
+    const int count = sqlite3_column_int(stmt, 1);
+    counts[i] = count;
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent
