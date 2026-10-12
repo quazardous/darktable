@@ -4352,6 +4352,38 @@ GList *dt_collection_tree_rows(const int property, const char *where_ext)
   return g_list_reverse(rows);
 }
 
+dt_imgid_t dt_collection_imgid_at_rowid(const int rowid)
+{
+  dt_imgid_t id = NO_IMGID;
+  sqlite3_stmt *stmt;
+  gchar *query = g_strdup_printf
+    ("SELECT imgid FROM memory.collected_images WHERE rowid=%d", rowid);
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  if(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    id = sqlite3_column_int(stmt, 0);
+  }
+  g_free(query);
+  sqlite3_finalize(stmt);
+  return id;
+}
+
+int dt_collection_rowid_of(const dt_imgid_t imgid, const int none)
+{
+  int id = none;
+  sqlite3_stmt *stmt;
+  gchar *query = g_strdup_printf
+    ("SELECT rowid FROM memory.collected_images WHERE imgid=%d", imgid);
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  if(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    id = sqlite3_column_int(stmt, 0);
+  }
+  g_free(query);
+  sqlite3_finalize(stmt);
+  return id;
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent
