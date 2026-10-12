@@ -347,6 +347,7 @@ typedef struct dt_collection_list_row_t
 {
   char *text;
   int v0;
+  int64_t v0_64; // column 0 as a 64-bit int: a timestamp
   int v1;
   int count;
   int v3;
@@ -363,6 +364,13 @@ GList *dt_collection_list_rows(const int property,
                                const char *where_ext,
                                const gboolean sort_descending,
                                gboolean *has_query);
+
+/** the values of a tree-shaped collection property (folders, tags,
+    geotagging, dates) among the images matching where_ext, with their
+    counts and, for folders, the film roll status in v3; in database order,
+    the collect module sorts them. Free with g_list_free_full(list,
+    dt_collection_list_row_free) */
+GList *dt_collection_tree_rows(const int property, const char *where_ext);
 
 typedef struct dt_collection_date_count_t
 {

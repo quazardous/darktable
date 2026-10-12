@@ -4165,12 +4165,190 @@ GList *dt_collection_list_rows(const int property,
     dt_collection_list_row_t *r = g_new0(dt_collection_list_row_t, 1);
     r->text = g_strdup((const char *)sqlite3_column_text(stmt, 0));
     r->v0 = sqlite3_column_int(stmt, 0);
+    r->v0_64 = sqlite3_column_int64(stmt, 0);
     r->v1 = sqlite3_column_int(stmt, 1);
     r->count = sqlite3_column_int(stmt, 2);
     r->v3 = cols > 3 ? sqlite3_column_int(stmt, 3) : 0;
     rows = g_list_prepend(rows, r);
   }
   sqlite3_finalize(stmt);
+  return g_list_reverse(rows);
+}
+
+GList *dt_collection_tree_rows(const int property, const char *where_ext)
+{
+  gchar *query = NULL;
+  switch(property)
+  {
+    case DT_COLLECTION_PROP_FOLDERS:
+      // clang-format off
+      query = g_strdup_printf
+        ("SELECT folder, film_rolls_id, COUNT(*) AS count, status"
+         " FROM main.images AS mi"
+         " JOIN (SELECT fr.id AS film_rolls_id, folder, status"
+         "       FROM main.film_rolls AS fr"
+         "       JOIN memory.film_folder AS ff"
+         "       ON fr.id = ff.id)"
+         "   ON film_id = film_rolls_id "
+         " WHERE %s"
+         " GROUP BY folder, film_rolls_id", where_ext);
+        // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_TAG:
+    {
+      const gboolean is_insensitive =
+        dt_conf_is_equal("plugins/lighttable/tagging/case_sensitivity", "insensitive");
+
+      if(is_insensitive)
+        // clang-format off
+        query = g_strdup_printf
+          ("SELECT name, 1 AS tagid, SUM(count) AS count"
+           " FROM (SELECT tagid, COUNT(*) as count"
+           "   FROM main.images AS mi"
+           "   JOIN main.tagged_images"
+           "     ON id = imgid "
+           "   WHERE %s"
+           "   GROUP BY tagid)"
+           " JOIN (SELECT lower(name) AS name, id AS tag_id FROM data.tags)"
+           "   ON tagid = tag_id"
+           "   GROUP BY name", where_ext);
+        // clang-format on
+      else
+        // clang-format off
+        query = g_strdup_printf
+          ("SELECT name, tagid, count"
+           " FROM (SELECT tagid, COUNT(*) AS count"
+           "  FROM main.images AS mi"
+           "  JOIN main.tagged_images"
+           "     ON id = imgid "
+           "  WHERE %s"
+           "  GROUP BY tagid)"
+           " JOIN (SELECT name, id AS tag_id FROM data.tags)"
+           "   ON tagid = tag_id"
+           , where_ext);
+        // clang-format on
+
+      // clang-format off
+      dt_util_str_cat
+        (&query, " UNION ALL "
+         "SELECT '%s' AS name, 0 as id, COUNT(*) AS count "
+         "FROM main.images AS mi "
+         "WHERE mi.id NOT IN"
+         "  (SELECT DISTINCT imgid FROM main.tagged_images AS ti"
+         "   WHERE ti.tagid NOT IN memory.darktable_tags)",
+         _("not tagged"));
+      // clang-format on
+    }
+    break;
+
+    case DT_COLLECTION_PROP_GEOTAGGING:
+      // clang-format off
+      query = g_strdup_printf
+        ("SELECT "
+         " CASE WHEN mi.longitude IS NULL"
+         "           OR mi.latitude IS null THEN \'%s\'"
+         "      ELSE CASE WHEN ta.imgid IS NULL THEN \'%s\'"
+         "                ELSE \'%s\' || ta.tagname"
+         "                END"
+         "      END AS name,"
+         " ta.tagid AS tag_id, COUNT(*) AS count"
+         " FROM main.images AS mi"
+         " LEFT JOIN (SELECT imgid, t.id AS tagid, SUBSTR(t.name, %d) AS tagname"
+         "   FROM main.tagged_images AS ti"
+         "   JOIN data.tags AS t"
+         "     ON ti.tagid = t.id"
+         "   JOIN data.locations AS l"
+         "     ON l.tagid = t.id"
+         "   ) AS ta ON ta.imgid = mi.id"
+         " WHERE %s"
+         " GROUP BY name, tag_id",
+         _("not tagged"), _("tagged"), _("tagged"),
+         (int)strlen(dt_map_location_data_tag_root()) + 1, where_ext);
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_DAY:
+      // clang-format off
+      query = g_strdup_printf
+        ("SELECT (datetime_taken / 86400000000) * 86400000000 AS date, 1,"
+         "        COUNT(*) AS count"
+         " FROM main.images AS mi"
+         " WHERE datetime_taken IS NOT NULL AND datetime_taken <> 0"
+         " AND %s"
+         " GROUP BY date", where_ext);
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_MONTH:
+      // clang-format off
+      query = g_strdup_printf
+        ("SELECT CAST(strftime('%%m', datetime_taken / 86400000000.0"
+         "            + julianday('0001-01-01')) AS INTEGER) AS month_num,"
+         "        1, COUNT(*) AS count"
+         " FROM main.images AS mi"
+         " WHERE datetime_taken IS NOT NULL AND datetime_taken <> 0"
+         " AND %s"
+         " GROUP BY month_num"
+         " ORDER BY month_num", where_ext);
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_TIME:
+    case DT_COLLECTION_PROP_IMPORT_TIMESTAMP:
+    case DT_COLLECTION_PROP_CHANGE_TIMESTAMP:
+    case DT_COLLECTION_PROP_EXPORT_TIMESTAMP:
+    case DT_COLLECTION_PROP_PRINT_TIMESTAMP:
+      {
+        const int local_property = property;
+        char *colname = NULL;
+
+      switch(local_property)
+      {
+        case DT_COLLECTION_PROP_TIME:
+          colname = "datetime_taken";
+          break;
+        case DT_COLLECTION_PROP_IMPORT_TIMESTAMP:
+          colname = "import_timestamp";
+          break;
+        case DT_COLLECTION_PROP_CHANGE_TIMESTAMP:
+          colname = "change_timestamp";
+          break;
+        case DT_COLLECTION_PROP_EXPORT_TIMESTAMP:
+          colname = "export_timestamp";
+          break;
+        case DT_COLLECTION_PROP_PRINT_TIMESTAMP:
+          colname = "print_timestamp";
+          break;
+      }
+      // clang-format off
+      query = g_strdup_printf("SELECT %s AS date, 1, COUNT(*) AS count"
+                              " FROM main.images AS mi"
+                              " WHERE %s IS NOT NULL AND %s <> 0"
+                              " AND %s"
+                              " GROUP BY date", colname, colname, colname, where_ext);
+      // clang-format on
+      break;
+      }
+  }
+
+  GList *rows = NULL;
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  const int cols = sqlite3_column_count(stmt);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    dt_collection_list_row_t *r = g_new0(dt_collection_list_row_t, 1);
+    r->text = g_strdup((const char *)sqlite3_column_text(stmt, 0));
+    r->v0 = sqlite3_column_int(stmt, 0);
+    r->v0_64 = sqlite3_column_int64(stmt, 0);
+    r->v1 = sqlite3_column_int(stmt, 1);
+    r->count = sqlite3_column_int(stmt, 2);
+    r->v3 = cols > 3 ? sqlite3_column_int(stmt, 3) : 0;
+    rows = g_list_prepend(rows, r);
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
   return g_list_reverse(rows);
 }
 

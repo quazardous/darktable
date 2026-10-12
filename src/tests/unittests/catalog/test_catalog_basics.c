@@ -242,6 +242,16 @@ static void test_list_rows(void **state)
   g_list_free_full(rows, dt_collection_list_row_free);
 }
 
+static void test_tree_rows(void **state)
+{
+  GList *rows = dt_collection_tree_rows(DT_COLLECTION_PROP_FOLDERS, "1=1");
+  assert_int_equal(g_list_length(rows), 1);
+  const dt_collection_list_row_t *r = rows->data;
+  assert_string_equal(r->text, DT_TEST_IMAGES);
+  assert_int_equal(r->count, 3);
+  g_list_free_full(rows, dt_collection_list_row_free);
+}
+
 // last in the list: it adds a duplicate, which the totals above do not expect
 static void test_duplicate_counts(void **state)
 {
@@ -271,6 +281,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_misc_counts),
     cmocka_unit_test(test_history_state_counts),
     cmocka_unit_test(test_list_rows),
+    cmocka_unit_test(test_tree_rows),
     cmocka_unit_test(test_duplicate_counts),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
