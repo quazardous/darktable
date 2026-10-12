@@ -4668,6 +4668,19 @@ GList *dt_collection_thumb_rows_after(const int rowid, const int limit)
   // clang-format on
 }
 
+GList *dt_collection_thumb_rows_from(const int rowid, const int limit)
+{
+  // clang-format off
+  return _thumb_rows(g_strdup_printf(
+     "SELECT mi.rowid, mi.imgid, si.imgid"
+     " FROM memory.collected_images AS mi"
+     " LEFT JOIN main.selected_images AS si"
+     "   ON mi.imgid = si.imgid"
+     " WHERE mi.rowid>=%d LIMIT %d",
+      rowid, limit));
+  // clang-format on
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

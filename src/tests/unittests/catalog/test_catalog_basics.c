@@ -311,7 +311,8 @@ static void test_selected_navigation(void **state)
   assert_int_equal(dt_collection_selected_imgid_after(second), second);
   assert_int_equal(dt_collection_selected_imgid_before(dt_collection_imgid_at_rowid(1)), NO_IMGID);
 
-  // the thumbtable's loads: before row 3, nearest first; after row 1, in order
+  // the thumbtable's loads: before row 3, nearest first; after row 1, in
+  // order; from row 2 on
   rows = dt_collection_thumb_rows_before(3, 5);
   assert_int_equal(g_list_length(rows), 2);
   assert_int_equal(((dt_collection_culling_row_t *)rows->data)->rowid, 2);
@@ -320,6 +321,11 @@ static void test_selected_navigation(void **state)
   rows = dt_collection_thumb_rows_after(1, 1);
   assert_int_equal(g_list_length(rows), 1);
   assert_int_equal(((dt_collection_culling_row_t *)rows->data)->rowid, 2);
+  g_list_free_full(rows, g_free);
+  rows = dt_collection_thumb_rows_from(2, 5);
+  assert_int_equal(g_list_length(rows), 2);
+  assert_int_equal(((dt_collection_culling_row_t *)rows->data)->rowid, 2);
+  assert_int_equal(((dt_collection_culling_row_t *)g_list_last(rows)->data)->rowid, 3);
   g_list_free_full(rows, g_free);
 }
 

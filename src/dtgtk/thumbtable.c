@@ -2832,7 +2832,6 @@ void dt_thumbtable_full_redraw(dt_thumbtable_t *table,
 
     const double start = dt_get_debug_wtime();
     table->dragging = FALSE;
-    sqlite3_stmt *stmt;
     dt_print(DT_DEBUG_LIGHTTABLE,
              "reload thumbs from db. force=%d w=%d h=%d zoom=%d rows=%d size=%d"
              " offset=%d centering=%d...",
@@ -2945,21 +2944,14 @@ void dt_thumbtable_full_redraw(dt_thumbtable_t *table,
 
     // we add the thumbs
     int nbnew = 0;
-    gchar *query
-        = g_strdup_printf
-      ("SELECT mi.rowid, mi.imgid, si.imgid"
-       " FROM memory.collected_images AS mi"
-       " LEFT JOIN main.selected_images AS si"
-       "   ON mi.imgid = si.imgid"
-       " WHERE mi.rowid>=%d LIMIT %d",
-       offset, table->rows * table->thumbs_per_row - empty_start);
-
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-    while(sqlite3_step(stmt) == SQLITE_ROW)
+    GList *rows = dt_collection_thumb_rows_from
+      (offset, table->rows * table->thumbs_per_row - empty_start);
+    for(const GList *l = rows; l; l = g_list_next(l))
     {
-      const int nrow = sqlite3_column_int(stmt, 0);
-      const int nid = sqlite3_column_int(stmt, 1);
-      const gboolean selected = (nid == sqlite3_column_int(stmt, 2));
+      const dt_collection_culling_row_t *r = l->data;
+      const int nrow = r->rowid;
+      const int nid = r->imgid;
+      const gboolean selected = r->selected;
 
       // first, we search if the thumb is already here
       dt_thumbnail_t *thumb = (dt_thumbnail_t *)g_hash_table_lookup(htable, &nid);
@@ -3052,8 +3044,7 @@ void dt_thumbtable_full_redraw(dt_thumbtable_t *table,
     dt_print(DT_DEBUG_LIGHTTABLE,
              "done in %0.04f sec %d thumbs reloaded",
              dt_get_wtime() - start, nbnew);
-    g_free(query);
-    sqlite3_finalize(stmt);
+    g_list_free_full(rows, g_free);
 
     if(darktable.unmuted & DT_DEBUG_CACHE)
       dt_mipmap_cache_print();
