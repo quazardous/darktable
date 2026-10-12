@@ -131,10 +131,63 @@ static void test_get_versions(void **state)
   g_list_free_full(versions, dt_metadata_version_free);
 }
 
+static void test_distinct_counts(void **state)
+{
+  const dt_imgid_t cr2 = dt_test_catalog_image("mire1.cr2");
+  const dt_imgid_t arw = dt_test_catalog_image("hlrecovery.arw");
+  dt_metadata_set(cr2, "Xmp.dc.title", "shared", FALSE);
+  dt_metadata_set(arw, "Xmp.dc.title", "shared", FALSE);
+  dt_metadata_set(cr2, "Xmp.dc.description", "only cr2", FALSE);
+  dt_metadata_set(arw, "Xmp.dc.description", "", FALSE);
+  gchar *images = _ids(cr2, arw);
+
+  // same film roll, different files and cameras; NONE has no column
+  const dt_image_attr_t attrs[] = { DT_IMAGE_ATTR_FILM, DT_IMAGE_ATTR_FILENAME, DT_IMAGE_ATTR_MAKER,
+                                    DT_IMAGE_ATTR_NONE, DT_IMAGE_ATTR_LOCAL_COPY };
+  int counts[5] = { -1, -1, -1, -1, -1 };
+  assert_true(dt_image_get_distinct_counts(images, attrs, 5, counts));
+  assert_int_equal(counts[0], 1);
+  assert_int_equal(counts[1], 2);
+  assert_int_equal(counts[2], 2);
+  assert_int_equal(counts[3], 2);
+  assert_int_equal(counts[4], 1);
+
+  gchar *one = g_strdup_printf("%d", cr2);
+  assert_true(dt_image_get_distinct_counts(one, attrs, 5, counts));
+  assert_int_equal(counts[1], 1);
+  assert_int_equal(counts[3], 2);
+  g_free(one);
+
+  // metadata, in dt_metadata_get_list() order of the non-internal ones;
+  // an unset value counts as one value
+  int title = -1, desc = -1, n = 0;
+  for(GList *iter = dt_metadata_get_list(); iter; iter = g_list_next(iter))
+  {
+    const dt_metadata_t *m = iter->data;
+    if(m->internal) continue;
+    if(!g_strcmp0(m->tagname, "Xmp.dc.title")) title = n;
+    if(!g_strcmp0(m->tagname, "Xmp.dc.description")) desc = n;
+    n++;
+  }
+  assert_true(title >= 0 && desc >= 0);
+  int *mcounts = g_malloc0(n * sizeof(int));
+  assert_int_equal(dt_metadata_get_distinct_counts(images, mcounts, n), n);
+  assert_int_equal(mcounts[title], 1);
+  assert_int_equal(mcounts[desc], 2);
+
+  // a shorter array gets the first ones only
+  int first = -1;
+  assert_int_equal(dt_metadata_get_distinct_counts(images, &first, 1), 1);
+  assert_int_equal(first, mcounts[0]);
+  g_free(mcounts);
+  g_free(images);
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_get_counts),
+    cmocka_unit_test(test_distinct_counts),
     cmocka_unit_test(test_definition_lifecycle),
     cmocka_unit_test(test_get_versions),
   };

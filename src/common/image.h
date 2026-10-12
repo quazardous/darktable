@@ -442,6 +442,56 @@ void dt_image_cap_thumb_maxmip(const int level);
 /** number of images whose id is returned by the SQL query `images`, and the
  *  first of them in *first (left unchanged when there are none) */
 int dt_image_count_in_query(const char *images, dt_imgid_t *first);
+
+/** image columns whose number of distinct values over a set of images can be
+ *  counted, e.g. to show "various values" for a selection */
+typedef enum dt_image_attr_t
+{
+  DT_IMAGE_ATTR_NONE = 0, // no column: counted as 2, always different
+  DT_IMAGE_ATTR_FILM,
+  DT_IMAGE_ATTR_GROUP,
+  DT_IMAGE_ATTR_FILENAME,
+  DT_IMAGE_ATTR_VERSION,
+  DT_IMAGE_ATTR_PATH,
+  DT_IMAGE_ATTR_LOCAL_COPY,
+  DT_IMAGE_ATTR_IMPORT_TIMESTAMP,
+  DT_IMAGE_ATTR_CHANGE_TIMESTAMP,
+  DT_IMAGE_ATTR_EXPORT_TIMESTAMP,
+  DT_IMAGE_ATTR_PRINT_TIMESTAMP,
+  DT_IMAGE_ATTR_FLAGS,
+  DT_IMAGE_ATTR_MODEL,
+  DT_IMAGE_ATTR_MAKER,
+  DT_IMAGE_ATTR_LENS,
+  DT_IMAGE_ATTR_APERTURE,
+  DT_IMAGE_ATTR_EXPOSURE,
+  DT_IMAGE_ATTR_EXPOSURE_BIAS,
+  DT_IMAGE_ATTR_EXPOSURE_PROGRAM,
+  DT_IMAGE_ATTR_WHITEBALANCE,
+  DT_IMAGE_ATTR_FLASH,
+  DT_IMAGE_ATTR_METERING_MODE,
+  DT_IMAGE_ATTR_FOCAL_LENGTH,
+  DT_IMAGE_ATTR_FOCAL_LENGTH_AND_CROP, // distinct focal lengths + distinct crops
+  DT_IMAGE_ATTR_CROP,
+  DT_IMAGE_ATTR_FOCUS_DISTANCE,
+  DT_IMAGE_ATTR_ISO,
+  DT_IMAGE_ATTR_DATETIME,
+  DT_IMAGE_ATTR_WIDTH,
+  DT_IMAGE_ATTR_HEIGHT,
+  DT_IMAGE_ATTR_OUTPUT_WIDTH,
+  DT_IMAGE_ATTR_OUTPUT_HEIGHT,
+  DT_IMAGE_ATTR_LATITUDE,
+  DT_IMAGE_ATTR_LONGITUDE,
+  DT_IMAGE_ATTR_ALTITUDE,
+  DT_IMAGE_ATTR_LAST
+} dt_image_attr_t;
+
+/** number of distinct values of each of the n attributes over the images
+ *  whose id is returned by the SQL query `images`, in counts[]; FALSE, counts
+ *  untouched, when the query returns no row */
+gboolean dt_image_get_distinct_counts(const char *images,
+                                      const dt_image_attr_t *attrs,
+                                      const int n,
+                                      int *counts);
 /** history_end of an image in *history_end; FALSE, *history_end untouched,
  *  when the image is missing or has none */
 gboolean dt_image_get_history_end(const dt_imgid_t imgid, int *history_end);

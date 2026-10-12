@@ -139,6 +139,12 @@ GList *dt_metadata_get_list_id(const dt_imgid_t imgid); // libs/image.c
     as dt_metadata_count_t, each with the number of images holding it.
     Free with g_list_free_full(list, dt_metadata_count_free). */
 GList *dt_metadata_get_counts(const char *images); // libs/metadata.c
+
+/** number of distinct values (an unset one counting as one) of each
+    non-internal metadata, in dt_metadata_get_list() order, over the images
+    whose id is returned by the SQL query `images`: at most n of them in
+    counts[]. Returns how many were filled. */
+int dt_metadata_get_distinct_counts(const char *images, int *counts, const int n);
 void dt_metadata_count_free(gpointer data);
 
 /** Get all versions of an image, by version, as dt_metadata_version_t.

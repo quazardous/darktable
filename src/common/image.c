@@ -534,6 +534,72 @@ int dt_image_count_in_query(const char *images, dt_imgid_t *first)
   return count;
 }
 
+// the column expression of each dt_image_attr_t, in enum order
+static const char *_image_attr_expr[DT_IMAGE_ATTR_LAST] =
+{
+  [DT_IMAGE_ATTR_NONE] = "2",
+  [DT_IMAGE_ATTR_FILM] = "COUNT(DISTINCT film_id)",
+  [DT_IMAGE_ATTR_GROUP] = "COUNT(DISTINCT group_id)",
+  [DT_IMAGE_ATTR_FILENAME] = "COUNT(DISTINCT filename)",
+  [DT_IMAGE_ATTR_VERSION] = "COUNT(DISTINCT version)",
+  [DT_IMAGE_ATTR_PATH] = "COUNT(DISTINCT film_id || '/' || filename)",
+  [DT_IMAGE_ATTR_LOCAL_COPY] = "COUNT(DISTINCT flags & 2048)",
+  [DT_IMAGE_ATTR_IMPORT_TIMESTAMP] = "COUNT(DISTINCT import_timestamp)",
+  [DT_IMAGE_ATTR_CHANGE_TIMESTAMP] = "COUNT(DISTINCT change_timestamp)",
+  [DT_IMAGE_ATTR_EXPORT_TIMESTAMP] = "COUNT(DISTINCT export_timestamp)",
+  [DT_IMAGE_ATTR_PRINT_TIMESTAMP] = "COUNT(DISTINCT print_timestamp)",
+  [DT_IMAGE_ATTR_FLAGS] = "COUNT(DISTINCT flags)",
+  [DT_IMAGE_ATTR_MODEL] = "COUNT(DISTINCT model_id)",
+  [DT_IMAGE_ATTR_MAKER] = "COUNT(DISTINCT maker_id)",
+  [DT_IMAGE_ATTR_LENS] = "COUNT(DISTINCT lens_id)",
+  [DT_IMAGE_ATTR_APERTURE] = "COUNT(DISTINCT aperture)",
+  [DT_IMAGE_ATTR_EXPOSURE] = "COUNT(DISTINCT exposure)",
+  [DT_IMAGE_ATTR_EXPOSURE_BIAS] = "COUNT(DISTINCT IFNULL(exposure_bias, ''))",
+  [DT_IMAGE_ATTR_EXPOSURE_PROGRAM] = "COUNT(DISTINCT IFNULL(exposure_program_id, ''))",
+  [DT_IMAGE_ATTR_WHITEBALANCE] = "COUNT(DISTINCT IFNULL(whitebalance_id, ''))",
+  [DT_IMAGE_ATTR_FLASH] = "COUNT(DISTINCT IFNULL(flash_id, ''))",
+  [DT_IMAGE_ATTR_METERING_MODE] = "COUNT(DISTINCT IFNULL(metering_mode_id, ''))",
+  [DT_IMAGE_ATTR_FOCAL_LENGTH] = "COUNT(DISTINCT focal_length)",
+  [DT_IMAGE_ATTR_FOCAL_LENGTH_AND_CROP] = "COUNT(DISTINCT focal_length) + COUNT(DISTINCT crop)",
+  [DT_IMAGE_ATTR_CROP] = "COUNT(DISTINCT crop)",
+  [DT_IMAGE_ATTR_FOCUS_DISTANCE] = "COUNT(DISTINCT focus_distance)",
+  [DT_IMAGE_ATTR_ISO] = "COUNT(DISTINCT iso)",
+  [DT_IMAGE_ATTR_DATETIME] = "COUNT(DISTINCT datetime_taken)",
+  [DT_IMAGE_ATTR_WIDTH] = "COUNT(DISTINCT width)",
+  [DT_IMAGE_ATTR_HEIGHT] = "COUNT(DISTINCT height)",
+  [DT_IMAGE_ATTR_OUTPUT_WIDTH] = "COUNT(DISTINCT IFNULL(output_width, ''))",
+  [DT_IMAGE_ATTR_OUTPUT_HEIGHT] = "COUNT(DISTINCT IFNULL(output_height, ''))",
+  [DT_IMAGE_ATTR_LATITUDE] = "COUNT(DISTINCT IFNULL(latitude, ''))",
+  [DT_IMAGE_ATTR_LONGITUDE] = "COUNT(DISTINCT IFNULL(longitude, ''))",
+  [DT_IMAGE_ATTR_ALTITUDE] = "COUNT(DISTINCT IFNULL(altitude, ''))",
+};
+
+gboolean dt_image_get_distinct_counts(const char *images,
+                                      const dt_image_attr_t *attrs,
+                                      const int n,
+                                      int *counts)
+{
+  if(n <= 0) return FALSE;
+
+  gchar *columns = NULL;
+  for(int i = 0; i < n; i++)
+    dt_util_str_cat(&columns, "%s%s", i ? ", " : "", _image_attr_expr[attrs[i]]);
+
+  gchar *query = g_strdup_printf("SELECT %s FROM main.images WHERE id IN (%s)", columns, images);
+  g_free(columns);
+
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  g_free(query);
+
+  const gboolean found = sqlite3_step(stmt) == SQLITE_ROW;
+  if(found)
+    for(int i = 0; i < n; i++)
+      counts[i] = sqlite3_column_int(stmt, i);
+  sqlite3_finalize(stmt);
+  return found;
+}
+
 gboolean dt_image_get_history_end(const dt_imgid_t imgid, int *history_end)
 {
   gboolean found = FALSE;
