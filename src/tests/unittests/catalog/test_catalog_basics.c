@@ -123,6 +123,18 @@ static void test_tree_rows(void **state)
   g_list_free_full(rows, dt_collection_list_row_free);
 }
 
+static void test_collected_rows(void **state)
+{
+  dt_collection_memory_update();
+  const dt_imgid_t first = dt_collection_imgid_at_rowid(1);
+  assert_true(dt_is_valid_imgid(first));
+  assert_int_equal(dt_collection_rowid_of(first, -1), 1);
+  // not in the collection: the caller's "none"
+  assert_int_equal(dt_collection_rowid_of(999999, -1), -1);
+  assert_int_equal(dt_collection_rowid_of(999999, NO_IMGID), NO_IMGID);
+  assert_int_equal(dt_collection_imgid_at_rowid(999999), NO_IMGID);
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -131,6 +143,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_metadata),
     cmocka_unit_test(test_list_rows),
     cmocka_unit_test(test_tree_rows),
+    cmocka_unit_test(test_collected_rows),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }

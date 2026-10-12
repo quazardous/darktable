@@ -53,38 +53,12 @@ static void _list_remove_thumb(gpointer user_data)
 // get imgid from rowid
 static dt_imgid_t _thumb_get_imgid(const int rowid)
 {
-  dt_imgid_t id = NO_IMGID;
-  sqlite3_stmt *stmt;
-  gchar *query = g_strdup_printf
-    ("SELECT imgid"
-     " FROM memory.collected_images"
-     " WHERE rowid=%d", rowid);
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    id = sqlite3_column_int(stmt, 0);
-  }
-  g_free(query);
-  sqlite3_finalize(stmt);
-  return id;
+  return dt_collection_imgid_at_rowid(rowid);
 }
 // get rowid from imgid
 static int _thumb_get_rowid(const dt_imgid_t imgid)
 {
-  dt_imgid_t id = NO_IMGID;
-  sqlite3_stmt *stmt;
-  gchar *query = g_strdup_printf
-    ("SELECT rowid"
-     " FROM memory.collected_images"
-     " WHERE imgid=%d", imgid);
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    id = sqlite3_column_int(stmt, 0);
-  }
-  g_free(query);
-  sqlite3_finalize(stmt);
-  return id;
+  return dt_collection_rowid_of(imgid, NO_IMGID);
 }
 
 // compute thumb_size, thumbs_per_row and rows for the current widget size

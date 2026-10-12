@@ -321,6 +321,12 @@ GList *dt_collection_list_rows(const int property,
     dt_collection_list_row_free) */
 GList *dt_collection_tree_rows(const int property, const char *where_ext);
 
+/** the image at a row of memory.collected_images, NO_IMGID when none */
+dt_imgid_t dt_collection_imgid_at_rowid(const int rowid);
+/** the row of an image in memory.collected_images, none when it is not in
+    the collection */
+int dt_collection_rowid_of(const dt_imgid_t imgid, const int none);
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent
