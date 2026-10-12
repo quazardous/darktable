@@ -44,8 +44,13 @@ settled_shot() {
     sleep 2
     shot=$(ctl shot --name "$name-$SECONDS" | python3 -I -c 'import json,sys; print(json.load(sys.stdin)["path"])')
     if [ -n "$prev" ] && cmp -s "$prev" "$shot"; then
-      mask_version "$shot" "$file"
-      echo ok
+      # inside $(...), set -e does not stop on a failed step: check it, or
+      # a bench that saved nothing reports ok (no Pillow in an image did)
+      if mask_version "$shot" "$file" && [ -s "$file" ]; then
+        echo ok
+      else
+        echo "could not save $file"
+      fi
       return
     fi
     prev="$shot"
