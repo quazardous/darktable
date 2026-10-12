@@ -41,6 +41,10 @@ case "${1:-}" in
   gui-labels) need_build; "$bench/gui_labels.sh" /out/gui-labels "$prefix" ;;
   gui-metadata) need_build; "$bench/gui_metadata.sh" /out/gui-metadata "$prefix" ;;
   gui-tags) need_build; "$bench/gui_tags.sh" /out/gui-tags "$prefix" ;;
+  # catalog timings on a synthetic 100,000-image library (darktable #3741);
+  # the library lives in the perf cache, built once with fresh statistics
+  perf) need_build
+         HELIOS_BENCH_WORK=/perf/work "$bench/perf.sh" /out/perf "${PERF_RUNS:-3}" "$prefix" ;;
   pixel) need_build
          HELIOS_KEEP_OUTPUTS=/out/pixel-outputs "$bench/integration.sh" "$prefix" /out/pixel.log ;;
   # the fast subset; fails only on a failure outside the known list of a

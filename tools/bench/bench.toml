@@ -8,6 +8,7 @@ containerfile = "tools/bench/image/Containerfile"
 [cache]
 build = "the build tree and the installed prefix, kept for incremental builds"
 ccache = "the compiler cache"
+perf = "the perf bench's synthetic 100,000-image library, built once"
 
 [jobs.build]
 cores = 6
@@ -83,3 +84,12 @@ timeout = "1h"
 [volumes.darktable-tests]
 provision = "tar -C /src/src/tests/integration --exclude=.git --exclude=.venv -cf - . | tar -C /volume -xf -"
 timeout = "20m"
+
+# timings: alone on the machine
+[jobs.perf]
+cores = 4
+memory = "4g"
+exclusive = ["machine"]
+command = "/src/tools/bench/job perf"
+mounts = { build = "/build", perf = "/perf" }
+timeout = "2h"
