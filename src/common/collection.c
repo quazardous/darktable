@@ -3538,6 +3538,72 @@ GArray *dt_collection_capture_rows_after(const GTimeSpan after)
   return rows;
 }
 
+int dt_collection_geo_bounds(const gboolean selected_only,
+                             double *min_lat,
+                             double *max_lat,
+                             double *min_lon,
+                             double *max_lon)
+{
+  int count = 0;
+  // clang-format off
+  gchar *query = g_strdup_printf("SELECT MIN(latitude), MAX(latitude),"
+                                "       MIN(longitude), MAX(longitude), COUNT(*)"
+                                " FROM main.images AS i "
+                                " JOIN %s AS l ON l.imgid = i.id "
+                                " WHERE latitude NOT NULL AND longitude NOT NULL",
+                                selected_only ? "main.selected_images" : "memory.collected_images");
+  // clang-format on
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  if(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    *min_lat = sqlite3_column_double(stmt, 0);
+    *max_lat = sqlite3_column_double(stmt, 1);
+    *min_lon = sqlite3_column_double(stmt, 2);
+    *max_lon = sqlite3_column_double(stmt, 3);
+    count = sqlite3_column_int(stmt, 4);
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+  return count;
+}
+
+GArray *dt_collection_geo_points(const gboolean collected_only,
+                                 const double lon1,
+                                 const double lon2,
+                                 const double lat1,
+                                 const double lat2)
+{
+  GArray *points = g_array_new(FALSE, FALSE, sizeof(dt_collection_geo_point_t));
+  // clang-format off
+  gchar *query =
+    g_strdup_printf("SELECT * FROM"
+                    " (SELECT id, longitude, latitude "
+                    "   FROM %s WHERE longitude >= ?1 AND longitude <= ?2"
+                    "           AND latitude <= ?3 AND latitude >= ?4 "
+                    "           AND longitude NOT NULL AND latitude NOT NULL)",
+                    collected_only
+                    ? "main.images i INNER JOIN memory.collected_images c ON i.id = c.imgid"
+                    : "main.images");
+  // clang-format on
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  DT_DEBUG_SQLITE3_BIND_DOUBLE(stmt, 1, lon1);
+  DT_DEBUG_SQLITE3_BIND_DOUBLE(stmt, 2, lon2);
+  DT_DEBUG_SQLITE3_BIND_DOUBLE(stmt, 3, lat1);
+  DT_DEBUG_SQLITE3_BIND_DOUBLE(stmt, 4, lat2);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    const dt_collection_geo_point_t p = { sqlite3_column_int(stmt, 0),
+                                          sqlite3_column_double(stmt, 1),
+                                          sqlite3_column_double(stmt, 2) };
+    g_array_append_val(points, p);
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+  return points;
+}
+
 void dt_collection_text_count_free(gpointer data)
 {
   dt_collection_text_count_t *c = data;

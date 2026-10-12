@@ -453,6 +453,31 @@ typedef struct dt_collection_capture_row_t
     is collected. Free with g_array_free(rows, TRUE) */
 GArray *dt_collection_capture_rows_after(const GTimeSpan after);
 
+/** latitude and longitude bounds of the geotagged images among the
+    selected ones, or the collected ones; returns how many there are, and
+    leaves the bounds unset when the query fails */
+int dt_collection_geo_bounds(const gboolean selected_only,
+                             double *min_lat,
+                             double *max_lat,
+                             double *min_lon,
+                             double *max_lon);
+
+typedef struct dt_collection_geo_point_t
+{
+  dt_imgid_t imgid;
+  double longitude;
+  double latitude;
+} dt_collection_geo_point_t;
+
+/** the geotagged images, all of them or the collected ones only, with
+    longitude in [lon1, lon2] and latitude in [lat2, lat1], in no given
+    order. Free with g_array_free(points, TRUE) */
+GArray *dt_collection_geo_points(const gboolean collected_only,
+                                 const double lon1,
+                                 const double lon2,
+                                 const double lat1,
+                                 const double lat2);
+
 typedef struct dt_collection_date_count_t
 {
   int64_t value; // a GDateTime-based timestamp, too wide for a double

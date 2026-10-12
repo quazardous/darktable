@@ -283,6 +283,16 @@ static void test_collected_rows(void **state)
   rows = dt_collection_capture_rows_after(max);
   assert_int_equal(rows->len, 0);
   g_array_free(rows, TRUE);
+
+  // the map: points over the whole world are the geotagged collected images
+  double lat0 = 0.0, lat1 = 0.0, lon0 = 0.0, lon1 = 0.0;
+  const int geotagged = dt_collection_geo_bounds(FALSE, &lat0, &lat1, &lon0, &lon1);
+  GArray *points = dt_collection_geo_points(TRUE, -180.0, 180.0, 90.0, -90.0);
+  assert_int_equal(points->len, geotagged);
+  g_array_free(points, TRUE);
+  points = dt_collection_geo_points(FALSE, -180.0, 180.0, 90.0, -90.0);
+  assert_int_equal(points->len, geotagged);
+  g_array_free(points, TRUE);
 }
 
 static void test_selected_navigation(void **state)
