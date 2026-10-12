@@ -61,8 +61,8 @@ def main():
             id=imgid, group_id=group, film_id=film,
             filename=f"img-{group:06d}.cr2", version=1 if duplicate else 0,
             max_version=0, position=imgid << 32,
-            # no capture date: the lighttable timeline is quadratic in the
-            # collection size (darktable #3715) and skips undated images
+            # no capture date: the lighttable timeline skips undated images,
+            # which keeps it out of the measurements (timeline.sh dates them)
             datetime_taken=None,
             history_end=0)
         rating = rng.choice((0, 1, 1, 2, 3, 3, 4, 5))
@@ -85,6 +85,12 @@ def main():
     db.executemany("INSERT INTO main.color_labels (imgid, color) VALUES (?, ?)", labels)
     db.executemany("INSERT INTO main.tagged_images (imgid, tagid, position) VALUES (?, ?, ?)", tagged)
     db.executemany("INSERT INTO main.meta_data (id, key, value) VALUES (?, ?, ?)", meta)
+    db.commit()
+    # the template library's sqlite_stat1 describes a handful of images; left
+    # stale, it makes SQLite skip the automatic indexes darktable's joins rely
+    # on (the timeline query goes quadratic, darktable #3715), which a real
+    # library avoids through darktable's ANALYZE and PRAGMA optimize
+    db.execute("ANALYZE")
     db.commit()
     print(f"{count} images, {films} film rolls, {len(labels)} labels, "
           f"{len(tagged)} tag links, {len(meta)} titles")
