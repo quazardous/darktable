@@ -50,6 +50,15 @@ TABLE_RE = re.compile(r'\b(?:(main|data|memory)\.)?(' + '|'.join(sorted(DOMAINS,
 # where SQL may live once phase 0 step A is done
 ALLOWED_PREFIXES = ('common/', 'tests/')
 
+# external interface layers that keep their own SQL on purpose, with why
+# (darktable #3841): not step A, not reported by --check
+INTERFACE_PREFIXES = {
+  'mcp/': 'the MCP bridge takes its sqlite3 handle as a parameter so that '
+          'test_mcp_paths.c can run it on an injected minimal database, and '
+          'checks that no database reads as "developed" (the --read-only '
+          'rollback guarantee); common/ always reads darktable.db',
+}
+
 def layer_of(rel):
   if rel == 'common/database.c':
     return 'schema'
@@ -60,6 +69,8 @@ def step_of(rel):
     return 'backend'          # schema/migrations: stay in the sqlite backend as is
   if rel.startswith(ALLOWED_PREFIXES):
     return 'B'                # already in common/: move behind the SDK interface
+  if rel.startswith(tuple(INTERFACE_PREFIXES)):
+    return 'interface'        # kept where it is, see INTERFACE_PREFIXES
   return 'A'                  # GUI/lua/develop/...: move into common/ domain functions
 
 def enclosing_function(lines, idx):
@@ -164,7 +175,13 @@ def markdown(sites, trig):
   md += ['', '## Step A sites (outside common/)', '', '| file:line | function | domains | ops |', '|---|---|---|---|']
   md += [f'| `{s["file"]}:{s["line"]}` | `{s["function"]}` | {", ".join(s["domains"])} | {" ".join(s["ops"])} |'
          for s in sites if s['step'] == 'A']
-  return '\n'.join(md) + '\n'
+  md += ['', '## Interface layers (SQL kept outside common/ on purpose)', '']
+  for prefix, why in INTERFACE_PREFIXES.items():
+    md += [f'`{prefix}`: {why}.', '', '| file:line | function | domains | ops |', '|---|---|---|---|']
+    md += [f'| `{s["file"]}:{s["line"]}` | `{s["function"]}` | {", ".join(s["domains"])} | {" ".join(s["ops"])} |'
+           for s in sites if s['step'] == 'interface' and s['file'].startswith(prefix)]
+    md.append('')
+  return '\n'.join(md).rstrip('\n') + '\n'
 
 def main():
   ap = argparse.ArgumentParser()
