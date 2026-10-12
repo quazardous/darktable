@@ -25,6 +25,7 @@
 #include "common/collection.h"
 #include "common/colorlabels.h"
 #include "common/image.h"
+#include "common/iop_order.h"
 #include "common/metadata.h"
 #include "common/tags.h"
 
@@ -205,6 +206,19 @@ static void test_misc_counts(void **state)
   assert_null(dt_collection_misc_counts(DT_COLLECTION_PROP_TAG, "1=1"));
 }
 
+static void test_history_state_counts(void **state)
+{
+  int hist[3];
+  dt_collection_history_counts("1=1", hist);
+  assert_int_equal(hist[0] + hist[1] + hist[2], 3);
+
+  int orders[DT_IOP_ORDER_LAST + 1];
+  dt_collection_module_order_counts("1=1", orders);
+  int total = 0;
+  for(int i = 0; i <= DT_IOP_ORDER_LAST; i++) total += orders[i];
+  assert_int_equal(total, 3);
+}
+
 // last in the list: it adds a duplicate, which the totals above do not expect
 static void test_duplicate_counts(void **state)
 {
@@ -232,6 +246,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_date_counts),
     cmocka_unit_test(test_filename_counts),
     cmocka_unit_test(test_misc_counts),
+    cmocka_unit_test(test_history_state_counts),
     cmocka_unit_test(test_duplicate_counts),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);

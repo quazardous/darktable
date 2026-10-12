@@ -331,6 +331,15 @@ void dt_collection_local_copy_counts(const char *where, int counts[2]);
     (counts[0]), and the duplicates (counts[1]) */
 void dt_collection_duplicate_counts(const char *where, int counts[2]);
 
+/** the images matching where counted by history state: counts[0] basic
+    (or no history hash), counts[1] auto-applied only, counts[2] altered */
+void dt_collection_history_counts(const char *where, int counts[3]);
+
+/** the images matching where counted per module order version
+    (dt_iop_order_t), counts[DT_IOP_ORDER_LAST] for those without one;
+    counts must hold DT_IOP_ORDER_LAST + 1 ints */
+void dt_collection_module_order_counts(const char *where, int *counts);
+
 typedef struct dt_collection_date_count_t
 {
   int64_t value; // a GDateTime-based timestamp, too wide for a double

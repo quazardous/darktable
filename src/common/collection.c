@@ -17,6 +17,7 @@
 */
 
 #include "common/collection.h"
+#include "common/iop_order.h"
 #include "common/debug.h"
 #include "common/image.h"
 #include "common/image_cache.h"
@@ -3676,6 +3677,62 @@ void dt_collection_duplicate_counts(const char *where, int counts[2])
     const int i = sqlite3_column_int(stmt, 0);
     const int count = sqlite3_column_int(stmt, 1);
     counts[i] = count;
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+}
+
+void dt_collection_history_counts(const char *where, int counts[3])
+{
+  counts[0] = counts[1] = counts[2] = 0;
+  // clang-format off
+  gchar *query = g_strdup_printf("SELECT CASE"
+                                 "       WHEN basic_hash == current_hash THEN 0"
+                                 "       WHEN auto_hash == current_hash THEN 1"
+                                 "       WHEN current_hash IS NOT NULL THEN 2"
+                                 "       ELSE 0"
+                                 "     END as altered, COUNT(*) AS count"
+                                 " FROM main.images AS mi"
+                                 " LEFT JOIN (SELECT DISTINCT imgid, basic_hash, auto_hash, current_hash"
+                                 "            FROM main.history_hash) ON id = imgid"
+                                 " WHERE %s"
+                                 " GROUP BY altered"
+                                 " ORDER BY altered ASC",
+                                 where);
+  // clang-format on
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    const int i = sqlite3_column_int(stmt, 0);
+    const int count = sqlite3_column_int(stmt, 1);
+    counts[i] = count;
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+}
+
+void dt_collection_module_order_counts(const char *where, int *counts)
+{
+  memset(counts, 0, (DT_IOP_ORDER_LAST + 1) * sizeof(int));
+  // clang-format off
+  gchar *query = g_strdup_printf("SELECT mo.version, COUNT(*) "
+                                 " FROM main.images as mi"
+                                 " LEFT JOIN (SELECT imgid, version FROM main.module_order) AS mo"
+                                 " ON mo.imgid = mi.id"
+                                 " WHERE %s"
+                                 " GROUP BY mo.version",
+                                 where);
+  // clang-format on
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    const int count = sqlite3_column_int(stmt, 1);
+    const int v = (sqlite3_column_bytes(stmt, 0) == 0) ? DT_IOP_ORDER_LAST : sqlite3_column_int(stmt, 0);
+    // a version from a newer darktable, or a damaged row, would write past
+    // the array
+    if(v >= 0 && v <= DT_IOP_ORDER_LAST) counts[v] = count;
   }
   sqlite3_finalize(stmt);
   g_free(query);

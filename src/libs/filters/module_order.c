@@ -106,27 +106,8 @@ static gboolean _module_order_update(dt_lib_filtering_rule_t *rule)
 
   rule->manual_widget_set++;
   _widgets_module_order_t *module_order = (_widgets_module_order_t *)rule->w_specific;
-  char query[1024] = { 0 };
-  // clang-format off
-  g_snprintf(query, sizeof(query),
-                   "SELECT mo.version, COUNT(*) "
-                   " FROM main.images as mi"
-                   " LEFT JOIN (SELECT imgid, version FROM main.module_order) AS mo"
-                   " ON mo.imgid = mi.id"
-                   " WHERE %s"
-                   " GROUP BY mo.version",
-                   rule->lib->last_where_ext);
-  // clang-format on
   int counts[DT_IOP_ORDER_LAST + 1] = { 0 };
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-  while(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    const int count = sqlite3_column_int(stmt, 1);
-    const int v = (sqlite3_column_bytes(stmt, 0) == 0) ? DT_IOP_ORDER_LAST : sqlite3_column_int(stmt, 0);
-    counts[v] = count;
-  }
-  sqlite3_finalize(stmt);
+  dt_collection_module_order_counts(rule->lib->last_where_ext, counts);
 
   for(int i = 0; i < DT_IOP_ORDER_LAST + 1; i++)
   {
