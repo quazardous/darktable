@@ -22,6 +22,7 @@
 #include <cmocka.h>
 
 #include "catalog_fixture.h"
+#include "common/collection.h"
 #include "common/colorlabels.h"
 #include "common/metadata.h"
 #include "common/tags.h"
@@ -89,12 +90,44 @@ static void test_metadata(void **state)
   g_list_free_full(res, g_free);
 }
 
+static void test_numeric_counts(void **state)
+{
+  // every image (the three the fixture imports), per numeric property
+  for(dt_collection_numeric_t prop = DT_COLLECTION_NUMERIC_APERTURE;
+      prop <= DT_COLLECTION_NUMERIC_ASPECT_RATIO; prop++)
+  {
+    GList *counts = dt_collection_numeric_counts(prop, "1=1");
+    int total = 0;
+    for(GList *l = counts; l; l = g_list_next(l))
+      total += ((dt_collection_count_t *)l->data)->count;
+    assert_int_equal(total, 3);
+    g_list_free_full(counts, g_free);
+
+    double min = -1000.0, max = -1000.0;
+    assert_true(dt_collection_numeric_range(prop, &min, &max));
+    assert_true(min <= max);
+  }
+
+  // values come rounded as the filter shows them: ISO to whole numbers
+  GList *iso = dt_collection_numeric_counts(DT_COLLECTION_NUMERIC_ISO, "1=1");
+  for(GList *l = iso; l; l = g_list_next(l))
+  {
+    const double v = ((dt_collection_count_t *)l->data)->value;
+    assert_true(v == (double)(long)v);
+  }
+  g_list_free_full(iso, g_free);
+
+  // a rule nothing matches gives no counts
+  assert_null(dt_collection_numeric_counts(DT_COLLECTION_NUMERIC_ISO, "mi.id < 0"));
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_colorlabels),
     cmocka_unit_test(test_tags),
     cmocka_unit_test(test_metadata),
+    cmocka_unit_test(test_numeric_counts),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }

@@ -34,37 +34,26 @@ static gboolean _ratio_update(dt_lib_filtering_rule_t *rule)
 
   rule->manual_widget_set++;
   // first, we update the graph
-  char query[1024] = { 0 };
-  // clang-format off
-  g_snprintf(query, sizeof(query),
-             "SELECT ROUND(aspect_ratio,2), COUNT(*) AS count"
-             " FROM main.images AS mi"
-             " WHERE %s"
-             " GROUP BY ROUND(aspect_ratio,2)",
-             d->last_where_ext);
-  // clang-format on
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  GList *counts = dt_collection_numeric_counts(DT_COLLECTION_NUMERIC_ASPECT_RATIO, d->last_where_ext);
   int nb_portrait = 0;
   int nb_square = 0;
   int nb_landscape = 0;
   dtgtk_range_select_reset_blocks(range);
   if(rangetop) dtgtk_range_select_reset_blocks(rangetop);
-  while(sqlite3_step(stmt) == SQLITE_ROW)
+  for(GList *l = counts; l; l = g_list_next(l))
   {
-    const double val = sqlite3_column_double(stmt, 0);
-    const int count = sqlite3_column_int(stmt, 1);
-    if(val < 1.0)
-      nb_portrait += count;
-    else if(val > 1.0)
-      nb_landscape += count;
+    const dt_collection_count_t *c = l->data;
+    if(c->value < 1.0)
+      nb_portrait += c->count;
+    else if(c->value > 1.0)
+      nb_landscape += c->count;
     else
-      nb_square += count;
+      nb_square += c->count;
 
-    dtgtk_range_select_add_block(range, val, count);
-    if(rangetop) dtgtk_range_select_add_block(rangetop, val, count);
+    dtgtk_range_select_add_block(range, c->value, c->count);
+    if(rangetop) dtgtk_range_select_add_block(rangetop, c->value, c->count);
   }
-  sqlite3_finalize(stmt);
+  g_list_free_full(counts, g_free);
 
   // predefined selections
   dtgtk_range_select_add_range_block(range, 1.0, 1.0, DT_RANGE_BOUND_MIN | DT_RANGE_BOUND_MAX, _("all images"),
@@ -141,22 +130,9 @@ static void _ratio_widget_init(dt_lib_filtering_rule_t *rule, const dt_collectio
   dtgtk_range_select_add_marker(range, 1.0, TRUE);
   range->print = _ratio_print_func;
 
-  char query[1024] = { 0 };
-  // clang-format off
-  g_snprintf(query, sizeof(query),
-             "SELECT MIN(aspect_ratio), MAX(aspect_ratio)"
-             " FROM main.images");
-  // clang-format on
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
   double min = 0.0;
   double max = 4.0;
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    min = sqlite3_column_double(stmt, 0);
-    max = sqlite3_column_double(stmt, 1);
-  }
-  sqlite3_finalize(stmt);
+  dt_collection_numeric_range(DT_COLLECTION_NUMERIC_ASPECT_RATIO, &min, &max);
   range->min_r = min;
   range->max_r = max;
 

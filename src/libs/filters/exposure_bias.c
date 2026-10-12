@@ -34,27 +34,16 @@ static gboolean _exposure_bias_update(dt_lib_filtering_rule_t *rule)
 
   rule->manual_widget_set++;
   // first, we update the graph
-  char query[1024] = { 0 };
-  // clang-format off
-  g_snprintf(query, sizeof(query),
-             "SELECT ROUND(exposure_bias,2), COUNT(*) AS count"
-             " FROM main.images AS mi"
-             " WHERE %s"
-             " GROUP BY ROUND(exposure_bias,2)",
-             d->last_where_ext);
-  // clang-format on
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  GList *counts = dt_collection_numeric_counts(DT_COLLECTION_NUMERIC_EXPOSURE_BIAS, d->last_where_ext);
   dtgtk_range_select_reset_blocks(range);
   if(rangetop) dtgtk_range_select_reset_blocks(rangetop);
-  while(sqlite3_step(stmt) == SQLITE_ROW)
+  for(GList *l = counts; l; l = g_list_next(l))
   {
-    const double val = sqlite3_column_double(stmt, 0);
-    const int count = sqlite3_column_int(stmt, 1);
-    dtgtk_range_select_add_block(range, val, count);
-    if(rangetop) dtgtk_range_select_add_block(rangetop, val, count);
+    const dt_collection_count_t *c = l->data;
+    dtgtk_range_select_add_block(range, c->value, c->count);
+    if(rangetop) dtgtk_range_select_add_block(rangetop, c->value, c->count);
   }
-  sqlite3_finalize(stmt);
+  g_list_free_full(counts, g_free);
 
   // and setup the selection
   dtgtk_range_select_set_selection_from_raw_text(range, rule->raw_text, FALSE);
@@ -94,22 +83,9 @@ static void _exposure_bias_widget_init(dt_lib_filtering_rule_t *rule,
   dtgtk_range_select_set_selection_from_raw_text(range, text, FALSE);
   range->print = _exposure_bias_print_func;
 
-  char query[1024] = { 0 };
-  // clang-format off
-  g_snprintf(query, sizeof(query),
-             "SELECT MIN(exposure_bias), MAX(exposure_bias)"
-             " FROM main.images");
-  // clang-format on
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
   double min = -5.0;
   double max = 5.0;
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    min = sqlite3_column_double(stmt, 0);
-    max = sqlite3_column_double(stmt, 1);
-  }
-  sqlite3_finalize(stmt);
+  dt_collection_numeric_range(DT_COLLECTION_NUMERIC_EXPOSURE_BIAS, &min, &max);
   range->min_r = floor(min * 100.0) / 100.0;
   range->max_r = (floor(max * 100.0) + 1.0) / 100.0;
 

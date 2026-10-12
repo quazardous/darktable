@@ -289,6 +289,35 @@ void dt_collection_memory_update();
 /** save the current collection for recentcollect module and collect history */
 void dt_collection_history_save();
 
+/** numeric image properties the range filters count over */
+typedef enum dt_collection_numeric_t
+{
+  DT_COLLECTION_NUMERIC_APERTURE = 0,  // rounded to 0.1
+  DT_COLLECTION_NUMERIC_EXPOSURE,      // as stored
+  DT_COLLECTION_NUMERIC_EXPOSURE_BIAS, // rounded to 0.01
+  DT_COLLECTION_NUMERIC_FOCAL_LENGTH,  // rounded to 1
+  DT_COLLECTION_NUMERIC_ISO,           // rounded to 1
+  DT_COLLECTION_NUMERIC_ASPECT_RATIO,  // rounded to 0.01
+} dt_collection_numeric_t;
+
+typedef struct dt_collection_count_t
+{
+  double value;
+  int count;
+} dt_collection_count_t;
+
+/** the images matching where (a WHERE clause on main.images AS mi, as the
+    filtering module builds it) counted per value of the property, rounded
+    as listed above. Free with g_list_free_full(list, g_free) */
+GList *dt_collection_numeric_counts(const dt_collection_numeric_t prop,
+                                    const char *where);
+
+/** smallest and largest value of the property over the whole library;
+    FALSE, and min and max untouched, when the query returns no row */
+gboolean dt_collection_numeric_range(const dt_collection_numeric_t prop,
+                                     double *min,
+                                     double *max);
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

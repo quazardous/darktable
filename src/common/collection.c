@@ -3307,6 +3307,68 @@ void dt_collection_history_save()
   dt_conf_set_string("plugins/lighttable/collect/history0", buf);
 }
 
+// the column and the grouping of each numeric property, as the range
+// filters display them
+static const struct
+{
+  const char *column;
+  const char *group;
+} _numeric[] = {
+  [DT_COLLECTION_NUMERIC_APERTURE] = { "aperture", "ROUND(aperture,1)" },
+  [DT_COLLECTION_NUMERIC_EXPOSURE] = { "exposure", "exposure" },
+  [DT_COLLECTION_NUMERIC_EXPOSURE_BIAS] = { "exposure_bias", "ROUND(exposure_bias,2)" },
+  [DT_COLLECTION_NUMERIC_FOCAL_LENGTH] = { "focal_length", "ROUND(focal_length,0)" },
+  [DT_COLLECTION_NUMERIC_ISO] = { "iso", "ROUND(iso,0)" },
+  [DT_COLLECTION_NUMERIC_ASPECT_RATIO] = { "aspect_ratio", "ROUND(aspect_ratio,2)" },
+};
+
+GList *dt_collection_numeric_counts(const dt_collection_numeric_t prop,
+                                    const char *where)
+{
+  GList *counts = NULL;
+  // clang-format off
+  gchar *query = g_strdup_printf("SELECT %s, COUNT(*) AS count"
+                                 " FROM main.images AS mi"
+                                 " WHERE %s"
+                                 " GROUP BY %s",
+                                 _numeric[prop].group, where, _numeric[prop].group);
+  // clang-format on
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    dt_collection_count_t *c = g_new(dt_collection_count_t, 1);
+    c->value = sqlite3_column_double(stmt, 0);
+    c->count = sqlite3_column_int(stmt, 1);
+    counts = g_list_prepend(counts, c);
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+  return g_list_reverse(counts);
+}
+
+gboolean dt_collection_numeric_range(const dt_collection_numeric_t prop,
+                                     double *min,
+                                     double *max)
+{
+  // clang-format off
+  gchar *query = g_strdup_printf("SELECT MIN(%s), MAX(%s)"
+                                 " FROM main.images",
+                                 _numeric[prop].column, _numeric[prop].column);
+  // clang-format on
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  const gboolean found = sqlite3_step(stmt) == SQLITE_ROW;
+  if(found)
+  {
+    *min = sqlite3_column_double(stmt, 0);
+    *max = sqlite3_column_double(stmt, 1);
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+  return found;
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent
