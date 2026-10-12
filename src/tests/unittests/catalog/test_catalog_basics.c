@@ -276,6 +276,14 @@ static void test_selected_navigation(void **state)
   assert_int_equal(dt_collection_selected_rowid_after(1, 1), 2);
   assert_int_equal(dt_collection_selected_rowid_after(3, 1), -1);
   assert_int_equal(dt_collection_count_after(1), 2);
+
+  assert_int_equal(dt_collection_selected_count(), 3);
+  assert_true(dt_collection_is_selected(dt_collection_imgid_at_rowid(2)));
+  assert_false(dt_collection_is_selected(999999));
+  int min = 0, max = 0;
+  assert_true(dt_collection_selected_rowid_range(&min, &max));
+  assert_int_equal(min, 1);
+  assert_int_equal(max, 3);
 }
 
 // last in the list: it adds a duplicate, which the totals above do not expect

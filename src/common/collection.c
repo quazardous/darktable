@@ -4450,6 +4450,48 @@ int dt_collection_count_after(const int rowid)
   // clang-format on
 }
 
+int dt_collection_selected_count(void)
+{
+  // clang-format off
+  return _collection_int(g_strdup_printf
+    ("SELECT count(*)"
+     " FROM memory.collected_images AS col, main.selected_images as sel"
+     " WHERE col.imgid=sel.imgid"), 0);
+  // clang-format on
+}
+
+gboolean dt_collection_is_selected(const dt_imgid_t imgid)
+{
+  // clang-format off
+  return _collection_int(g_strdup_printf
+    ("SELECT col.imgid"
+     " FROM memory.collected_images AS col, main.selected_images AS sel"
+     " WHERE col.imgid=sel.imgid AND col.imgid=%d",
+     imgid), NO_IMGID) != NO_IMGID;
+  // clang-format on
+}
+
+gboolean dt_collection_selected_rowid_range(int *min, int *max)
+{
+  sqlite3_stmt *stmt;
+  // clang-format off
+  DT_DEBUG_SQLITE3_PREPARE_V2
+    (dt_database_get(darktable.db),
+     "SELECT MIN(rowid), MAX(rowid)"
+     " FROM memory.collected_images AS col, main.selected_images as sel"
+     " WHERE col.imgid=sel.imgid",
+     -1, &stmt, NULL);
+  // clang-format on
+  const gboolean found = sqlite3_step(stmt) == SQLITE_ROW;
+  if(found)
+  {
+    *min = sqlite3_column_int(stmt, 0);
+    *max = sqlite3_column_int(stmt, 1);
+  }
+  sqlite3_finalize(stmt);
+  return found;
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

@@ -393,6 +393,13 @@ int dt_collection_selected_rowid_after(const int rowid, const int steps);
 /** how many images of the collection come after rowid (-1 if the query
     could not run) */
 int dt_collection_count_after(const int rowid);
+/** how many selected images the collection holds */
+int dt_collection_selected_count(void);
+/** TRUE when the image is in the collection and selected */
+gboolean dt_collection_is_selected(const dt_imgid_t imgid);
+/** first and last row of the selected images of the collection; FALSE, min
+    and max untouched, when the query returns no row */
+gboolean dt_collection_selected_rowid_range(int *min, int *max);
 
 typedef struct dt_collection_date_count_t
 {
