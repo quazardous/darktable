@@ -4525,6 +4525,71 @@ dt_imgid_t dt_collection_neighbor_imgid(const int rowid,
   return _collection_int(query, NO_IMGID);
 }
 
+GList *dt_collection_culling_rows(const int offset,
+                                  const int count,
+                                  const gboolean selected_only)
+{
+  gchar *query = NULL;
+  if(selected_only)
+  {
+    // in this mode, we have "gaps" between rowid because of unselected images
+    // if some case, there isn't enough select images *after* the offset
+    // in this case, we need to try to take some image before the offset
+    // the "dynamic" field "newrow" below is taking care of that
+
+    // clang-format off
+    query = g_strdup_printf
+      ("SELECT i1, i2, i3, i2, newrow"
+       " FROM (SELECT m.rowid AS i1, m.imgid AS i2, b.aspect_ratio AS i3,"
+       "              (CASE WHEN m.rowid >= %d"
+       "                 THEN m.rowid"
+       "                 ELSE (SELECT MAX(rowid) FROM memory.collected_images) + %d - m.rowid"
+       "               END) AS newrow"
+       "       FROM memory.collected_images AS m, main.selected_images AS s, images AS b"
+       "       WHERE m.imgid = b.id AND m.imgid = s.imgid"
+       "       ORDER BY newrow"
+       "       LIMIT %d)"
+       " ORDER BY i1",
+       offset, offset, count);
+    // clang-format on
+  }
+  else
+  {
+    // clang-format off
+    query = g_strdup_printf
+      ("SELECT m.rowid, m.imgid, b.aspect_ratio, s.imgid"
+       " FROM (SELECT rowid, imgid "
+       "       FROM memory.collected_images "
+       "       WHERE rowid < %d + %d "
+       "       ORDER BY rowid DESC "
+       "       LIMIT %d) AS m "
+       " LEFT JOIN main.selected_images AS s"
+       "   ON m.imgid=s.imgid,"
+       " images AS b"
+       " WHERE m.imgid = b.id "
+       " ORDER BY m.rowid",
+       offset, count, count);
+    // clang-format on
+  }
+
+  GList *rows = NULL;
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    dt_collection_culling_row_t *r = g_new(dt_collection_culling_row_t, 1);
+    r->rowid = sqlite3_column_int(stmt, 0);
+    r->imgid = sqlite3_column_int(stmt, 1);
+    r->aspect_ratio = sqlite3_column_double(stmt, 2);
+    r->selected = (r->imgid == sqlite3_column_int(stmt, 3));
+    rows = g_list_prepend(rows, r);
+  }
+  // the culling view used to leave this statement and its query behind
+  sqlite3_finalize(stmt);
+  g_free(query);
+  return g_list_reverse(rows);
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

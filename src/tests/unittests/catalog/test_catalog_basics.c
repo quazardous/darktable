@@ -289,6 +289,22 @@ static void test_selected_navigation(void **state)
   assert_int_equal(dt_collection_neighbor_imgid(3, FALSE, TRUE), dt_collection_imgid_at_rowid(2));
   assert_int_equal(dt_collection_neighbor_imgid(1, FALSE, FALSE), NO_IMGID);
   assert_int_equal(dt_collection_neighbor_imgid(3, TRUE, TRUE), NO_IMGID);
+
+  // the culling rows from row 1: the three images, in row order, selected
+  GList *rows = dt_collection_culling_rows(1, 3, FALSE);
+  assert_int_equal(g_list_length(rows), 3);
+  int expect = 1;
+  for(GList *l = rows; l; l = g_list_next(l), expect++)
+  {
+    const dt_collection_culling_row_t *r = l->data;
+    assert_int_equal(r->rowid, expect);
+    assert_true(r->selected);
+  }
+  g_list_free_full(rows, g_free);
+  // selection only, from the last row: completed with the earlier ones
+  rows = dt_collection_culling_rows(3, 3, TRUE);
+  assert_int_equal(g_list_length(rows), 3);
+  g_list_free_full(rows, g_free);
 }
 
 // last in the list: it adds a duplicate, which the totals above do not expect
