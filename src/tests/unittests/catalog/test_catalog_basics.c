@@ -22,6 +22,7 @@
 #include <cmocka.h>
 
 #include "catalog_fixture.h"
+#include "common/collection.h"
 #include "common/colorlabels.h"
 #include "common/metadata.h"
 #include "common/tags.h"
@@ -89,12 +90,36 @@ static void test_metadata(void **state)
   g_list_free_full(res, g_free);
 }
 
+static void test_list_rows(void **state)
+{
+  gboolean has_query = FALSE;
+  GList *rows = dt_collection_list_rows(DT_COLLECTION_PROP_CAMERA, "1=1", FALSE, &has_query);
+  assert_true(has_query);
+  int total = 0;
+  for(GList *l = rows; l; l = g_list_next(l))
+  {
+    const dt_collection_list_row_t *r = l->data;
+    assert_non_null(r->text);
+    total += r->count;
+  }
+  assert_int_equal(total, 3);
+  g_list_free_full(rows, dt_collection_list_row_free);
+
+  // the film rolls: one, holding the three images
+  rows = dt_collection_list_rows(DT_COLLECTION_PROP_FILMROLL, "1=1", FALSE, &has_query);
+  assert_true(has_query);
+  assert_int_equal(g_list_length(rows), 1);
+  assert_int_equal(((dt_collection_list_row_t *)rows->data)->count, 3);
+  g_list_free_full(rows, dt_collection_list_row_free);
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_colorlabels),
     cmocka_unit_test(test_tags),
     cmocka_unit_test(test_metadata),
+    cmocka_unit_test(test_list_rows),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }
