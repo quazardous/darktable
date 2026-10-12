@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# a darktable bench job, inside the container (manifest: bench.toml): /src is
+# the checkout of the requested branch, /build and /ccache the project's
+# caches, /out the results.
+# The build type is RelWithDebInfo, as for upstream's pixel references
+# (darktable #3786: a Release build adds -ffast-math).
+
+set -uo pipefail
+mkdir -p "$HOME"
+# labwc puts its Wayland socket here (wbox, for the run and GUI jobs)
+mkdir -m 700 -p "$XDG_RUNTIME_DIR"
+prefix=/build/prefix
+bench=/src/tools/helios/bench
+
+build() {
+  cmake -S /src -B /build/obj -G Ninja \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTING=ON \
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_INSTALL_PREFIX="$prefix" > /out/cmake.log 2>&1 \
+    || { tail -30 /out/cmake.log; return 1; }
+  cmake --build /build/obj 2>&1 | tee /out/build.log | grep -E 'warning|error'
+  [ "${PIPESTATUS[0]}" = 0 ] || { tail -30 /out/build.log; return 1; }
+  cmake --install /build/obj > /out/install.log 2>&1
+  ccache -s > /out/ccache.txt 2>&1
+  echo "build ok: $(git -C /src log --oneline -1)"
+}
+
+need_build() {
+  [ -x "$prefix/bin/darktable" ] || { echo "no build yet: run the build job first"; exit 4; }
+}
+
+case "${1:-}" in
+  build) build ;;
+  # provisioning of the darktable-cli volume: the install prefix, for other
+  # projects' parity jobs (darktable is relocatable, so it runs from there)
+  install-to) build && cmake --install /build/obj --prefix "${2:?usage: install-to <dir>}" > /out/install-to.log 2>&1 ;;
+  ctest) [ -d /build/obj ] || { echo "no build yet"; exit 4; }
+         cd /build/obj && ctest --output-on-failure > /out/ctest.txt 2>&1
+         status=$?; tail -5 /out/ctest.txt; exit $status ;;
+  run) need_build; "$bench/run.sh" /out/run "$prefix" ;;
+  gui-labels) need_build; "$bench/gui_labels.sh" /out/gui-labels "$prefix" ;;
+  gui-metadata) need_build; "$bench/gui_metadata.sh" /out/gui-metadata "$prefix" ;;
+  gui-tags) need_build; "$bench/gui_tags.sh" /out/gui-tags "$prefix" ;;
+  pixel) need_build
+         HELIOS_KEEP_OUTPUTS=/out/pixel-outputs "$bench/integration.sh" "$prefix" /out/pixel.log ;;
+  *) echo "unknown job: ${1:-}"; exit 2 ;;
+esac
