@@ -95,20 +95,13 @@ static dt_job_t *_process_job_create(dt_slideshow_t *d);
 
 static dt_imgid_t _get_image_at_rank(const int rank)
 {
-  // get random image id from sql
   dt_imgid_t id = NO_IMGID;
 
   if(rank >= 0)
   {
-    const gchar *query = dt_collection_get_query(darktable.collection);
-
-    sqlite3_stmt *stmt;
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, rank);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, 1);
-    if(sqlite3_step(stmt) == SQLITE_ROW)
-      id = sqlite3_column_int(stmt, 0);
-    sqlite3_finalize(stmt);
+    // dt_collection_get_nth() says -1 past the end, where this says NO_IMGID
+    const int nth = dt_collection_get_nth(darktable.collection, rank);
+    if(nth > 0) id = nth;
   }
 
   return id;
@@ -470,18 +463,7 @@ void enter(dt_view_t *self)
 
   if(dt_is_valid_imgid(imgid))
   {
-    sqlite3_stmt *stmt;
-    gchar *query = g_strdup_printf("SELECT rowid"
-                                   " FROM memory.collected_images"
-                                   " WHERE imgid=%d",
-                                   imgid);
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-    if(sqlite3_step(stmt) == SQLITE_ROW)
-    {
-      selrank = sqlite3_column_int(stmt, 0) - 1;
-    }
-    g_free(query);
-    sqlite3_finalize(stmt);
+    selrank = dt_collection_rowid_of(imgid, 0) - 1;
   }
 
   const int rank =
