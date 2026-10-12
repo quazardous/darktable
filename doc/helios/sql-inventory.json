@@ -8601,7 +8601,135 @@
   },
   {
    "file": "common/history.c",
-   "line": 1662,
+   "line": 1600,
+   "function": "dt_history_clear_memory",
+   "call": "DT_DEBUG_SQLITE3_EXEC",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "DELETE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "memory.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "DELETE FROM memory.history"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1607,
+   "function": "dt_history_snapshot_memory",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "INSERT",
+    "SELECT"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "memory.history",
+    "memory.snapshot_history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "INSERT INTO memory.snapshot_history SELECT ?1, * FROM memory.history"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1635,
+   "function": "dt_history_get_rows",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT imgid, num, module, operation, op_params, enabled, blendop_params, blendop_version, multi_priority, multi_name, multi_name_hand_edited FROM main.history WHERE imgid = ?1 ORDER BY num"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1649,
+   "function": "dt_history_get_rows",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "memory.snapshot_history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT id, num, module, operation, op_params, enabled, blendop_params, blendop_version, multi_priority, multi_name, multi_name_hand_edited FROM memory.snapshot_history WHERE id = ?1 ORDER BY num"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1701,
+   "function": "dt_history_get_masks_rows",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.masks_history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT imgid, formid, form, name, version, points, points_count, source, num FROM main.masks_history WHERE imgid = ?1 AND num < ?2 ORDER BY num"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1714,
+   "function": "dt_history_get_masks_rows",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "memory.snapshot_masks_history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT imgid, formid, form, name, version, points, points_count, source, num FROM memory.snapshot_masks_history WHERE id = ?1 AND num < ?2 ORDER BY num"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1818,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8622,7 +8750,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1679,
+   "line": 1835,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8643,7 +8771,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1716,
+   "line": 1872,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8664,7 +8792,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1745,
+   "line": 1901,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8685,7 +8813,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1826,
+   "line": 1982,
    "function": "dt_history_hash_write_from_history",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8707,7 +8835,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1849,
+   "line": 2005,
    "function": "dt_history_hash_write",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8729,7 +8857,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1877,
+   "line": 2033,
    "function": "dt_history_hash_read",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8750,7 +8878,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1932,
+   "line": 2088,
    "function": "dt_history_hash_is_mipmap_synced",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8771,7 +8899,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1954,
+   "line": 2110,
    "function": "dt_history_hash_set_mipmap",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8792,7 +8920,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1970,
+   "line": 2126,
    "function": "dt_history_hash_unset_mipmap",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8813,7 +8941,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1999,
+   "line": 2155,
    "function": "dt_history_hash_get_status",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -14667,113 +14795,6 @@
    "sql": "INSERT INTO main.history SELECT imgid, num, module, operation, op_params, enabled, blendop_params, blendop_version, multi_priority, multi_name, multi_name_hand_edited FROM memory.history"
   },
   {
-   "file": "develop/develop.c",
-   "line": 2485,
-   "function": "dt_dev_read_history_ext",
-   "call": "DT_DEBUG_SQLITE3_EXEC",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "memory.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM memory.history"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 2531,
-   "function": "dt_dev_read_history_ext",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "INSERT",
-    "SELECT"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "memory.history",
-    "memory.snapshot_history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "INSERT INTO memory.snapshot_history SELECT ?1, * FROM memory.history"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 2540,
-   "function": "dt_dev_read_history_ext",
-   "call": "DT_DEBUG_SQLITE3_EXEC",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "memory.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM memory.history"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 2558,
-   "function": "dt_dev_read_history_ext",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT imgid, num, module, operation, op_params, enabled, blendop_params, blendop_version, multi_priority, multi_name, multi_name_hand_edited FROM main.history WHERE imgid = ?1 ORDER BY num"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 2572,
-   "function": "dt_dev_read_history_ext",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "memory.snapshot_history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT id, num, module, operation, op_params, enabled, blendop_params, blendop_version, multi_priority, multi_name, multi_name_hand_edited FROM memory.snapshot_history WHERE id = ?1 ORDER BY num"
-  },
-  {
    "file": "develop/imageop.c",
    "line": 1584,
    "function": "_init_presets",
@@ -14922,49 +14943,7 @@
   },
   {
    "file": "develop/masks/masks.c",
-   "line": 983,
-   "function": "dt_masks_read_masks_history",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.masks_history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT imgid, formid, form, name, version, points, points_count, source, num FROM main.masks_history WHERE imgid = ?1 AND num < ?2 ORDER BY num"
-  },
-  {
-   "file": "develop/masks/masks.c",
-   "line": 996,
-   "function": "dt_masks_read_masks_history",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "memory.snapshot_masks_history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT imgid, formid, form, name, version, points, points_count, source, num FROM memory.snapshot_masks_history WHERE id = ?1 AND num < ?2 ORDER BY num"
-  },
-  {
-   "file": "develop/masks/masks.c",
-   "line": 1194,
+   "line": 1164,
    "function": "dt_masks_write_masks_history_item",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -18066,6 +18045,65 @@
    ],
    "cross_schema": false,
    "sql": "SELECT num, module, enabled, blendop_version, multi_priority, multi_name FROM main.history WHERE imgid = ?1 AND operation = 'flip'"
+  },
+  {
+   "file": "tests/unittests/catalog/test_catalog_history.c",
+   "line": 94,
+   "function": "_exec",
+   "call": "DT_DEBUG_SQLITE3_EXEC",
+   "layer": "tests",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT num, module, enabled, blendop_version, multi_priority, multi_name FROM main.history WHERE imgid = ?1 AND operation = 'flip' flipbayer4.crwfliphlrecovery.arwexposureexposureexposurecolorin"
+  },
+  {
+   "file": "tests/unittests/catalog/test_catalog_history.c",
+   "line": 101,
+   "function": "_count",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "tests",
+   "step": "B",
+   "ops": [],
+   "write": false,
+   "dynamic": true,
+   "tables": [],
+   "domains": [
+    "?"
+   ],
+   "cross_schema": false,
+   "sql": "flipbayer4.crwfliphlrecovery.arwexposureexposureexposurecolorin"
+  },
+  {
+   "file": "tests/unittests/catalog/test_catalog_history.c",
+   "line": 207,
+   "function": "test_get_masks_rows",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "tests",
+   "step": "B",
+   "ops": [
+    "INSERT"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.masks_history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "INSERT INTO main.masks_history (imgid, num, formid, form, name, version, points, points_count, source) VALUES (?1, ?2, ?3, 1, ?4, 6, ?5, 2, ?6)"
   },
   {
    "file": "tests/unittests/catalog/test_catalog_metadata.c",
