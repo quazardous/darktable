@@ -2304,45 +2304,10 @@ static void _dt_collection_changed_callback(gpointer instance,
         newid = next;
         if(table->navigate_inside_selection)
         {
-          sqlite3_stmt *stmt;
-          // clang-format off
-          gchar *query = g_strdup_printf(
-              "SELECT m.imgid"
-              " FROM memory.collected_images AS m, main.selected_images AS s"
-              " WHERE m.imgid=s.imgid"
-              "   AND m.rowid>=(SELECT rowid FROM memory.collected_images WHERE imgid=%d)"
-              " ORDER BY m.rowid LIMIT 1",
-              next);
-          // clang-format on
-          DT_DEBUG_SQLITE3_PREPARE_V2
-            (dt_database_get(darktable.db), query, -1, &stmt, NULL);
-          if(sqlite3_step(stmt) == SQLITE_ROW)
-          {
-            newid = sqlite3_column_int(stmt, 0);
-          }
-          else
-          {
-            // no select image after, search before
-            g_free(query);
-            sqlite3_finalize(stmt);
-            // clang-format off
-            query = g_strdup_printf(
-                "SELECT m.imgid"
-                " FROM memory.collected_images AS m, main.selected_images AS s"
-                " WHERE m.imgid=s.imgid"
-                "   AND m.rowid<(SELECT rowid FROM memory.collected_images WHERE imgid=%d)"
-                " ORDER BY m.rowid DESC LIMIT 1",
-                next);
-            // clang-format on
-            DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                        query, -1, &stmt, NULL);
-            if(sqlite3_step(stmt) == SQLITE_ROW)
-            {
-              newid = sqlite3_column_int(stmt, 0);
-            }
-          }
-          g_free(query);
-          sqlite3_finalize(stmt);
+          dt_imgid_t sel = dt_collection_selected_imgid_after(next);
+          // no select image after, search before
+          if(!dt_is_valid_imgid(sel)) sel = dt_collection_selected_imgid_before(next);
+          if(dt_is_valid_imgid(sel)) newid = sel;
         }
       }
     }
@@ -3603,14 +3568,7 @@ static gboolean _filemanager_key_move(dt_thumbtable_t *table,
     baserowid = _thumb_get_rowid(baseid);
     newrowid = baserowid;
     // last rowid of the current collection
-    int maxrowid = 1;
-    sqlite3_stmt *stmt;
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                "SELECT MAX(rowid) FROM memory.collected_images", -1,
-                                &stmt, NULL);
-    if(sqlite3_step(stmt) == SQLITE_ROW)
-      maxrowid = sqlite3_column_int(stmt, 0);
-    sqlite3_finalize(stmt);
+    const int maxrowid = dt_collection_max_rowid();
 
     switch(move)
     {
@@ -3696,14 +3654,7 @@ static gboolean _zoomable_key_move(dt_thumbtable_t *table,
     moved = _zoomable_ensure_rowid_visibility(table, 1);
   else if(move == DT_THUMBTABLE_MOVE_END)
   {
-    int maxrowid = 1;
-    sqlite3_stmt *stmt;
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                "SELECT MAX(rowid) FROM memory.collected_images",
-                                -1, &stmt, NULL);
-    if(sqlite3_step(stmt) == SQLITE_ROW)
-      maxrowid = sqlite3_column_int(stmt, 0);
-    sqlite3_finalize(stmt);
+    const int maxrowid = dt_collection_max_rowid();
     moved = _zoomable_ensure_rowid_visibility(table, maxrowid);
   }
   else if(move == DT_THUMBTABLE_MOVE_ALIGN)
