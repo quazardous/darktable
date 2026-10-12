@@ -363,6 +363,15 @@ GList *dt_collection_filename_counts(const char *where);
     g_list_free_full(list, dt_collection_text_count_free) */
 GList *dt_collection_extension_counts(const char *where);
 
+/** the images matching where counted per value of a misc property:
+    camera, lens, group id (groups of more than one image), dimensions,
+    white balance, flash, exposure program or metering mode. A NULL or
+    empty text is an unset value, kept for the caller to count. NULL for
+    any other property. Free with g_list_free_full(list,
+    dt_collection_text_count_free) */
+GList *dt_collection_misc_counts(const dt_collection_properties_t prop,
+                                 const char *where);
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

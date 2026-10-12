@@ -74,12 +74,9 @@ void _misc_tree_update(_widgets_misc_t *misc)
 {
   dt_lib_filtering_t *d = misc->rule->lib;
 
-  char query[1024] = { 0 };
-
   GtkTreeModel *name_model = gtk_tree_view_get_model(GTK_TREE_VIEW(misc->name_tree));
   gtk_list_store_clear(GTK_LIST_STORE(name_model));
 
-  gchar *table = NULL;
   gchar *tooltip = NULL;
 
   if(misc->prop == DT_COLLECTION_PROP_CAMERA)
@@ -96,22 +93,18 @@ void _misc_tree_update(_widgets_misc_t *misc)
   }
   else if(misc->prop == DT_COLLECTION_PROP_WHITEBALANCE)
   {
-    table = g_strdup("whitebalance");
     tooltip = g_strdup(_("no white balance defined"));
   }
   else if(misc->prop == DT_COLLECTION_PROP_FLASH)
   {
-    table = g_strdup("flash");
     tooltip = g_strdup(_("no flash defined"));
   }
   else if(misc->prop == DT_COLLECTION_PROP_EXPOSURE_PROGRAM)
   {
-    table = g_strdup("exposure_program");
     tooltip = g_strdup(_("no exposure program defined"));
   }
   else if(misc->prop == DT_COLLECTION_PROP_METERING_MODE)
   {
-    table = g_strdup("metering_mode");
     tooltip = g_strdup(_("no metering mode defined"));
   }
   else if(misc->prop == DT_COLLECTION_PROP_DIMENSIONS)
@@ -119,85 +112,13 @@ void _misc_tree_update(_widgets_misc_t *misc)
     tooltip = g_strdup(_("no image dimensions defined"));
   }
 
-  // SQL
-  if(misc->prop == DT_COLLECTION_PROP_CAMERA)
-  {
-    // clang-format off
-    g_snprintf(query, sizeof(query),
-               "SELECT TRIM(cm.maker || ' ' || cm.model) AS camera, COUNT(*) AS count"
-               " FROM main.images AS mi, main.cameras AS cm"
-               " WHERE mi.camera_id = cm.id AND %s"
-               " GROUP BY camera"
-               " ORDER BY camera",
-               d->last_where_ext);
-    // clang-format on
-  }
-  else if(misc->prop == DT_COLLECTION_PROP_LENS)
-  {
-    // clang-format off
-    g_snprintf(query, sizeof(query),
-               "SELECT CASE LOWER(TRIM(ln.name))"
-               "         WHEN 'n/a' THEN ''"
-               "         ELSE ln.name"
-               "       END AS lens, COUNT(*) AS count"
-               " FROM main.images AS mi, main.lens AS ln"
-               " WHERE mi.lens_id = ln.id AND %s"
-               " GROUP BY lens"
-               " ORDER BY lens",
-               d->last_where_ext);
-    // clang-format on
-  }
-  else if(misc->prop == DT_COLLECTION_PROP_GROUP_ID)
-  {
-    // clang-format off
-    g_snprintf(query, sizeof(query),
-               "SELECT mi.group_id, COUNT(*) AS count"
-               " FROM main.images AS mi"
-               " WHERE %s"
-               " GROUP BY group_id"
-               " HAVING COUNT(*) > 1"
-               " ORDER BY group_id",
-               d->last_where_ext);
-    // clang-format on
-  }
-  else if(misc->prop == DT_COLLECTION_PROP_DIMENSIONS)
-  {
-    // clang-format off
-    g_snprintf(query, sizeof(query),
-               "SELECT mi.width || 'x' || mi.height AS dim, COUNT(*) AS count"
-               " FROM main.images AS mi"
-               " WHERE %s"
-               " GROUP BY dim"
-               " ORDER BY dim",
-               d->last_where_ext);
-    // clang-format on
-  }
-  else // white balance, flash, exposure program, metering mode
-  {
-    // clang-format off
-    g_snprintf(query, sizeof(query),
-               "SELECT t.name"
-               "     , COUNT(*) AS count"
-               " FROM main.images AS mi"
-               " JOIN main.%s AS t"
-               " WHERE mi.%s_id = t.id AND %s"
-               " GROUP BY name"
-               " ORDER BY name",
-               table, table,
-               d->last_where_ext);
-    // clang-format on
-  }
-
-  g_free(table);
-
-  // clang-format on
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  GList *counts = dt_collection_misc_counts(misc->prop, d->last_where_ext);
   int unset = 0;
-  while(sqlite3_step(stmt) == SQLITE_ROW)
+  for(GList *l = counts; l; l = g_list_next(l))
   {
-    const char *name = (char *)sqlite3_column_text(stmt, 0);
-    const int count = sqlite3_column_int(stmt, 1);
+    const dt_collection_text_count_t *c = l->data;
+    const char *name = c->text;
+    const int count = c->count;
 
     if(!name || !g_strcmp0(name, ""))
     {
@@ -214,7 +135,7 @@ void _misc_tree_update(_widgets_misc_t *misc)
       g_free(value_path);
     }
   }
-  sqlite3_finalize(stmt);
+  g_list_free_full(counts, dt_collection_text_count_free);
 
   // we add the unset entry if any
   if(unset > 0)

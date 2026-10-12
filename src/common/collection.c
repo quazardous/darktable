@@ -3550,6 +3550,101 @@ GList *dt_collection_extension_counts(const char *where)
   return counts;
 }
 
+GList *dt_collection_misc_counts(const dt_collection_properties_t prop,
+                                 const char *where)
+{
+  gchar *query = NULL;
+  const char *table = NULL;
+  if(prop == DT_COLLECTION_PROP_WHITEBALANCE)
+    table = "whitebalance";
+  else if(prop == DT_COLLECTION_PROP_FLASH)
+    table = "flash";
+  else if(prop == DT_COLLECTION_PROP_EXPOSURE_PROGRAM)
+    table = "exposure_program";
+  else if(prop == DT_COLLECTION_PROP_METERING_MODE)
+    table = "metering_mode";
+
+  if(prop == DT_COLLECTION_PROP_CAMERA)
+  {
+    // clang-format off
+    query = g_strdup_printf("SELECT TRIM(cm.maker || ' ' || cm.model) AS camera, COUNT(*) AS count"
+                            " FROM main.images AS mi, main.cameras AS cm"
+                            " WHERE mi.camera_id = cm.id AND %s"
+                            " GROUP BY camera"
+                            " ORDER BY camera",
+                            where);
+    // clang-format on
+  }
+  else if(prop == DT_COLLECTION_PROP_LENS)
+  {
+    // clang-format off
+    query = g_strdup_printf("SELECT CASE LOWER(TRIM(ln.name))"
+                            "         WHEN 'n/a' THEN ''"
+                            "         ELSE ln.name"
+                            "       END AS lens, COUNT(*) AS count"
+                            " FROM main.images AS mi, main.lens AS ln"
+                            " WHERE mi.lens_id = ln.id AND %s"
+                            " GROUP BY lens"
+                            " ORDER BY lens",
+                            where);
+    // clang-format on
+  }
+  else if(prop == DT_COLLECTION_PROP_GROUP_ID)
+  {
+    // clang-format off
+    query = g_strdup_printf("SELECT mi.group_id, COUNT(*) AS count"
+                            " FROM main.images AS mi"
+                            " WHERE %s"
+                            " GROUP BY group_id"
+                            " HAVING COUNT(*) > 1"
+                            " ORDER BY group_id",
+                            where);
+    // clang-format on
+  }
+  else if(prop == DT_COLLECTION_PROP_DIMENSIONS)
+  {
+    // clang-format off
+    query = g_strdup_printf("SELECT mi.width || 'x' || mi.height AS dim, COUNT(*) AS count"
+                            " FROM main.images AS mi"
+                            " WHERE %s"
+                            " GROUP BY dim"
+                            " ORDER BY dim",
+                            where);
+    // clang-format on
+  }
+  else if(table) // white balance, flash, exposure program, metering mode
+  {
+    // clang-format off
+    query = g_strdup_printf("SELECT t.name"
+                            "     , COUNT(*) AS count"
+                            " FROM main.images AS mi"
+                            " JOIN main.%s AS t"
+                            " WHERE mi.%s_id = t.id AND %s"
+                            " GROUP BY name"
+                            " ORDER BY name",
+                            table, table,
+                            where);
+    // clang-format on
+  }
+  else
+    return NULL;
+
+  GList *counts = NULL;
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    dt_collection_text_count_t *c = g_new(dt_collection_text_count_t, 1);
+    c->text = g_strdup((const char *)sqlite3_column_text(stmt, 0));
+    c->count = sqlite3_column_int(stmt, 1);
+    c->flags = 0;
+    counts = g_list_prepend(counts, c);
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+  return g_list_reverse(counts);
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

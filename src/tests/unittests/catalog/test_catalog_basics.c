@@ -187,6 +187,24 @@ static void test_filename_counts(void **state)
   g_list_free_full(exts, dt_collection_text_count_free);
 }
 
+static void test_misc_counts(void **state)
+{
+  // each of the three images has a camera and dimensions
+  const dt_collection_properties_t props[] = { DT_COLLECTION_PROP_CAMERA, DT_COLLECTION_PROP_DIMENSIONS };
+  for(int i = 0; i < 2; i++)
+  {
+    GList *counts = dt_collection_misc_counts(props[i], "1=1");
+    int total = 0;
+    for(GList *l = counts; l; l = g_list_next(l)) total += ((dt_collection_text_count_t *)l->data)->count;
+    assert_int_equal(total, 3);
+    g_list_free_full(counts, dt_collection_text_count_free);
+  }
+  // no group holds more than one image
+  assert_null(dt_collection_misc_counts(DT_COLLECTION_PROP_GROUP_ID, "1=1"));
+  // not a misc property
+  assert_null(dt_collection_misc_counts(DT_COLLECTION_PROP_TAG, "1=1"));
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -197,6 +215,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_flag_counts),
     cmocka_unit_test(test_date_counts),
     cmocka_unit_test(test_filename_counts),
+    cmocka_unit_test(test_misc_counts),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }
