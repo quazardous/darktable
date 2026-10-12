@@ -162,39 +162,16 @@ static void _thumbs_move(dt_culling_t *table,
   {
     if(table->navigate_inside_selection)
     {
-      sqlite3_stmt *stmt;
-      // clang-format off
-      gchar *query = g_strdup_printf
-        ("SELECT m.rowid FROM memory.collected_images as m, main.selected_images as s"
-         " WHERE m.imgid=s.imgid AND m.rowid<=%d"
-         " ORDER BY m.rowid DESC LIMIT 1 OFFSET %d",
-         table->offset, -1 * move);
-      // clang-format on
-      DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-      if(sqlite3_step(stmt) == SQLITE_ROW)
-      {
-        new_offset = sqlite3_column_int(stmt, 0);
-      }
+      const int back = dt_collection_selected_rowid_before(table->offset, -1 * move);
+      if(back != -1)
+        new_offset = back;
       else
       {
         // if we are here, that means we don't have enough space to
         // move as wanted. So we move to first position
-        g_free(query);
-        sqlite3_finalize(stmt);
-        // clang-format off
-        query = g_strdup_printf
-          ("SELECT m.rowid FROM memory.collected_images as m, main.selected_images as s"
-           " WHERE m.imgid=s.imgid"
-           " ORDER BY m.rowid LIMIT 1");
-        // clang-format on
-        DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-        if(sqlite3_step(stmt) == SQLITE_ROW)
-        {
-          new_offset = sqlite3_column_int(stmt, 0);
-        }
+        const int first = dt_collection_selected_rowid_first();
+        if(first != -1) new_offset = first;
       }
-      g_free(query);
-      sqlite3_finalize(stmt);
       if(new_offset == table->offset)
       {
         dt_control_log(_("you have reached the start of your selection"));
@@ -215,40 +192,13 @@ static void _thumbs_move(dt_culling_t *table,
   {
     if(table->navigate_inside_selection)
     {
-      sqlite3_stmt *stmt;
-      // clang-format off
-      gchar *query = g_strdup_printf
-        ("SELECT COUNT(m.rowid)"
-         " FROM memory.collected_images as m, main.selected_images as s"
-         " WHERE m.imgid=s.imgid AND m.rowid>%d",
-         table->offset);
-      // clang-format on
-      DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-      int nb_after = 0;
-      if(sqlite3_step(stmt) == SQLITE_ROW)
-      {
-        nb_after = sqlite3_column_int(stmt, 0);
-      }
-      g_free(query);
-      sqlite3_finalize(stmt);
+      const int nb_after = dt_collection_selected_count_after(table->offset);
 
       if(nb_after >= table->thumbs_count)
       {
         const int delta = MIN(nb_after + 1 - table->thumbs_count, move);
-        // clang-format off
-        query = g_strdup_printf
-          ("SELECT m.rowid FROM memory.collected_images as m, main.selected_images as s"
-           " WHERE m.imgid=s.imgid AND m.rowid>=%d"
-           " ORDER BY m.rowid LIMIT 1 OFFSET %d",
-           table->offset, delta);
-        // clang-format on
-        DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-        if(sqlite3_step(stmt) == SQLITE_ROW)
-        {
-          new_offset = sqlite3_column_int(stmt, 0);
-        }
-        g_free(query);
-        sqlite3_finalize(stmt);
+        const int on = dt_collection_selected_rowid_after(table->offset, delta);
+        if(on != -1) new_offset = on;
       }
 
       if(new_offset == table->offset)
@@ -259,25 +209,11 @@ static void _thumbs_move(dt_culling_t *table,
     }
     else
     {
-      sqlite3_stmt *stmt;
-      // clang-format off
-      gchar *query = g_strdup_printf
-        ("SELECT COUNT(m.rowid)"
-         " FROM memory.collected_images as m"
-         " WHERE m.rowid>%d",
-         table->offset);
-      // clang-format on
-      DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-      if(sqlite3_step(stmt) == SQLITE_ROW)
+      const int nb = dt_collection_count_after(table->offset);
+      if(nb != -1 && nb >= table->thumbs_count)
       {
-        const int nb = sqlite3_column_int(stmt, 0);
-        if(nb >= table->thumbs_count)
-        {
-          new_offset = table->offset + MIN(nb + 1 - table->thumbs_count, move);
-        }
+        new_offset = table->offset + MIN(nb + 1 - table->thumbs_count, move);
       }
-      g_free(query);
-      sqlite3_finalize(stmt);
       if(new_offset == table->offset)
       {
         dt_control_log(_("you have reached the end of your collection"));

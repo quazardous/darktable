@@ -378,6 +378,22 @@ dt_imgid_t dt_collection_imgid_at_rowid(const int rowid);
     the collection */
 int dt_collection_rowid_of(const dt_imgid_t imgid, const int none);
 
+/** navigation among the selected images of the collection, by row of
+    memory.collected_images; -1 when there is no such row */
+/** the row of the selected image steps positions back from rowid, rowid
+    included */
+int dt_collection_selected_rowid_before(const int rowid, const int steps);
+/** the row of the first selected image */
+int dt_collection_selected_rowid_first(void);
+/** how many selected images come after rowid (0 when none) */
+int dt_collection_selected_count_after(const int rowid);
+/** the row of the selected image steps positions on from rowid, rowid
+    included */
+int dt_collection_selected_rowid_after(const int rowid, const int steps);
+/** how many images of the collection come after rowid (-1 if the query
+    could not run) */
+int dt_collection_count_after(const int rowid);
+
 typedef struct dt_collection_date_count_t
 {
   int64_t value; // a GDateTime-based timestamp, too wide for a double

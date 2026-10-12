@@ -4384,6 +4384,72 @@ int dt_collection_rowid_of(const dt_imgid_t imgid, const int none)
   return id;
 }
 
+// a single int from a query built by the caller; none when no row
+static int _collection_int(gchar *query, const int none)
+{
+  int v = none;
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  if(sqlite3_step(stmt) == SQLITE_ROW) v = sqlite3_column_int(stmt, 0);
+  sqlite3_finalize(stmt);
+  g_free(query);
+  return v;
+}
+
+int dt_collection_selected_rowid_before(const int rowid, const int steps)
+{
+  // clang-format off
+  return _collection_int(g_strdup_printf
+    ("SELECT m.rowid FROM memory.collected_images as m, main.selected_images as s"
+     " WHERE m.imgid=s.imgid AND m.rowid<=%d"
+     " ORDER BY m.rowid DESC LIMIT 1 OFFSET %d",
+     rowid, steps), -1);
+  // clang-format on
+}
+
+int dt_collection_selected_rowid_first(void)
+{
+  // clang-format off
+  return _collection_int(g_strdup_printf
+    ("SELECT m.rowid FROM memory.collected_images as m, main.selected_images as s"
+     " WHERE m.imgid=s.imgid"
+     " ORDER BY m.rowid LIMIT 1"), -1);
+  // clang-format on
+}
+
+int dt_collection_selected_count_after(const int rowid)
+{
+  // clang-format off
+  return _collection_int(g_strdup_printf
+    ("SELECT COUNT(m.rowid)"
+     " FROM memory.collected_images as m, main.selected_images as s"
+     " WHERE m.imgid=s.imgid AND m.rowid>%d",
+     rowid), 0);
+  // clang-format on
+}
+
+int dt_collection_selected_rowid_after(const int rowid, const int steps)
+{
+  // clang-format off
+  return _collection_int(g_strdup_printf
+    ("SELECT m.rowid FROM memory.collected_images as m, main.selected_images as s"
+     " WHERE m.imgid=s.imgid AND m.rowid>=%d"
+     " ORDER BY m.rowid LIMIT 1 OFFSET %d",
+     rowid, steps), -1);
+  // clang-format on
+}
+
+int dt_collection_count_after(const int rowid)
+{
+  // clang-format off
+  return _collection_int(g_strdup_printf
+    ("SELECT COUNT(m.rowid)"
+     " FROM memory.collected_images as m"
+     " WHERE m.rowid>%d",
+     rowid), -1);
+  // clang-format on
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent
