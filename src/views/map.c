@@ -83,7 +83,6 @@ typedef struct dt_map_t
   int start_drag_x, start_drag_y;
   int start_drag_offset_x, start_drag_offset_y;
   float thumb_lat_angle, thumb_lon_angle;
-  sqlite3_stmt *main_query;
   gboolean drop_filmstrip_activated;
   gboolean filter_images_drawn;
   int max_images_drawn;
@@ -264,7 +263,7 @@ static void _view_map_build_main_query(dt_map_t *lib);
 
 /* center map to on the baricenter of the image list */
 static gboolean _view_map_center_on_image_list(dt_view_t *self,
-                                               const char *table);
+                                               const gboolean selected);
 /* center map on the given image */
 static void _view_map_center_on_image(dt_view_t *self,
                                       const dt_imgid_t imgid);
@@ -817,8 +816,6 @@ void init(dt_view_t *self)
                      self);
   }
 
-  /* build the query string */
-  lib->main_query = NULL;
   _view_map_build_main_query(lib);
 
 #ifdef USE_LUA
@@ -890,7 +887,6 @@ void cleanup(dt_view_t *self)
     // are doing this inside expose() so removing the widget can cause
     // segfaults.  g_object_unref(G_OBJECT(lib->map));
   }
-  if(lib->main_query) sqlite3_finalize(lib->main_query);
   free(self->data);
 }
 
@@ -1476,22 +1472,10 @@ static void _view_map_changed_callback_delayed(const gpointer user_data)
     dt_conf_set_float("plugins/map/latitude", center_lat);
     dt_conf_set_int("plugins/map/zoom", zoom);
 
-    /* let's reset and reuse the main_query statement */
-    DT_DEBUG_SQLITE3_CLEAR_BINDINGS(lib->main_query);
-    DT_DEBUG_SQLITE3_RESET(lib->main_query);
-
-    /* bind bounding box coords for the main query */
-    DT_DEBUG_SQLITE3_BIND_DOUBLE(lib->main_query, 1, lib->bbox.lon1);
-    DT_DEBUG_SQLITE3_BIND_DOUBLE(lib->main_query, 2, lib->bbox.lon2);
-    DT_DEBUG_SQLITE3_BIND_DOUBLE(lib->main_query, 3, lib->bbox.lat1);
-    DT_DEBUG_SQLITE3_BIND_DOUBLE(lib->main_query, 4, lib->bbox.lat2);
-
-    // count the images
-    int img_count = 0;
-    while(sqlite3_step(lib->main_query) == SQLITE_ROW)
-    {
-      img_count++;
-    }
+    GArray *geo = dt_collection_geo_points(lib->filter_images_drawn,
+                                           lib->bbox.lon1, lib->bbox.lon2,
+                                           lib->bbox.lat1, lib->bbox.lat2);
+    const int img_count = geo->len;
 
     if(lib->points)
       g_free(lib->points);
@@ -1502,16 +1486,16 @@ static void _view_map_changed_callback_delayed(const gpointer user_data)
     dt_geo_position_t *p = lib->points;
     if(p)
     {
-      DT_DEBUG_SQLITE3_RESET(lib->main_query);
       /* make the image list */
       dt_times_t start;
       dt_get_perf_times(&start);
       int i = 0;
-      while(sqlite3_step(lib->main_query) == SQLITE_ROW && all_good && i < img_count)
+      while(all_good && i < img_count)
       {
-        p[i].imgid = sqlite3_column_int(lib->main_query, 0);
-        p[i].x = deg2rad(sqlite3_column_double(lib->main_query, 1));
-        p[i].y = deg2rad(sqlite3_column_double(lib->main_query, 2));
+        const dt_collection_geo_point_t *g = &g_array_index(geo, dt_collection_geo_point_t, i);
+        p[i].imgid = g->imgid;
+        p[i].x = deg2rad(g->longitude);
+        p[i].y = deg2rad(g->latitude);
         p[i].cluster_id = UNCLASSIFIED;
         i++;
       }
@@ -1597,6 +1581,7 @@ static void _view_map_changed_callback_delayed(const gpointer user_data)
       free(processed);
       g_list_free(sel_imgs);
     }
+    g_array_free(geo, TRUE);
 
     needs_redraw = _view_map_draw_images(self);
     _view_map_draw_main_location(lib, &lib->loc.main);
@@ -2324,12 +2309,12 @@ static gboolean _view_map_display_selected(const gpointer user_data)
   dt_map_t *lib = self->data;
   gboolean done = FALSE;
   // selected images ?
-  done = _view_map_center_on_image_list(self, "main.selected_images");
+  done = _view_map_center_on_image_list(self, TRUE);
 
   // collection ?
   if(!done)
   {
-    done = _view_map_center_on_image_list(self, "memory.collected_images");
+    done = _view_map_center_on_image_list(self, FALSE);
   }
 
   // last map view
@@ -2957,7 +2942,7 @@ static void _view_map_collection_changed(gpointer instance,
   // avoid to centre the map on collection while a location is active
   if(darktable.view_manager->proxy.map.view && !lib->loc.main.id)
   {
-    _view_map_center_on_image_list(self, "memory.collected_images");
+    _view_map_center_on_image_list(self, FALSE);
   }
 
   if(dt_conf_get_bool("plugins/map/filter_images_drawn"))
@@ -3012,35 +2997,15 @@ static void _view_map_center_on_image(dt_view_t *self,
 }
 
 static gboolean _view_map_center_on_image_list(dt_view_t *self,
-                                               const char* table)
+                                               const gboolean selected)
 {
   const dt_map_t *lib = self->data;
   double max_longitude = -FLT_MAX;
   double max_latitude = -FLT_MAX;
   double min_longitude = FLT_MAX;
   double min_latitude = FLT_MAX;
-  int count = 0;
-
-  // clang-format off
-  gchar *query = g_strdup_printf("SELECT MIN(latitude), MAX(latitude),"
-                                "       MIN(longitude), MAX(longitude), COUNT(*)"
-                                " FROM main.images AS i "
-                                " JOIN %s AS l ON l.imgid = i.id "
-                                " WHERE latitude NOT NULL AND longitude NOT NULL",
-                                table);
-  // clang-format on
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    min_latitude = sqlite3_column_double(stmt, 0);
-    max_latitude = sqlite3_column_double(stmt, 1);
-    min_longitude = sqlite3_column_double(stmt, 2);
-    max_longitude  = sqlite3_column_double(stmt, 3);
-    count = sqlite3_column_int(stmt, 4);
-  }
-  sqlite3_finalize(stmt);
-  g_free(query);
+  const int count = dt_collection_geo_bounds(selected, &min_latitude, &max_latitude,
+                                             &min_longitude, &max_longitude);
 
   if(count>0)
   {
@@ -3281,28 +3246,7 @@ static gboolean _view_map_prefs_changed(dt_map_t *lib)
 
 static void _view_map_build_main_query(dt_map_t *lib)
 {
-  char *geo_query;
-
-  if(lib->main_query) sqlite3_finalize(lib->main_query);
-
   lib->filter_images_drawn = dt_conf_get_bool("plugins/map/filter_images_drawn");
-  // clang-format off
-  geo_query =
-    g_strdup_printf("SELECT * FROM"
-                    " (SELECT id, longitude, latitude "
-                    "   FROM %s WHERE longitude >= ?1 AND longitude <= ?2"
-                    "           AND latitude <= ?3 AND latitude >= ?4 "
-                    "           AND longitude NOT NULL AND latitude NOT NULL)",
-                    lib->filter_images_drawn
-                    ? "main.images i INNER JOIN memory.collected_images c ON i.id = c.imgid"
-                    : "main.images");
-  // clang-format on
-
-  /* prepare the main query statement */
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              geo_query, -1, &lib->main_query, NULL);
-
-  g_free(geo_query);
 }
 
 GSList *mouse_actions(const dt_view_t *self)
