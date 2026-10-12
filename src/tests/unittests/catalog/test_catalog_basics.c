@@ -363,6 +363,17 @@ static void test_selected_navigation(void **state)
   assert_int_equal(((dt_collection_culling_row_t *)rows->data)->rowid, 2);
   assert_int_equal(((dt_collection_culling_row_t *)g_list_last(rows)->data)->rowid, 3);
   g_list_free_full(rows, g_free);
+
+  // the view manager's selection bit, without the collection
+  assert_true(dt_selection_contains(second));
+  dt_selection_set_member(second, FALSE);
+  assert_false(dt_selection_contains(second));
+  dt_selection_set_member(second, FALSE);
+  assert_false(dt_selection_contains(second));
+  dt_selection_set_member(second, TRUE);
+  dt_selection_set_member(second, TRUE);
+  assert_true(dt_selection_contains(second));
+  assert_int_equal(dt_collection_selected_count(), 3);
 }
 
 // last in the list: it adds a duplicate, which the totals above do not expect
