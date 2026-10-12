@@ -136,7 +136,7 @@ cores = 4
 memory = "4g"
 exclusive = ["machine"]
 cwd = "/work/darktable"
-command = "tools/bench/job perf"
+command = "PERF_RUNS=${runs:-3} tools/bench/job perf"
 mounts = { build = "/build", perf = "/perf" }
 timeout = "2h"
 

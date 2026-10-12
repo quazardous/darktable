@@ -43,7 +43,8 @@ local function scenario()
   timed("collection color label", function() return set_collection("DT_COLLECTION_PROP_COLORLABEL", "red") end)
   timed("collection film roll", function()
     return set_collection("DT_COLLECTION_PROP_FILMROLL", "/helios-perf/film-050") end)
-  set_collection("DT_COLLECTION_PROP_FILMROLL", "%")
+  -- the change that spikes (darktable #3741), timed on its own line
+  timed("collection after film roll", function() return set_collection("DT_COLLECTION_PROP_FILMROLL", "%") end)
 
   -- the first 200 images, in id order. Each Lua write reloads the whole
   -- collection query (lua/image.c rating_member and friends), ~40 ms at
