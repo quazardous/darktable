@@ -4621,6 +4621,53 @@ dt_imgid_t dt_collection_selected_imgid_before(const dt_imgid_t imgid)
   // clang-format on
 }
 
+// rows of collected images with their selected state, as the thumbtable loads them
+static GList *_thumb_rows(gchar *query)
+{
+  GList *rows = NULL;
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    dt_collection_culling_row_t *r = g_new0(dt_collection_culling_row_t, 1);
+    r->rowid = sqlite3_column_int(stmt, 0);
+    r->imgid = sqlite3_column_int(stmt, 1);
+    r->selected = (r->imgid == sqlite3_column_int(stmt, 2));
+    rows = g_list_prepend(rows, r);
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+  return g_list_reverse(rows);
+}
+
+GList *dt_collection_thumb_rows_before(const int rowid, const int limit)
+{
+  // clang-format off
+  return _thumb_rows(g_strdup_printf(
+     "SELECT mi.rowid, mi.imgid, si.imgid"
+     " FROM memory.collected_images AS mi"
+     " LEFT JOIN main.selected_images AS si"
+     "   ON mi.imgid = si.imgid"
+     " WHERE mi.rowid<%d"
+     " ORDER BY mi.rowid DESC LIMIT %d",
+      rowid, limit));
+  // clang-format on
+}
+
+GList *dt_collection_thumb_rows_after(const int rowid, const int limit)
+{
+  // clang-format off
+  return _thumb_rows(g_strdup_printf(
+     "SELECT mi.rowid, mi.imgid, si.imgid"
+     " FROM memory.collected_images AS mi"
+     " LEFT JOIN main.selected_images AS si"
+     "   ON mi.imgid = si.imgid"
+     " WHERE rowid>%d"
+     " ORDER BY rowid LIMIT %d",
+      rowid, limit));
+  // clang-format on
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

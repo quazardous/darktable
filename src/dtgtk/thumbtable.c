@@ -569,7 +569,6 @@ static int _thumbs_load_needed(dt_thumbtable_t *table,
 {
   if(!first || !last) return 0;
 
-  sqlite3_stmt *stmt;
   int changed = 0;
 
   // we save here the last image value as they may change if the last image is invalid
@@ -590,28 +589,19 @@ static int _thumbs_load_needed(dt_thumbtable_t *table,
       space = first->x;
 
     const int nb_to_load = space / table->thumb_size + (space % table->thumb_size != 0);
-    // clang-format off
-    gchar *query = g_strdup_printf(
-       "SELECT mi.rowid, mi.imgid, si.imgid"
-       " FROM memory.collected_images AS mi"
-       " LEFT JOIN main.selected_images AS si"
-       "   ON mi.imgid = si.imgid"
-       " WHERE mi.rowid<%d"
-       " ORDER BY mi.rowid DESC LIMIT %d",
-        first->rowid, nb_to_load * table->thumbs_per_row);
-    // clang-format on
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+    GList *rows = dt_collection_thumb_rows_before(first->rowid, nb_to_load * table->thumbs_per_row);
     int posx = first->x;
     int posy = first->y;
     _pos_get_previous(table, &posx, &posy);
 
-    while(sqlite3_step(stmt) == SQLITE_ROW)
+    for(GList *r = rows; r; r = g_list_next(r))
     {
+      const dt_collection_culling_row_t *row = r->data;
       if(posy < table->view_height) // we don't load invisible thumbs
       {
-        const dt_imgid_t imgid = sqlite3_column_int(stmt, 1);
-        const int rowid = sqlite3_column_int(stmt, 0);
-        const gboolean selected = (imgid == sqlite3_column_int(stmt, 2));
+        const dt_imgid_t imgid = row->imgid;
+        const int rowid = row->rowid;
+        const gboolean selected = row->selected;
         _thumb_move_or_create(table,
                               th_invalid,
                               imgid,
@@ -623,8 +613,7 @@ static int _thumbs_load_needed(dt_thumbtable_t *table,
       }
       _pos_get_previous(table, &posx, &posy);
     }
-    g_free(query);
-    sqlite3_finalize(stmt);
+    g_list_free_full(rows, g_free);
   }
 
   // we load images at the end
@@ -642,29 +631,20 @@ static int _thumbs_load_needed(dt_thumbtable_t *table,
     if(table->mode == DT_THUMBTABLE_MODE_FILMSTRIP)
       space = table->view_width - (last_x + table->thumb_size);
     const int nb_to_load = space / table->thumb_size + (space % table->thumb_size != 0);
-    // clang-format off
-    gchar *query = g_strdup_printf(
-       "SELECT mi.rowid, mi.imgid, si.imgid"
-       " FROM memory.collected_images AS mi"
-       " LEFT JOIN main.selected_images AS si"
-       "   ON mi.imgid = si.imgid"
-       " WHERE rowid>%d"
-       " ORDER BY rowid LIMIT %d",
-        last_rowid, nb_to_load * table->thumbs_per_row);
-    // clang-format on
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+    GList *rows = dt_collection_thumb_rows_after(last_rowid, nb_to_load * table->thumbs_per_row);
 
     int posx = last_x;
     int posy = last_y;
     _pos_get_next(table, &posx, &posy);
 
-    while(sqlite3_step(stmt) == SQLITE_ROW)
+    for(GList *r = rows; r; r = g_list_next(r))
     {
+      const dt_collection_culling_row_t *row = r->data;
       if(posy + table->thumb_size > 0) // we don't load invisible thumbs
       {
-        const dt_imgid_t imgid = sqlite3_column_int(stmt, 1);
-        const int rowid =  sqlite3_column_int(stmt, 0);
-        const gboolean selected = (imgid == sqlite3_column_int(stmt, 2));
+        const dt_imgid_t imgid = row->imgid;
+        const int rowid =  row->rowid;
+        const gboolean selected = row->selected;
         _thumb_move_or_create(table,
                               th_invalid,
                               imgid,
@@ -676,8 +656,7 @@ static int _thumbs_load_needed(dt_thumbtable_t *table,
       }
       _pos_get_next(table, &posx, &posy);
     }
-    g_free(query);
-    sqlite3_finalize(stmt);
+    g_list_free_full(rows, g_free);
   }
 
   return changed;
