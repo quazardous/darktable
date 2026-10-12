@@ -7,8 +7,9 @@
 #
 # the prefix defaults to build/helios-prefix, filled with
 #   cmake --install build --prefix build/helios-prefix
-# darktable runs offscreen in a wbox compositor (tools/helios/wbox), the
-# scenario as its --luacmd; WBOX_VISIBLE=1 shows the window.
+# darktable runs offscreen in a wbox compositor (tools/helios/wbox), one
+# session with the scenario run through its D-Bus Lua method (lib.sh dtlua);
+# WBOX_VISIBLE=1 shows the window.
 #
 # the work directory path is fixed (paths are stored in the database and
 # the sidecars), so two runs are only comparable when made on the same
@@ -28,7 +29,7 @@ integ="$src/src/tests/integration"
 rm -rf "$outdir"
 mkdir -p "$outdir/xmp"
 export HELIOS_PREFIX="$prefix"
-init_library
+init_dirs
 cp "$integ"/images/*.{cr2,arw,raf,crw} "$work/images/"
 
 export HELIOS_BENCH_IMAGES="$work/images"
@@ -37,13 +38,18 @@ export HELIOS_BENCH_OUT="$outdir/reads.txt"
 
 # the lighttable then shows a collection that matches nothing: rendering
 # thumbnails in the background reloads, upgrades and rewrites histories and
-# image rows, racing with the scenario and making runs differ. A fresh
-# library starts with an init session (lib.sh init_library) for this.
+# image rows, racing with the scenario and making runs differ.
 set_collection /helios-bench-no-such-film
 
 start=$(date +%s.%N)
-status=$(session "dofile('$here/scenario.lua')" "$outdir/reads.txt" '^SCENARIO (OK|ABORTED)$')
+# one darktable session, the scenario run through its D-Bus Lua method
+status=$(dbus_session_start)
+if [ "$status" = ok ] && ! HELIOS_DTLUA_TIMEOUT=600 dtlua "dofile('$here/scenario.lua') return 'ok'" > /dev/null; then
+  status="scenario call failed"
+fi
 end=$(date +%s.%N)
+quit=$(session_quit)
+[ "$status" = ok ] && status="$quit"
 
 python3 -I "$here/normalize.py" db "$work/config/library.db" > "$outdir/library.txt"
 python3 -I "$here/normalize.py" db "$work/config/data.db" > "$outdir/data.txt"
