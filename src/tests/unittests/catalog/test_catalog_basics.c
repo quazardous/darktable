@@ -305,6 +305,11 @@ static void test_selected_navigation(void **state)
   rows = dt_collection_culling_rows(3, 3, TRUE);
   assert_int_equal(g_list_length(rows), 3);
   g_list_free_full(rows, g_free);
+
+  assert_int_equal(dt_collection_max_rowid(), 3);
+  const dt_imgid_t second = dt_collection_imgid_at_rowid(2);
+  assert_int_equal(dt_collection_selected_imgid_after(second), second);
+  assert_int_equal(dt_collection_selected_imgid_before(dt_collection_imgid_at_rowid(1)), NO_IMGID);
 }
 
 // last in the list: it adds a duplicate, which the totals above do not expect

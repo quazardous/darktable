@@ -4590,6 +4590,37 @@ GList *dt_collection_culling_rows(const int offset,
   return g_list_reverse(rows);
 }
 
+int dt_collection_max_rowid(void)
+{
+  return _collection_int(g_strdup("SELECT MAX(rowid) FROM memory.collected_images"), 1);
+}
+
+dt_imgid_t dt_collection_selected_imgid_after(const dt_imgid_t imgid)
+{
+  // clang-format off
+  return _collection_int(g_strdup_printf(
+      "SELECT m.imgid"
+      " FROM memory.collected_images AS m, main.selected_images AS s"
+      " WHERE m.imgid=s.imgid"
+      "   AND m.rowid>=(SELECT rowid FROM memory.collected_images WHERE imgid=%d)"
+      " ORDER BY m.rowid LIMIT 1",
+      imgid), NO_IMGID);
+  // clang-format on
+}
+
+dt_imgid_t dt_collection_selected_imgid_before(const dt_imgid_t imgid)
+{
+  // clang-format off
+  return _collection_int(g_strdup_printf(
+      "SELECT m.imgid"
+      " FROM memory.collected_images AS m, main.selected_images AS s"
+      " WHERE m.imgid=s.imgid"
+      "   AND m.rowid<(SELECT rowid FROM memory.collected_images WHERE imgid=%d)"
+      " ORDER BY m.rowid DESC LIMIT 1",
+      imgid), NO_IMGID);
+  // clang-format on
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

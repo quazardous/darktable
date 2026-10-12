@@ -393,6 +393,12 @@ int dt_collection_selected_rowid_after(const int rowid, const int steps);
 /** how many images of the collection come after rowid (-1 if the query
     could not run) */
 int dt_collection_count_after(const int rowid);
+/** the last row of memory.collected_images (0 when empty) */
+int dt_collection_max_rowid(void);
+/** the first selected image of the collection at or after imgid's row */
+dt_imgid_t dt_collection_selected_imgid_after(const dt_imgid_t imgid);
+/** the last selected image of the collection before imgid's row */
+dt_imgid_t dt_collection_selected_imgid_before(const dt_imgid_t imgid);
 /** how many selected images the collection holds */
 int dt_collection_selected_count(void);
 /** TRUE when the image is in the collection and selected */
