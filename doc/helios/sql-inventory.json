@@ -8729,7 +8729,154 @@
   },
   {
    "file": "common/history.c",
-   "line": 1818,
+   "line": 1769,
+   "function": "dt_history_write_item",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT num FROM main.history WHERE imgid = ?1 AND num = ?2"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1777,
+   "function": "dt_history_write_item",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "INSERT"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "INSERT INTO main.history (imgid, num) VALUES (?1, ?2)"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1787,
+   "function": "dt_history_write_item",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE main.history SET operation = ?1, op_params = ?2, module = ?3, enabled = ?4, blendop_params = ?7, blendop_version = ?8, multi_priority = ?9, multi_name = ?10, multi_name_hand_edited = ?11 WHERE imgid = ?5 AND num = ?6"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1825,
+   "function": "dt_history_insert_masks_item",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "INSERT"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.masks_history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "INSERT INTO main.masks_history (imgid, num, formid, form, name, version, points, points_count,source) VALUES (?1, ?9, ?2, ?3, ?4, ?5, ?6, ?7, ?8)"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1850,
+   "function": "dt_history_next_num",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT IFNULL(MAX(num)+1, 0) FROM main.history WHERE imgid=?1"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1865,
+   "function": "dt_history_delete_rows",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "DELETE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "DELETE FROM main.history WHERE imgid = ?1"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1872,
+   "function": "dt_history_delete_rows",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "DELETE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.masks_history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "DELETE FROM main.masks_history WHERE imgid = ?1"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1944,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8750,7 +8897,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1835,
+   "line": 1961,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8771,7 +8918,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1872,
+   "line": 1998,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8792,7 +8939,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1901,
+   "line": 2027,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8813,7 +8960,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1982,
+   "line": 2108,
    "function": "dt_history_hash_write_from_history",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8835,7 +8982,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2005,
+   "line": 2131,
    "function": "dt_history_hash_write",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8857,7 +9004,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2033,
+   "line": 2159,
    "function": "dt_history_hash_read",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8878,7 +9025,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2088,
+   "line": 2214,
    "function": "dt_history_hash_is_mipmap_synced",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8899,7 +9046,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2110,
+   "line": 2236,
    "function": "dt_history_hash_set_mipmap",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8920,7 +9067,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2126,
+   "line": 2252,
    "function": "dt_history_hash_unset_mipmap",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8941,7 +9088,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2155,
+   "line": 2281,
    "function": "dt_history_hash_get_status",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -14475,133 +14622,7 @@
   },
   {
    "file": "develop/develop.c",
-   "line": 1171,
-   "function": "_dev_write_history_item",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT num FROM main.history WHERE imgid = ?1 AND num = ?2"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 1179,
-   "function": "_dev_write_history_item",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "INSERT"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "INSERT INTO main.history (imgid, num) VALUES (?1, ?2)"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 1189,
-   "function": "_dev_write_history_item",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE main.history SET operation = ?1, op_params = ?2, module = ?3, enabled = ?4, blendop_params = ?7, blendop_version = ?8, multi_priority = ?9, multi_name = ?10, multi_name_hand_edited = ?11 WHERE imgid = ?5 AND num = ?6"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 1831,
-   "function": "dt_dev_history_truncate",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT IFNULL(MAX(num)+1, 0) FROM main.history WHERE imgid=?1"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 1918,
-   "function": "_cleanup_history",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM main.history WHERE imgid = ?1"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 1925,
-   "function": "_cleanup_history",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.masks_history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM main.masks_history WHERE imgid = ?1"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 1979,
+   "line": 1917,
    "function": "_dev_get_module_nb_records",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14622,7 +14643,7 @@
   },
   {
    "file": "develop/develop.c",
-   "line": 2002,
+   "line": 1940,
    "function": "_dev_insert_module",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14643,7 +14664,7 @@
   },
   {
    "file": "develop/develop.c",
-   "line": 2205,
+   "line": 2143,
    "function": "_dev_auto_apply_presets",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14666,7 +14687,7 @@
   },
   {
    "file": "develop/develop.c",
-   "line": 2229,
+   "line": 2167,
    "function": "_dev_auto_apply_presets",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14689,7 +14710,7 @@
   },
   {
    "file": "develop/develop.c",
-   "line": 2353,
+   "line": 2291,
    "function": "_dev_merge_history",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14710,7 +14731,7 @@
   },
   {
    "file": "develop/develop.c",
-   "line": 2375,
+   "line": 2313,
    "function": "_dev_merge_history",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14731,7 +14752,7 @@
   },
   {
    "file": "develop/develop.c",
-   "line": 2385,
+   "line": 2323,
    "function": "_dev_merge_history",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14752,7 +14773,7 @@
   },
   {
    "file": "develop/develop.c",
-   "line": 2411,
+   "line": 2349,
    "function": "_dev_merge_history",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14773,7 +14794,7 @@
   },
   {
    "file": "develop/develop.c",
-   "line": 2425,
+   "line": 2363,
    "function": "_dev_merge_history",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14940,27 +14961,6 @@
    ],
    "cross_schema": false,
    "sql": "(\\\"%s\\\",\\\"%s\\\"),INSERT INTO memory.darktable_iop_names (operation, name) VALUES %s"
-  },
-  {
-   "file": "develop/masks/masks.c",
-   "line": 1164,
-   "function": "dt_masks_write_masks_history_item",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "INSERT"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.masks_history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "INSERT INTO main.masks_history (imgid, num, formid, form, name, version, points, points_count,source) VALUES (?1, ?9, ?2, ?3, ?4, ?5, ?6, ?7, ?8)"
   },
   {
    "file": "dtgtk/culling.c",
