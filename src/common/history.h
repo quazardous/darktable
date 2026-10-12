@@ -190,6 +190,59 @@ gboolean dt_history_find_module_version(const char *operation,
                                         const int params_size,
                                         int *version);
 
+/** empty memory.history, the staging table of a history load */
+void dt_history_clear_memory(void);
+
+/** copy memory.history into memory.snapshot_history under snapshot_id */
+void dt_history_snapshot_memory(const int snapshot_id);
+
+/** a main.history or memory.snapshot_history row, blobs copied: a
+    NULL blob or text column stays NULL, an empty blob is NULL too */
+typedef struct dt_history_row_t
+{
+  int id;               // the image id, or the snapshot id
+  int num;
+  int module_version;
+  char *operation;
+  void *op_params;
+  int op_params_size;
+  int enabled;
+  void *blendop_params;
+  int blendop_params_size;
+  int blendop_version;
+  int multi_priority;
+  char *multi_name;
+  int multi_name_hand_edited;
+} dt_history_row_t;
+
+/** history rows of the image, or of the snapshot when snapshot_id is not
+    -1, by num. Free with g_list_free_full(list, dt_history_row_free) */
+GList *dt_history_get_rows(const dt_imgid_t imgid, const int snapshot_id);
+void dt_history_row_free(gpointer data);
+
+/** a main.masks_history or memory.snapshot_masks_history row, blobs copied */
+typedef struct dt_history_masks_row_t
+{
+  int formid;
+  int type;
+  char *name;
+  int version;
+  void *points;
+  int points_size;
+  int points_count;
+  void *source;
+  int source_size;
+  int num;
+} dt_history_masks_row_t;
+
+/** mask history rows below history_end of the image, or of the snapshot
+    when snapshot_id is not -1, by num.
+    Free with g_list_free_full(list, dt_history_masks_row_free) */
+GList *dt_history_get_masks_rows(const dt_imgid_t imgid,
+                                 const int snapshot_id,
+                                 const int history_end);
+void dt_history_masks_row_free(gpointer data);
+
 /** calculate history hash and save it to database*/
 void dt_history_hash_write_from_history(const dt_imgid_t imgid,
                                         const dt_history_hash_t type);

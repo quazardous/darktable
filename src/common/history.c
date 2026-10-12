@@ -1595,6 +1595,162 @@ gboolean dt_history_find_module_version(const char *operation,
   return found;
 }
 
+void dt_history_clear_memory(void)
+{
+  DT_DEBUG_SQLITE3_EXEC(dt_database_get(darktable.db),
+                        "DELETE FROM memory.history", NULL, NULL, NULL);
+}
+
+void dt_history_snapshot_memory(const int snapshot_id)
+{
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2
+    (dt_database_get(darktable.db),
+     "INSERT INTO memory.snapshot_history"
+     " SELECT ?1, * FROM memory.history",
+     -1, &stmt, NULL);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, snapshot_id);
+  sqlite3_step(stmt);
+  sqlite3_finalize(stmt);
+}
+
+// a blob column, copied; NULL when empty, as sqlite3_column_blob() returns
+static void *_column_blob_dup(sqlite3_stmt *stmt, const int col, int *size)
+{
+  const void *blob = sqlite3_column_blob(stmt, col);
+  *size = sqlite3_column_bytes(stmt, col);
+  if(!blob) return NULL;
+  void *copy = g_malloc(*size);
+  memcpy(copy, blob, *size);
+  return copy;
+}
+
+GList *dt_history_get_rows(const dt_imgid_t imgid, const int snapshot_id)
+{
+  sqlite3_stmt *stmt;
+  // clang-format off
+  if(snapshot_id == -1)
+  {
+    // not a snapshot, read from main history
+    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                                "SELECT imgid, num, module, operation,"
+                                "       op_params, enabled, blendop_params,"
+                                "       blendop_version, multi_priority, multi_name,"
+                                "       multi_name_hand_edited"
+                                " FROM main.history"
+                                " WHERE imgid = ?1"
+                                " ORDER BY num",
+                                -1, &stmt, NULL);
+    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
+  }
+  else
+  {
+    // a snapshot, read from history_snapshot
+    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                                "SELECT id, num, module, operation,"
+                                "       op_params, enabled, blendop_params,"
+                                "       blendop_version, multi_priority, multi_name,"
+                                "       multi_name_hand_edited"
+                                " FROM memory.snapshot_history"
+                                " WHERE id = ?1"
+                                " ORDER BY num",
+                                -1, &stmt, NULL);
+    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, snapshot_id);
+  }
+  // clang-format on
+
+  GList *rows = NULL;
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    dt_history_row_t *row = g_malloc0(sizeof(dt_history_row_t));
+    row->id = sqlite3_column_int(stmt, 0);
+    row->num = sqlite3_column_int(stmt, 1);
+    row->module_version = sqlite3_column_int(stmt, 2);
+    row->operation = g_strdup((const char *)sqlite3_column_text(stmt, 3));
+    row->op_params = _column_blob_dup(stmt, 4, &row->op_params_size);
+    row->enabled = sqlite3_column_int(stmt, 5);
+    row->blendop_params = _column_blob_dup(stmt, 6, &row->blendop_params_size);
+    row->blendop_version = sqlite3_column_int(stmt, 7);
+    row->multi_priority = sqlite3_column_int(stmt, 8);
+    row->multi_name = g_strdup((const char *)sqlite3_column_text(stmt, 9));
+    row->multi_name_hand_edited = sqlite3_column_int(stmt, 10);
+    rows = g_list_prepend(rows, row);
+  }
+  sqlite3_finalize(stmt);
+  return g_list_reverse(rows);
+}
+
+void dt_history_row_free(gpointer data)
+{
+  dt_history_row_t *row = data;
+  g_free(row->operation);
+  g_free(row->op_params);
+  g_free(row->blendop_params);
+  g_free(row->multi_name);
+  g_free(row);
+}
+
+GList *dt_history_get_masks_rows(const dt_imgid_t imgid,
+                                 const int snapshot_id,
+                                 const int history_end)
+{
+  sqlite3_stmt *stmt;
+  // clang-format off
+  if(snapshot_id == -1)
+  {
+    DT_DEBUG_SQLITE3_PREPARE_V2(
+      dt_database_get(darktable.db),
+      "SELECT imgid, formid, form, name, version, points, points_count, source, num"
+      " FROM main.masks_history"
+      " WHERE imgid = ?1"
+      "   AND num < ?2"
+      " ORDER BY num",
+      -1, &stmt, NULL);
+    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
+    DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, history_end);
+  }
+  else
+  {
+    DT_DEBUG_SQLITE3_PREPARE_V2(
+      dt_database_get(darktable.db),
+      "SELECT imgid, formid, form, name, version, points, points_count, source, num"
+      " FROM memory.snapshot_masks_history"
+      " WHERE id = ?1"
+      "   AND num < ?2"
+      " ORDER BY num",
+      -1, &stmt, NULL);
+    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, snapshot_id);
+    DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, history_end);
+  }
+  // clang-format on
+
+  GList *rows = NULL;
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    dt_history_masks_row_t *row = g_malloc0(sizeof(dt_history_masks_row_t));
+    row->formid = sqlite3_column_int(stmt, 1);
+    row->type = sqlite3_column_int(stmt, 2);
+    row->name = g_strdup((const char *)sqlite3_column_text(stmt, 3));
+    row->version = sqlite3_column_int(stmt, 4);
+    row->points = _column_blob_dup(stmt, 5, &row->points_size);
+    row->points_count = sqlite3_column_int(stmt, 6);
+    row->source = _column_blob_dup(stmt, 7, &row->source_size);
+    row->num = sqlite3_column_int(stmt, 8);
+    rows = g_list_prepend(rows, row);
+  }
+  sqlite3_finalize(stmt);
+  return g_list_reverse(rows);
+}
+
+void dt_history_masks_row_free(gpointer data)
+{
+  dt_history_masks_row_t *row = data;
+  g_free(row->name);
+  g_free(row->points);
+  g_free(row->source);
+  g_free(row);
+}
+
 GList *dt_history_duplicate(GList *hist)
 {
   GList *result = NULL;

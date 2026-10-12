@@ -19,6 +19,7 @@
 #include "develop/masks.h"
 #include "bauhaus/bauhaus.h"
 #include "common/debug.h"
+#include "common/history.h"
 #include "control/conf.h"
 #include "control/control.h"
 #include "develop/blend.h"
@@ -976,67 +977,36 @@ void dt_masks_read_masks_history(dt_develop_t *dev, const dt_imgid_t imgid)
   const dt_dev_history_item_t *hist_item_last = NULL;
   int num_prev = -1;
 
-  sqlite3_stmt *stmt;
-  // clang-format off
-  if(dev->snapshot_id == -1)
-  {
-    DT_DEBUG_SQLITE3_PREPARE_V2(
-      dt_database_get(darktable.db),
-      "SELECT imgid, formid, form, name, version, points, points_count, source, num"
-      " FROM main.masks_history"
-      " WHERE imgid = ?1"
-      "   AND num < ?2"
-      " ORDER BY num",
-      -1, &stmt, NULL);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, dev->history_end);
-  }
-  else
-  {
-    DT_DEBUG_SQLITE3_PREPARE_V2(
-      dt_database_get(darktable.db),
-      "SELECT imgid, formid, form, name, version, points, points_count, source, num"
-      " FROM memory.snapshot_masks_history"
-      " WHERE id = ?1"
-      "   AND num < ?2"
-      " ORDER BY num",
-      -1, &stmt, NULL);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, dev->snapshot_id);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, dev->history_end);
-  }
-  // clang-format on
+  GList *rows = dt_history_get_masks_rows(imgid, dev->snapshot_id, dev->history_end);
 
-  while(sqlite3_step(stmt) == SQLITE_ROW)
+  for(const GList *r = rows; r; r = g_list_next(r))
   {
-    // db record: 0-img, 1-formid, 2-form_type, 3-name, 4-version,
-    // 5-points, 6-points_count, 7-source, 8-num
+    const dt_history_masks_row_t *row = r->data;
 
-    // we get the values
-
-    const dt_mask_id_t formid = sqlite3_column_int(stmt, 1);
-    const int num = sqlite3_column_int(stmt, 8);
-    const dt_masks_type_t type = sqlite3_column_int(stmt, 2);
+    const dt_mask_id_t formid = row->formid;
+    const int num = row->num;
+    const dt_masks_type_t type = row->type;
     dt_masks_form_t *form = dt_masks_create(type);
     form->formid = formid;
-    const char *name = (const char *)sqlite3_column_text(stmt, 3);
+    const char *name = row->name;
     g_strlcpy(form->name, name, sizeof(form->name));
-    form->version = sqlite3_column_int(stmt, 4);
+    form->version = row->version;
     form->points = NULL;
-    const int nb_points = sqlite3_column_int(stmt, 6);
-    const int source_bytes = sqlite3_column_bytes(stmt, 7);
+    const int nb_points = row->points_count;
+    const int source_bytes = row->source_size;
     if(source_bytes == sizeof(float) * 2)
     {
-      memcpy(form->source, sqlite3_column_blob(stmt, 7), sizeof(float) * 2);
+      memcpy(form->source, row->source, sizeof(float) * 2);
       form->source[2] = 0.0f;
     }
     else if(source_bytes == sizeof(float) * 3)
     {
-      memcpy(form->source, sqlite3_column_blob(stmt, 7), sizeof(float) * 3);
+      memcpy(form->source, row->source, sizeof(float) * 3);
     }
     else if(source_bytes == sizeof(float) * 4)
     {
       // migration: old format stored an unused scale field as source[3]; drop it
-      memcpy(form->source, sqlite3_column_blob(stmt, 7), sizeof(float) * 3);
+      memcpy(form->source, row->source, sizeof(float) * 3);
     }
     else
     {
@@ -1046,7 +1016,7 @@ void dt_masks_read_masks_history(dt_develop_t *dev, const dt_imgid_t imgid)
     // and now we "read" the blob
     if(form->functions)
     {
-      const char *const ptbuf = (char *)sqlite3_column_blob(stmt, 5);
+      const char *const ptbuf = row->points;
       const size_t point_size = form->functions->point_struct_size;
       for(int i = 0; i < nb_points; i++)
       {
@@ -1177,7 +1147,7 @@ void dt_masks_read_masks_history(dt_develop_t *dev, const dt_imgid_t imgid)
 
     if(num < dev->history_end) hist_item_last = hist_item;
   }
-  sqlite3_finalize(stmt);
+  g_list_free_full(rows, dt_history_masks_row_free);
 
   // and we update the current forms snapshot
   dt_masks_replace_current_forms(dev, (hist_item_last)?hist_item_last->forms:NULL);

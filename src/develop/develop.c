@@ -2482,8 +2482,7 @@ void dt_dev_read_history_ext(dt_develop_t *dev,
   if(!no_image)
   {
     // cleanup
-    DT_DEBUG_SQLITE3_EXEC(dt_database_get(darktable.db),
-                          "DELETE FROM memory.history", NULL, NULL, NULL);
+    dt_history_clear_memory();
 
     dt_print(DT_DEBUG_PARAMS, "[dt_dev_read_history_ext] temporary history deleted");
 
@@ -2526,61 +2525,18 @@ void dt_dev_read_history_ext(dt_develop_t *dev,
 
     if(dev->snapshot_id != -1)
     {
-      sqlite3_stmt *stmt;
-
-      DT_DEBUG_SQLITE3_PREPARE_V2
-        (dt_database_get(darktable.db),
-         "INSERT INTO memory.snapshot_history"
-         " SELECT ?1, * FROM memory.history",
-         -1, &stmt, NULL);
-      DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, dev->snapshot_id);
-      sqlite3_step(stmt);
-      sqlite3_finalize(stmt);
-
-      DT_DEBUG_SQLITE3_EXEC
-        (dt_database_get(darktable.db),
-         "DELETE FROM memory.history", NULL, NULL, NULL);
+      dt_history_snapshot_memory(dev->snapshot_id);
+      dt_history_clear_memory();
     }
   }
-
-  sqlite3_stmt *stmt;
 
   // Get the end of the history - What's that ???
 
   int history_end_current = 0;
   dt_image_get_history_end(imgid, &history_end_current);
 
-  // Load current image history from DB
-  // clang-format off
-  if(dev->snapshot_id == -1)
-  {
-    // not a snapshot, read from main history
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                "SELECT imgid, num, module, operation,"
-                                "       op_params, enabled, blendop_params,"
-                                "       blendop_version, multi_priority, multi_name,"
-                                "       multi_name_hand_edited"
-                                " FROM main.history"
-                                " WHERE imgid = ?1"
-                                " ORDER BY num",
-                                -1, &stmt, NULL);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-  }
-  else
-  {
-    // a snapshot, read from history_snapshot
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                "SELECT id, num, module, operation,"
-                                "       op_params, enabled, blendop_params,"
-                                "       blendop_version, multi_priority, multi_name,"
-                                "       multi_name_hand_edited"
-                                " FROM memory.snapshot_history"
-                                " WHERE id = ?1"
-                                " ORDER BY num",
-                                -1, &stmt, NULL);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, dev->snapshot_id);
-  }
-  // clang-format on
+  // Load current image history from DB, or the snapshot's
+  GList *rows = dt_history_get_rows(imgid, dev->snapshot_id);
 
   dev->history_end = 0;
 
@@ -2592,23 +2548,23 @@ void dt_dev_read_history_ext(dt_develop_t *dev,
   dt_iop_module_t *temperature = NULL;
 
   // Strip rows from DB lookup. One row == One module in history
-  while(sqlite3_step(stmt) == SQLITE_ROW)
+  for(const GList *r = rows; r; r = g_list_next(r))
   {
-    // Unpack the DB blobs
-    const int id = sqlite3_column_int(stmt, 0);
-    const int num = sqlite3_column_int(stmt, 1);
-    const int modversion = sqlite3_column_int(stmt, 2);
-    const char *module_name = (const char *)sqlite3_column_text(stmt, 3);
-    const void *module_params = sqlite3_column_blob(stmt, 4);
-    const int enabled = sqlite3_column_int(stmt, 5);
-    const void *blendop_params = sqlite3_column_blob(stmt, 6);
-    const int blendop_version = sqlite3_column_int(stmt, 7);
-    const int multi_priority = sqlite3_column_int(stmt, 8);
-    const char *multi_name = (const char *)sqlite3_column_text(stmt, 9);
-    const int multi_name_hand_edited = sqlite3_column_int(stmt, 10);
+    const dt_history_row_t *row = r->data;
+    const int id = row->id;
+    const int num = row->num;
+    const int modversion = row->module_version;
+    const char *module_name = row->operation;
+    const void *module_params = row->op_params;
+    const int enabled = row->enabled;
+    const void *blendop_params = row->blendop_params;
+    const int blendop_version = row->blendop_version;
+    const int multi_priority = row->multi_priority;
+    const char *multi_name = row->multi_name;
+    const int multi_name_hand_edited = row->multi_name_hand_edited;
 
-    const int param_length = sqlite3_column_bytes(stmt, 4);
-    const int bl_length = sqlite3_column_bytes(stmt, 6);
+    const int param_length = row->op_params_size;
+    const int bl_length = row->blendop_params_size;
 
     // Sanity checks
     const gboolean is_valid_id = (id == imgid || (dev->snapshot_id != -1));
@@ -2859,7 +2815,7 @@ void dt_dev_read_history_ext(dt_develop_t *dev,
     dev->history = g_list_append(dev->history, hist);
     dev->history_end++;
   }
-  sqlite3_finalize(stmt);
+  g_list_free_full(rows, dt_history_row_free);
 
   // Both modules are actives and found on the history stack, let's
   // again reload the defaults to ensure the whiteblance is properly
