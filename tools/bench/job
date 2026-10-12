@@ -43,5 +43,15 @@ case "${1:-}" in
   gui-tags) need_build; "$bench/gui_tags.sh" /out/gui-tags "$prefix" ;;
   pixel) need_build
          HELIOS_KEEP_OUTPUTS=/out/pixel-outputs "$bench/integration.sh" "$prefix" /out/pixel.log ;;
+  # the fast subset; fails only on a failure outside the known list of a
+  # RelWithDebInfo build (darktable #3767)
+  pixel-fast) need_build
+         mapfile -t tests < <(sed 's/#.*//' "$bench/integration-fast.txt" | awk 'NF { print $1 }')
+         HELIOS_KEEP_OUTPUTS=/out/pixel-outputs "$bench/integration.sh" "$prefix" /out/pixel.log "${tests[@]}"
+         failed=$(sed -n '/^Errors /,$p' /out/pixel.log | sed -n 's/^   - //p')
+         new=$(comm -23 <(printf '%s\n' $failed | sort -u) \
+                 <(sed 's/#.*//' "$bench/integration-known-failures.txt" | awk 'NF { print $1 }' | sort -u))
+         [ -z "$new" ] || { echo "new failures: $new"; exit 1; }
+         echo "pixel-fast: ${#tests[@]} tests, no new failure" ;;
   *) echo "unknown job: ${1:-}"; exit 2 ;;
 esac
