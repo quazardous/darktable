@@ -119,6 +119,17 @@ command = "tools/bench/job pixel-fast"
 mounts = { build = "/build" }
 timeout = "20m"
 
+# the fast subset at 1, 2, 4 and 8 OpenMP threads and with -t 4 on two
+# CPUs, compared pixel by pixel with -t 4 (darktable #3807): 8 threads so
+# that t8 differs from the default
+[jobs.threads]
+cores = 8
+memory = "4g"
+cwd = "/work/darktable"
+command = "tools/bench/job threads"
+mounts = { build = "/build" }
+timeout = "1h"
+
 # timings: alone on the machine
 [jobs.perf]
 cores = 4

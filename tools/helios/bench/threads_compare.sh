@@ -38,7 +38,11 @@ wrapper() {
   case "$v" in
     t[0-9]*) threads="${v#t}" ;;
     tall) threads="$(nproc)" ;;
-    cpus2) threads=4; cpus=0-1 ;;
+    # the first two CPUs this process may use, not 0-1: in a container
+    # pinned elsewhere (a bench box job), 0-1 are not allowed
+    cpus2) threads=4; cpus="$(taskset -cp $$ | sed 's/.*: //; s/[,-].*//')"
+           cpus="$cpus,$(taskset -cp $$ | sed 's/.*: //' | tr ',' '\n' \
+             | awk -F- -v first="$cpus" '{ for (c = $1; c <= ($2 == "" ? $1 : $2); c++) if (c != first) { print c; exit } }')" ;;
     *) echo "unknown variant: $v" >&2; exit 1 ;;
   esac
   cat > "$out/cli-$v" << SH
