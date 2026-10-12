@@ -27,6 +27,9 @@ run = [
  && /opt/dt-tests-venv/bin/pip install --quiet --upgrade pip \
  && /opt/dt-tests-venv/bin/pip install --quiet "colour-science>=0.4.4" "numpy>=1.24" \
       "scipy>=1.10" "imageio>=2.9" "pillow>=9.0" "packaging>=20.0" "matplotlib>=3.7\"""",
+  # uploaded files arrive without their execute bit (config file stores
+  # them 0664, and COPY keeps the mode); glycin runs bwrap
+  "chmod 755 /usr/local/bin/bwrap",
   # wbox drives darktable in a headless labwc for the benches
   """python3 -m venv /opt/wbox \
  && /opt/wbox/bin/pip install --quiet "git+https://github.com/quazardous/wbox-mcp.git\"""",
