@@ -1085,18 +1085,7 @@ static void _dt_selection_changed_callback(gpointer instance,
      && dt_view_lighttable_get_layout(darktable.view_manager)
         == DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC)
   {
-    sqlite3_stmt *stmt;
-    int sel_count = 0;
-    // clang-format off
-    DT_DEBUG_SQLITE3_PREPARE_V2
-      (dt_database_get(darktable.db),
-       "SELECT count(*)"
-       " FROM memory.collected_images AS col, main.selected_images as sel"
-       " WHERE col.imgid=sel.imgid",
-       -1, &stmt, NULL);
-    // clang-format on
-    if(sqlite3_step(stmt) == SQLITE_ROW) sel_count = sqlite3_column_int(stmt, 0);
-    sqlite3_finalize(stmt);
+    const int sel_count = dt_collection_selected_count();
 
     const int nz = (sel_count <= 1)
       ? dt_conf_get_int("plugins/lighttable/culling_num_images")
@@ -1355,19 +1344,7 @@ void dt_culling_init(dt_culling_t *table,
   }
 
   // selection count
-  int sel_count = 0;
-  sqlite3_stmt *stmt;
-  // clang-format off
-  DT_DEBUG_SQLITE3_PREPARE_V2
-    (dt_database_get(darktable.db),
-     "SELECT count(*)"
-     " FROM memory.collected_images AS col, main.selected_images as sel"
-     " WHERE col.imgid=sel.imgid",
-     -1, &stmt, NULL);
-  // clang-format on
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-    sel_count = sqlite3_column_int(stmt, 0);
-  sqlite3_finalize(stmt);
+  const int sel_count = dt_collection_selected_count();
 
   // special culling dynamic mode
   if(culling_dynamic)
@@ -1384,18 +1361,7 @@ void dt_culling_init(dt_culling_t *table,
   }
 
   // is first_id inside selection ?
-  gboolean inside = FALSE;
-  // clang-format off
-  gchar *query = g_strdup_printf
-    ("SELECT col.imgid"
-     " FROM memory.collected_images AS col, main.selected_images AS sel"
-     " WHERE col.imgid=sel.imgid AND col.imgid=%d",
-     first_id);
-  // clang-format on
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-  if(sqlite3_step(stmt) == SQLITE_ROW) inside = TRUE;
-  sqlite3_finalize(stmt);
-  g_free(query);
+  const gboolean inside = dt_collection_is_selected(first_id);
 
   if(table->mode == DT_CULLING_MODE_PREVIEW)
   {
@@ -1413,22 +1379,14 @@ void dt_culling_init(dt_culling_t *table,
     else if(sel_count == zoom && inside)
     {
       // we ensure that the selection is continuous
-      // clang-format off
-      DT_DEBUG_SQLITE3_PREPARE_V2
-        (dt_database_get(darktable.db),
-         "SELECT MIN(rowid), MAX(rowid)"
-         " FROM memory.collected_images AS col, main.selected_images as sel"
-         " WHERE col.imgid=sel.imgid",
-         -1, &stmt, NULL);
-      // clang-format on
-      if(sqlite3_step(stmt) == SQLITE_ROW)
+      int min = 0, max = 0;
+      if(dt_collection_selected_rowid_range(&min, &max))
       {
-        if(sqlite3_column_int(stmt, 0) + sel_count - 1 == sqlite3_column_int(stmt, 1))
+        if(min + sel_count - 1 == max)
         {
           table->selection_sync = TRUE;
         }
       }
-      sqlite3_finalize(stmt);
     }
 
     // we now determine if we limit culling images to the selection
