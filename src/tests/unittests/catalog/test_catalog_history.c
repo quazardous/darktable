@@ -26,6 +26,7 @@
 #include "common/database.h"
 #include "common/debug.h"
 #include "common/history.h"
+#include "common/image.h"
 
 static int _count_history(const dt_imgid_t imgid)
 {
@@ -317,6 +318,56 @@ static void test_masks_item_and_delete(void **state)
   assert_int_equal(dt_history_count_items(other), keep);
 }
 
+static void test_merge_memory(void **state)
+{
+  const dt_imgid_t imgid = dt_test_catalog_image("bayer4.crw");
+  assert_true(dt_is_valid_imgid(imgid));
+  dt_history_delete_rows(imgid);
+  const int params[2] = { 1, 2 };
+  const char blend[2] = { 9, 8 };
+  dt_history_write_item(imgid, 0, "exposure", params, sizeof(params), 6, 1,
+                        blend, sizeof(blend), 13, 0, "", 0);
+  assert_int_equal(dt_history_count_items(imgid), 1);
+  assert_true(dt_image_set_history_end(imgid, 1));
+  int end = -1;
+
+  // nothing staged: nothing changes
+  dt_history_clear_memory();
+  assert_int_equal(dt_history_memory_count(), 0);
+  dt_history_merge_memory(imgid);
+  assert_int_equal(dt_history_count_items(imgid), 1);
+  assert_true(dt_image_get_history_end(imgid, &end));
+  assert_int_equal(end, 1);
+
+  // two staged defaults are prepended, the image's own item moves after them
+  dt_history_memory_insert_default(imgid, 2, "colorin", params, sizeof(params), "preset");
+  dt_history_memory_insert_default(imgid, 3, "colorout", params, sizeof(params), NULL);
+  assert_int_equal(dt_history_memory_count(), 2);
+  dt_history_merge_memory(imgid);
+
+  GList *rows = dt_history_get_rows(imgid, -1);
+  assert_int_equal(g_list_length(rows), 3);
+  const char *ops[3] = { "colorin", "colorout", "exposure" };
+  const char *names[3] = { "preset", "", "" };
+  int i = 0;
+  for(GList *l = rows; l; l = g_list_next(l), i++)
+  {
+    const dt_history_row_t *r = l->data;
+    assert_int_equal(r->num, i);
+    assert_string_equal(r->operation, ops[i]);
+    assert_string_equal(r->multi_name ? r->multi_name : "", names[i]);
+  }
+  const dt_history_row_t *first = rows->data;
+  assert_int_equal(first->module_version, 2);
+  assert_int_equal(first->enabled, 1);
+  assert_memory_equal(first->op_params, params, sizeof(params));
+  g_list_free_full(rows, dt_history_row_free);
+
+  assert_true(dt_image_get_history_end(imgid, &end));
+  assert_int_equal(end, 3);
+  dt_history_clear_memory();
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -327,6 +378,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_get_masks_rows),
     cmocka_unit_test(test_write_item),
     cmocka_unit_test(test_masks_item_and_delete),
+    cmocka_unit_test(test_merge_memory),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }
