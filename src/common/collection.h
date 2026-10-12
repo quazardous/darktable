@@ -355,6 +355,22 @@ dt_imgid_t dt_collection_neighbor_imgid(const int rowid,
                                         const gboolean after,
                                         const gboolean selected_only);
 
+typedef struct dt_collection_culling_row_t
+{
+  int rowid;
+  dt_imgid_t imgid;
+  double aspect_ratio;
+  gboolean selected;
+} dt_collection_culling_row_t;
+
+/** the count images the culling view shows from offset, in row order: the
+    collection's rows before offset + count, or, among the selected images
+    only, those from offset on, completed with earlier ones when too few
+    follow. Free with g_list_free_full(list, g_free) */
+GList *dt_collection_culling_rows(const int offset,
+                                  const int count,
+                                  const gboolean selected_only);
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent
