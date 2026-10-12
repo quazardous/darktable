@@ -437,6 +437,22 @@ GList *dt_collection_thumb_rows_before(const int rowid, const int limit);
 GList *dt_collection_thumb_rows_after(const int rowid, const int limit);
 GList *dt_collection_thumb_rows_from(const int rowid, const int limit);
 
+/** the earliest capture date after 1 and the latest one, among all the
+    images or the collected ones only; 0 for none */
+void dt_collection_capture_bounds(const gboolean collected_only,
+                                  GTimeSpan *min,
+                                  GTimeSpan *max);
+
+typedef struct dt_collection_capture_row_t
+{
+  GTimeSpan datetime;
+  dt_imgid_t imgid; // 0 when the image is not in the collection
+} dt_collection_capture_row_t;
+
+/** every image captured after the given date, by date, with its id when it
+    is collected. Free with g_array_free(rows, TRUE) */
+GArray *dt_collection_capture_rows_after(const GTimeSpan after);
+
 typedef struct dt_collection_date_count_t
 {
   int64_t value; // a GDateTime-based timestamp, too wide for a double

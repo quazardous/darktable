@@ -557,27 +557,10 @@ static gboolean _time_read_bounds_from_db(dt_lib_module_t *self)
 {
   dt_lib_timeline_t *strip = self->data;
 
-  sqlite3_stmt *stmt;
-  const char *query = "SELECT MIN(datetime_taken) AS dt FROM main.images WHERE datetime_taken > 1";
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    strip->has_selection =
-      dt_datetime_gtimespan_to_numbers(&strip->time_mini, sqlite3_column_int64(stmt, 0));
-  }
-  else
-    strip->has_selection = FALSE;
-  sqlite3_finalize(stmt);
-
-  const char *query2 = "SELECT MAX(datetime_taken) AS dt FROM main.images";
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query2, -1, &stmt, NULL);
-
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    dt_datetime_gtimespan_to_numbers(&strip->time_maxi, sqlite3_column_int64(stmt, 0));
-  }
-  sqlite3_finalize(stmt);
+  GTimeSpan min, max;
+  dt_collection_capture_bounds(FALSE, &min, &max);
+  strip->has_selection = dt_datetime_gtimespan_to_numbers(&strip->time_mini, min);
+  dt_datetime_gtimespan_to_numbers(&strip->time_maxi, max);
 
   return TRUE;
 }
@@ -587,35 +570,10 @@ static gboolean _time_read_bounds_from_collection(dt_lib_module_t *self)
 {
   dt_lib_timeline_t *strip = self->data;
 
-  sqlite3_stmt *stmt;
-  // clang-format off
-  const char *query = "SELECT MIN(db.datetime_taken) AS dt "
-                      "FROM main.images AS db, memory.collected_images AS col "
-                      "WHERE db.id=col.imgid AND db.datetime_taken > 1";
-  // clang-format on
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    strip->has_selection =
-      dt_datetime_gtimespan_to_numbers(&strip->start_t, sqlite3_column_int64(stmt, 0));
-  }
-  else
-    strip->has_selection = FALSE;
-  sqlite3_finalize(stmt);
-
-  // clang-format off
-  const char *query2 = "SELECT MAX(db.datetime_taken) AS dt "
-                       "FROM main.images AS db, memory.collected_images AS col "
-                       "WHERE db.id=col.imgid";
-  // clang-format on
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query2, -1, &stmt, NULL);
-
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    dt_datetime_gtimespan_to_numbers(&strip->stop_t, sqlite3_column_int64(stmt, 0));
-  }
-  sqlite3_finalize(stmt);
+  GTimeSpan min, max;
+  dt_collection_capture_bounds(TRUE, &min, &max);
+  strip->has_selection = dt_datetime_gtimespan_to_numbers(&strip->start_t, min);
+  dt_datetime_gtimespan_to_numbers(&strip->stop_t, max);
 
   return TRUE;
 }
@@ -661,27 +619,21 @@ static int _block_get_at_zoom(dt_lib_module_t *self, int width)
   if(_time_compare_at_zoom(strip->start_t, strip->time_pos, strip->zoom) < 0) strip->start_x = -2;
   if(_time_compare_at_zoom(strip->stop_t, strip->time_pos, strip->zoom) < 0) strip->stop_x = -1;
 
-  sqlite3_stmt *stmt;
-  // clang-format off
-  gchar *query = g_strdup_printf("SELECT db.datetime_taken AS dt,"
-                                 " col.imgid FROM main.images AS db "
-                                 "LEFT JOIN memory.collected_images AS col ON db.id=col.imgid "
-                                 "WHERE dt > %lld "
-                                 "ORDER BY dt ASC",
-                                 (long long)_time_format_for_db(strip->time_pos, strip->zoom));
-  // clang-format on
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  GArray *rows =
+    dt_collection_capture_rows_after(_time_format_for_db(strip->time_pos, strip->zoom));
+  if(rows->len == 0)
+  {
+    g_array_free(rows, TRUE);
+    return 0;
+  }
 
+  guint next = 0;
   dt_datetime_t tx;
   int id = 0;
-  int stat = sqlite3_step(stmt);
-  if(stat == SQLITE_ROW)
-  {
-    dt_datetime_gtimespan_to_numbers(&tx, sqlite3_column_int64(stmt, 0));
-    id = sqlite3_column_int(stmt, 1);
-  }
-  else
-    return 0;
+  gboolean more = TRUE;
+  dt_datetime_gtimespan_to_numbers
+    (&tx, g_array_index(rows, dt_collection_capture_row_t, next).datetime);
+  id = g_array_index(rows, dt_collection_capture_row_t, next).imgid;
 
   dt_datetime_t tt = strip->time_pos;
   // we round correctly this date
@@ -742,13 +694,18 @@ static int _block_get_at_zoom(dt_lib_module_t *self, int width)
       if(_time_compare_at_zoom(strip->stop_t, tt, strip->zoom) == 0)
         strip->stop_x = w + (i + 1) * _block_get_bar_width(strip->zoom);
       // and we count how many photos we have for this time
-      while(stat == SQLITE_ROW && _time_compare_at_zoom(tt, tx, strip->zoom) == 0)
+      while(more && _time_compare_at_zoom(tt, tx, strip->zoom) == 0)
       {
         bloc->values[i]++;
         if(id > 0) bloc->collect_values[i]++;
-        stat = sqlite3_step(stmt);
-        dt_datetime_gtimespan_to_numbers(&tx, sqlite3_column_int64(stmt, 0));
-        id = sqlite3_column_int(stmt, 1);
+        more = ++next < rows->len;
+        if(more)
+        {
+          const dt_collection_capture_row_t *r =
+            &g_array_index(rows, dt_collection_capture_row_t, next);
+          dt_datetime_gtimespan_to_numbers(&tx, r->datetime);
+          id = r->imgid;
+        }
       }
 
       // and we jump to next date
@@ -769,7 +726,7 @@ static int _block_get_at_zoom(dt_lib_module_t *self, int width)
     strip->blocks = g_list_append(strip->blocks, bloc);
 
     w += bloc->width + 2;
-    if(w > width || stat != SQLITE_ROW)
+    if(w > width || !more)
     {
       // if selection start/stop times are greater than the last time
       if(_time_compare_at_zoom(strip->start_t, tt, strip->zoom) >= 0) strip->start_x = strip->panel_width + 1;
@@ -777,8 +734,7 @@ static int _block_get_at_zoom(dt_lib_module_t *self, int width)
       break;
     }
   }
-  sqlite3_finalize(stmt);
-  g_free(query);
+  g_array_free(rows, TRUE);
 
   // and we return the width of the strip
   return w;

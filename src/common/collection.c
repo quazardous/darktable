@@ -3488,6 +3488,56 @@ gboolean dt_collection_date_range(const dt_collection_properties_t prop,
   return found;
 }
 
+void dt_collection_capture_bounds(const gboolean collected_only,
+                                  GTimeSpan *min,
+                                  GTimeSpan *max)
+{
+  // clang-format off
+  const char *query = collected_only
+    ? "SELECT MIN(db.datetime_taken) AS dt "
+      "FROM main.images AS db, memory.collected_images AS col "
+      "WHERE db.id=col.imgid AND db.datetime_taken > 1"
+    : "SELECT MIN(datetime_taken) AS dt FROM main.images WHERE datetime_taken > 1";
+  const char *query2 = collected_only
+    ? "SELECT MAX(db.datetime_taken) AS dt "
+      "FROM main.images AS db, memory.collected_images AS col "
+      "WHERE db.id=col.imgid"
+    : "SELECT MAX(datetime_taken) AS dt FROM main.images";
+  // clang-format on
+  sqlite3_stmt *stmt;
+  *min = *max = 0;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  if(sqlite3_step(stmt) == SQLITE_ROW) *min = sqlite3_column_int64(stmt, 0);
+  sqlite3_finalize(stmt);
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query2, -1, &stmt, NULL);
+  if(sqlite3_step(stmt) == SQLITE_ROW) *max = sqlite3_column_int64(stmt, 0);
+  sqlite3_finalize(stmt);
+}
+
+GArray *dt_collection_capture_rows_after(const GTimeSpan after)
+{
+  GArray *rows = g_array_new(FALSE, FALSE, sizeof(dt_collection_capture_row_t));
+  sqlite3_stmt *stmt;
+  // clang-format off
+  gchar *query = g_strdup_printf("SELECT db.datetime_taken AS dt,"
+                                 " col.imgid FROM main.images AS db "
+                                 "LEFT JOIN memory.collected_images AS col ON db.id=col.imgid "
+                                 "WHERE dt > %lld "
+                                 "ORDER BY dt ASC",
+                                 (long long)after);
+  // clang-format on
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    const dt_collection_capture_row_t r = { sqlite3_column_int64(stmt, 0),
+                                            sqlite3_column_int(stmt, 1) };
+    g_array_append_val(rows, r);
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+  return rows;
+}
+
 void dt_collection_text_count_free(gpointer data)
 {
   dt_collection_text_count_t *c = data;

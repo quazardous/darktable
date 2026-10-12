@@ -263,6 +263,26 @@ static void test_collected_rows(void **state)
   assert_int_equal(dt_collection_rowid_of(999999, -1), -1);
   assert_int_equal(dt_collection_rowid_of(999999, NO_IMGID), NO_IMGID);
   assert_int_equal(dt_collection_imgid_at_rowid(999999), NO_IMGID);
+
+  // the timeline's capture dates: every image is collected, so both
+  // bounds agree and every dated row carries its id, in date order
+  GTimeSpan min = 0, max = 0, cmin = 0, cmax = 0;
+  dt_collection_capture_bounds(FALSE, &min, &max);
+  dt_collection_capture_bounds(TRUE, &cmin, &cmax);
+  assert_true(min <= max);
+  assert_true(cmin == min && cmax == max);
+  GArray *rows = dt_collection_capture_rows_after(0);
+  for(guint i = 0; i < rows->len; i++)
+  {
+    const dt_collection_capture_row_t *r = &g_array_index(rows, dt_collection_capture_row_t, i);
+    assert_true(dt_is_valid_imgid(r->imgid));
+    if(i) assert_true(g_array_index(rows, dt_collection_capture_row_t, i - 1).datetime <= r->datetime);
+  }
+  if(rows->len) assert_true(g_array_index(rows, dt_collection_capture_row_t, rows->len - 1).datetime == max);
+  g_array_free(rows, TRUE);
+  rows = dt_collection_capture_rows_after(max);
+  assert_int_equal(rows->len, 0);
+  g_array_free(rows, TRUE);
 }
 
 static void test_selected_navigation(void **state)
