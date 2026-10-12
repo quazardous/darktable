@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# a darktable bench job, inside the container (manifest: bench.toml): /src is
-# the checkout of the requested branch, /build and /ccache the project's
-# caches, /out the results.
+# a darktable bench job, inside the container (Benchfile, or bench.toml in
+# repository mode): $DT_SRC (/src by default) is the checkout of the
+# requested branch, /build and /ccache the project's caches, /out the
+# results.
 # The build type is RelWithDebInfo, as for upstream's pixel references
 # (darktable #3786: a Release build adds -ffast-math).
 
@@ -9,11 +10,12 @@ set -uo pipefail
 mkdir -p "$HOME"
 # labwc puts its Wayland socket here (wbox, for the run and GUI jobs)
 mkdir -m 700 -p "$XDG_RUNTIME_DIR"
+src="${DT_SRC:-/src}"
 prefix=/build/prefix
-bench=/src/tools/helios/bench
+bench="$src/tools/helios/bench"
 
 build() {
-  cmake -S /src -B /build/obj -G Ninja \
+  cmake -S "$src" -B /build/obj -G Ninja \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTING=ON \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
     -DCMAKE_INSTALL_PREFIX="$prefix" > /out/cmake.log 2>&1 \
@@ -22,7 +24,7 @@ build() {
   [ "${PIPESTATUS[0]}" = 0 ] || { tail -30 /out/build.log; return 1; }
   cmake --install /build/obj > /out/install.log 2>&1
   ccache -s > /out/ccache.txt 2>&1
-  echo "build ok: $(git -C /src log --oneline -1)"
+  echo "build ok: $(git -C "$src" log --oneline -1)"
 }
 
 need_build() {
