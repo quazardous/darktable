@@ -57,15 +57,22 @@ command = "/src/tools/bench/job gui-tags"
 mounts = { build = "/build" }
 timeout = "20m"
 
-# the pixel suite pins OpenMP to 4 threads (its run script), and its
-# results are compared output against output: it holds the whole machine
+# the pixel suite pins OpenMP to 4 threads (its run script); its outputs do
+# not depend on load, and each container has its own /tmp, so it shares
+# the box with other jobs
 [jobs.pixel]
 cores = 4
 memory = "4g"
-exclusive = ["machine"]
 command = "/src/tools/bench/job pixel"
 mounts = { build = "/build" }
 timeout = "2h"
+
+[jobs.pixel-fast]
+cores = 4
+memory = "3g"
+command = "/src/tools/bench/job pixel-fast"
+mounts = { build = "/build" }
+timeout = "20m"
 
 [volumes.darktable-cli]
 cores = 6
