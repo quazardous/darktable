@@ -326,6 +326,24 @@ void dt_collection_rating_counts(const char *where, int counts[7]);
     (counts[1]) */
 void dt_collection_local_copy_counts(const char *where, int counts[2]);
 
+typedef struct dt_collection_date_count_t
+{
+  int64_t value; // a GDateTime-based timestamp, too wide for a double
+  int count;
+} dt_collection_date_count_t;
+
+/** the images matching where counted per value of a date property (the
+    capture date, or the import, change, export or print timestamp), NULL
+    dates left out. Free with g_list_free_full(list, g_free) */
+GList *dt_collection_date_counts(const dt_collection_properties_t prop,
+                                 const char *where);
+
+/** earliest and latest non NULL value of a date property over the whole
+    library; FALSE, and min and max untouched, when the query returns no row */
+gboolean dt_collection_date_range(const dt_collection_properties_t prop,
+                                  int64_t *min,
+                                  int64_t *max);
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

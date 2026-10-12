@@ -20,23 +20,6 @@
   This file contains the necessary routines to implement a filter for the filtering module
 */
 
-static gchar *_date_get_db_colname(dt_lib_filtering_rule_t *rule)
-{
-  switch(rule->prop)
-  {
-    case DT_COLLECTION_PROP_IMPORT_TIMESTAMP:
-      return g_strdup("import_timestamp");
-    case DT_COLLECTION_PROP_CHANGE_TIMESTAMP:
-      return g_strdup("change_timestamp");
-    case DT_COLLECTION_PROP_EXPORT_TIMESTAMP:
-      return g_strdup("export_timestamp");
-    case DT_COLLECTION_PROP_PRINT_TIMESTAMP:
-      return g_strdup("print_timestamp");
-    default:
-      return g_strdup("datetime_taken");
-  }
-}
-
 static gboolean _date_update(dt_lib_filtering_rule_t *rule)
 {
   if(!rule->w_specific) return FALSE;
@@ -49,29 +32,16 @@ static gboolean _date_update(dt_lib_filtering_rule_t *rule)
 
   rule->manual_widget_set++;
   // first, we update the graph
-  gchar *colname = _date_get_db_colname(rule);
-  char query[1024] = { 0 };
-  // clang-format off
-  g_snprintf(query, sizeof(query),
-             "SELECT %s AS date, COUNT(*) AS count"
-             " FROM main.images AS mi"
-             " WHERE %s IS NOT NULL AND %s"
-             " GROUP BY date",
-             colname, colname, d->last_where_ext);
-  // clang-format on
-  g_free(colname);
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  GList *counts = dt_collection_date_counts(rule->prop, d->last_where_ext);
   dtgtk_range_select_reset_blocks(range);
   if(rangetop) dtgtk_range_select_reset_blocks(rangetop);
-  while(sqlite3_step(stmt) == SQLITE_ROW)
+  for(GList *l = counts; l; l = g_list_next(l))
   {
-    const int count = sqlite3_column_int(stmt, 1);
-    const int64_t dt = sqlite3_column_int64(stmt, 0);
-    dtgtk_range_select_add_block(range, dt, count);
-    if(rangetop) dtgtk_range_select_add_block(rangetop, dt, count);
+    const dt_collection_date_count_t *c = l->data;
+    dtgtk_range_select_add_block(range, c->value, c->count);
+    if(rangetop) dtgtk_range_select_add_block(rangetop, c->value, c->count);
   }
-  sqlite3_finalize(stmt);
+  g_list_free_full(counts, g_free);
 
   // and setup the selection
   dtgtk_range_select_set_selection_from_raw_text(range, rule->raw_text, FALSE);
@@ -222,24 +192,12 @@ static void _date_widget_init(dt_lib_filtering_rule_t *rule, const dt_collection
   range->step_bd = 86400; // step of 1 day (in seconds)
   dtgtk_range_select_set_selection_from_raw_text(range, text, FALSE);
 
-  gchar *colname = _date_get_db_colname(rule);
-  char query[1024] = { 0 };
-  // clang-format off
-  g_snprintf(query, sizeof(query),
-             "SELECT MIN(%s), MAX(%s)"
-             " FROM main.images"
-             " WHERE %s IS NOT NULL",
-             colname, colname, colname);
-  // clang-format on
-  g_free(colname);
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
+  int64_t min = 0, max = 0;
+  if(dt_collection_date_range(rule->prop, &min, &max))
   {
-    range->min_r = sqlite3_column_int64(stmt, 0);
-    range->max_r = sqlite3_column_int64(stmt, 1);
+    range->min_r = min;
+    range->max_r = max;
   }
-  sqlite3_finalize(stmt);
 
   _range_widget_add_to_rule(rule, special, top);
 }

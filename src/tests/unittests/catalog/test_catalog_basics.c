@@ -139,6 +139,27 @@ static void test_flag_counts(void **state)
   for(int i = 0; i < 7; i++) assert_int_equal(ratings[i], 0);
 }
 
+static void test_date_counts(void **state)
+{
+  // every imported image has an import timestamp
+  GList *counts = dt_collection_date_counts(DT_COLLECTION_PROP_IMPORT_TIMESTAMP, "1=1");
+  int total = 0;
+  for(GList *l = counts; l; l = g_list_next(l))
+  {
+    const dt_collection_date_count_t *c = l->data;
+    assert_true(c->value > 0);
+    total += c->count;
+  }
+  assert_int_equal(total, 3);
+  g_list_free_full(counts, g_free);
+
+  int64_t min = 0, max = 0;
+  assert_true(dt_collection_date_range(DT_COLLECTION_PROP_IMPORT_TIMESTAMP, &min, &max));
+  assert_true(min > 0 && min <= max);
+
+  assert_null(dt_collection_date_counts(DT_COLLECTION_PROP_IMPORT_TIMESTAMP, "mi.id < 0"));
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -147,6 +168,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_metadata),
     cmocka_unit_test(test_numeric_counts),
     cmocka_unit_test(test_flag_counts),
+    cmocka_unit_test(test_date_counts),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }

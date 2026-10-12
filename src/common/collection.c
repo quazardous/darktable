@@ -3418,6 +3418,75 @@ void dt_collection_local_copy_counts(const char *where, int counts[2])
   g_free(query);
 }
 
+// the images column of a date property; the date filters fall back to
+// the capture date
+static const char *_date_column(const dt_collection_properties_t prop)
+{
+  switch(prop)
+  {
+    case DT_COLLECTION_PROP_IMPORT_TIMESTAMP:
+      return "import_timestamp";
+    case DT_COLLECTION_PROP_CHANGE_TIMESTAMP:
+      return "change_timestamp";
+    case DT_COLLECTION_PROP_EXPORT_TIMESTAMP:
+      return "export_timestamp";
+    case DT_COLLECTION_PROP_PRINT_TIMESTAMP:
+      return "print_timestamp";
+    default:
+      return "datetime_taken";
+  }
+}
+
+GList *dt_collection_date_counts(const dt_collection_properties_t prop,
+                                 const char *where)
+{
+  const char *col = _date_column(prop);
+  GList *counts = NULL;
+  // clang-format off
+  gchar *query = g_strdup_printf("SELECT %s AS date, COUNT(*) AS count"
+                                 " FROM main.images AS mi"
+                                 " WHERE %s IS NOT NULL AND %s"
+                                 " GROUP BY date",
+                                 col, col, where);
+  // clang-format on
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    dt_collection_date_count_t *c = g_new(dt_collection_date_count_t, 1);
+    c->value = sqlite3_column_int64(stmt, 0);
+    c->count = sqlite3_column_int(stmt, 1);
+    counts = g_list_prepend(counts, c);
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+  return g_list_reverse(counts);
+}
+
+gboolean dt_collection_date_range(const dt_collection_properties_t prop,
+                                  int64_t *min,
+                                  int64_t *max)
+{
+  const char *col = _date_column(prop);
+  // clang-format off
+  gchar *query = g_strdup_printf("SELECT MIN(%s), MAX(%s)"
+                                 " FROM main.images"
+                                 " WHERE %s IS NOT NULL",
+                                 col, col, col);
+  // clang-format on
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  const gboolean found = sqlite3_step(stmt) == SQLITE_ROW;
+  if(found)
+  {
+    *min = sqlite3_column_int64(stmt, 0);
+    *max = sqlite3_column_int64(stmt, 1);
+  }
+  sqlite3_finalize(stmt);
+  g_free(query);
+  return found;
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent
