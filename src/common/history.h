@@ -243,6 +243,42 @@ GList *dt_history_get_masks_rows(const dt_imgid_t imgid,
                                  const int history_end);
 void dt_history_masks_row_free(gpointer data);
 
+/** write history item num of the image: insert the row if it is missing,
+    then set all its columns */
+void dt_history_write_item(const dt_imgid_t imgid,
+                           const int num,
+                           const char *operation,
+                           const void *params,
+                           const int params_size,
+                           const int module_version,
+                           const int enabled,
+                           const void *blend_params,
+                           const int blend_params_size,
+                           const int blend_version,
+                           const int multi_priority,
+                           const char *multi_name,
+                           const int multi_name_hand_edited);
+
+/** add a mask form to history item num of the image */
+void dt_history_insert_masks_item(const dt_imgid_t imgid,
+                                  const int num,
+                                  const int formid,
+                                  const int type,
+                                  const char *name,
+                                  const int version,
+                                  const void *points,
+                                  const int points_size,
+                                  const int points_count,
+                                  const void *source,
+                                  const int source_size);
+
+/** the num after the image's last history item, 0 when it has none */
+int dt_history_next_num(const dt_imgid_t imgid);
+
+/** remove the image's history and mask history rows, nothing else
+    (dt_history_delete_on_image also resets the image) */
+void dt_history_delete_rows(const dt_imgid_t imgid);
+
 /** calculate history hash and save it to database*/
 void dt_history_hash_write_from_history(const dt_imgid_t imgid,
                                         const dt_history_hash_t type);

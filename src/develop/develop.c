@@ -1167,49 +1167,11 @@ static void _dev_write_history_item(const dt_imgid_t imgid,
                                     dt_dev_history_item_t *h,
                                     const int32_t num)
 {
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2
-    (dt_database_get(darktable.db),
-     "SELECT num FROM main.history WHERE imgid = ?1 AND num = ?2", -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, num);
-  if(sqlite3_step(stmt) != SQLITE_ROW)
-  {
-    sqlite3_finalize(stmt);
-    DT_DEBUG_SQLITE3_PREPARE_V2
-      (dt_database_get(darktable.db),
-       "INSERT INTO main.history (imgid, num) VALUES (?1, ?2)", -1, &stmt, NULL);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, num);
-    sqlite3_step(stmt);
-  }
-
-  sqlite3_finalize(stmt);
-  // clang-format off
-  DT_DEBUG_SQLITE3_PREPARE_V2
-    (dt_database_get(darktable.db),
-     "UPDATE main.history"
-     " SET operation = ?1, op_params = ?2, module = ?3, enabled = ?4, "
-     "     blendop_params = ?7, blendop_version = ?8, multi_priority = ?9,"
-     "     multi_name = ?10, multi_name_hand_edited = ?11"
-     " WHERE imgid = ?5 AND num = ?6",
-     -1, &stmt, NULL);
-  // clang-format on
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, h->module->op, -1, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 2, h->params, h->module->params_size, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 3, h->module->version());
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 4, h->enabled);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 5, imgid);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 6, num);
-  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 7, h->blend_params,
-                             sizeof(dt_develop_blend_params_t), SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 8, dt_develop_blend_version());
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 9, h->multi_priority);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 10, h->multi_name, -1, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 11, h->multi_name_hand_edited);
-
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
+  dt_history_write_item(imgid, num, h->module->op,
+                        h->params, h->module->params_size, h->module->version(),
+                        h->enabled, h->blend_params, sizeof(dt_develop_blend_params_t),
+                        dt_develop_blend_version(), h->multi_priority,
+                        h->multi_name, h->multi_name_hand_edited);
 
   // write masks (if any)
   for(GList *forms = h->forms; forms; forms = g_list_next(forms))
@@ -1817,8 +1779,6 @@ void dt_dev_history_truncate(dt_develop_t *dev, const gboolean compress)
   else
     dt_history_truncate_on_image(imgid, dev->history_end);
 
-  sqlite3_stmt *stmt;
-
   // load new history and write it back to ensure that all history are
   // properly numbered without a gap
   dt_dev_reload_history_items(dev);
@@ -1827,17 +1787,8 @@ void dt_dev_history_truncate(dt_develop_t *dev, const gboolean compress)
 
   // then we can get the item to select in the new clean-up history
   // retrieve the position of the module corresponding to the history
-  // end.  clang-format off
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT IFNULL(MAX(num)+1, 0)"
-                              " FROM main.history"
-                              " WHERE imgid=?1", -1, &stmt, NULL);
-  // clang-format on
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-    dev->history_end = sqlite3_column_int(stmt, 0);
-  sqlite3_finalize(stmt);
+  // end.
+  dev->history_end = dt_history_next_num(imgid);
 
   // select the new history end corresponding to the one before the history compression
   dt_image_set_history_end(imgid, dev->history_end);
@@ -1914,20 +1865,7 @@ void dt_dev_pop_history_items(dt_develop_t *dev, const int32_t cnt)
 
 static void _cleanup_history(const dt_imgid_t imgid)
 {
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "DELETE FROM main.history WHERE imgid = ?1", -1,
-                              &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
-
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "DELETE FROM main.masks_history WHERE imgid = ?1", -1,
-                              &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
+  dt_history_delete_rows(imgid);
 }
 
 void dt_dev_write_history_ext(dt_develop_t *dev,
