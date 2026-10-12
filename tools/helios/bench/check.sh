@@ -112,12 +112,22 @@ run lua-equivalence lua_bench
 # integration_fast: the fast subset on the after build, known base failures
 # ignored
 integration_fast() {
-  local tests failed new
+  local tests failed new known
   mapfile -t tests < <(sed 's/#.*//' "$here/integration-fast.txt" | awk 'NF { print $1 }')
+  # integration.sh runs the whole suite (~50 min) when given no test
+  if [ ${#tests[@]} -eq 0 ]; then
+    echo "integration-fast.txt lists no test"
+    return 1
+  fi
   "$here/integration.sh" "$after" "$out/integration.log" "${tests[@]}"
   failed=$(sed -n '/^Errors /,$p' "$out/integration.log" | sed -n 's/^   - //p')
+  # the known failures depend on the build type: a Release build adds
+  # -ffast-math (darktable #3786)
+  known="$here/integration-known-failures.txt"
+  grep -qx 'CMAKE_BUILD_TYPE:STRING=Release' "$src/build/CMakeCache.txt" 2> /dev/null \
+    && known="$here/integration-known-failures-release.txt"
   new=$(comm -23 <(printf '%s\n' $failed | sort -u) \
-          <(sed 's/#.*//' "$here/integration-known-failures.txt" 2> /dev/null | awk 'NF { print $1 }' | sort -u))
+          <(sed 's/#.*//' "$known" 2> /dev/null | awk 'NF { print $1 }' | sort -u))
   if [ -n "$new" ]; then
     echo "new failures: $new"
     return 1

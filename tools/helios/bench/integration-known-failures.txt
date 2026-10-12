@@ -1,0 +1,14 @@
+# pixel tests that fail against expected.png on a RelWithDebInfo build of
+# the unmodified base on this kind of machine, with why (darktable #3786).
+# None is a darktable bug; a failure outside this list fails the check.
+0032-watermark                 # font rendering: anti-aliasing of the watermark text
+0096-lensfun                   # diffuse numeric drift between machines (lensfun, libm)
+0097-sigmoid                   # diffuse numeric drift between machines (libm)
+0103-almost-all                # "not stable across computers" per the suite itself
+0151-sigmoid-no-hue-preservation  # as 0097
+0168-lut3d-srgb-pyramid        # saturated colors: LUT interpolation, lcms2/libm
+0169-lut3d-adobe-trilinear     # as 0168
+0170-lut3d-prophoto-tetrahedral  # as 0168
+0178-contrast-texture          # fails in upstream's own nightly
+0179-spektrafilm               # float threshold: grain draws flip along iso-lines
+0180-spektrafilm-simple        # needs the spektrafilm data pack in the user data dir
