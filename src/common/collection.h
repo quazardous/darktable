@@ -400,6 +400,11 @@ gboolean dt_collection_is_selected(const dt_imgid_t imgid);
 /** first and last row of the selected images of the collection; FALSE, min
     and max untouched, when the query returns no row */
 gboolean dt_collection_selected_rowid_range(int *min, int *max);
+/** the image right after (or before) a row of the collection, among the
+    selected images only if selected_only; NO_IMGID when none */
+dt_imgid_t dt_collection_neighbor_imgid(const int rowid,
+                                        const gboolean after,
+                                        const gboolean selected_only);
 
 typedef struct dt_collection_date_count_t
 {

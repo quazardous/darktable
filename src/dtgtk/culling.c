@@ -1417,79 +1417,16 @@ static void _thumbs_prefetch(dt_culling_t *table)
     dt_mipmap_cache_get_matching_size(mipwidth, mipheight);
 
   // prefetch next image
-  gchar *query;
-  sqlite3_stmt *stmt;
-  dt_thumbnail_t *last = g_list_last(table->list)->data;
-  if(table->navigate_inside_selection)
-  {
-    // clang-format off
-    query = g_strdup_printf
-      ("SELECT m.imgid"
-       " FROM memory.collected_images AS m, main.selected_images AS s"
-       " WHERE m.imgid = s.imgid"
-       "   AND m.rowid > %d"
-       " ORDER BY m.rowid "
-       " LIMIT 1",
-       last->rowid);
-    // clang-format on
-  }
-  else
-  {
-    // clang-format off
-    query = g_strdup_printf
-      ("SELECT m.imgid"
-       " FROM memory.collected_images AS m "
-       " WHERE m.rowid > %d"
-       " ORDER BY m.rowid "
-       " LIMIT 1",
-       last->rowid);
-    // clang-format on
-  }
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    const dt_imgid_t id = sqlite3_column_int(stmt, 0);
-    if(dt_is_valid_imgid(id))
-      dt_mipmap_cache_get(NULL, id, mip, DT_MIPMAP_PREFETCH, 'r');
-  }
-  sqlite3_finalize(stmt);
-  g_free(query);
+  const dt_thumbnail_t *last = g_list_last(table->list)->data;
+  dt_imgid_t id = dt_collection_neighbor_imgid(last->rowid, TRUE, table->navigate_inside_selection);
+  if(dt_is_valid_imgid(id))
+    dt_mipmap_cache_get(NULL, id, mip, DT_MIPMAP_PREFETCH, 'r');
 
   // prefetch previous image
-  dt_thumbnail_t *prev = (table->list)->data;
-  if(table->navigate_inside_selection)
-  {
-    // clang-format off
-    query = g_strdup_printf
-      ("SELECT m.imgid"
-       " FROM memory.collected_images AS m, main.selected_images AS s"
-       " WHERE m.imgid = s.imgid"
-       "   AND m.rowid < %d"
-       " ORDER BY m.rowid DESC "
-       " LIMIT 1",
-       prev->rowid);
-    // clang-format on
-  }
-  else
-  {
-    // clang-format off
-    query = g_strdup_printf
-      ("SELECT m.imgid"
-       " FROM memory.collected_images AS m"
-       " WHERE m.rowid < %d"
-       " ORDER BY m.rowid DESC "
-       " LIMIT 1",
-       prev->rowid);
-    // clang-format on
-  }
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    const dt_imgid_t id = sqlite3_column_int(stmt, 0);
-    if(dt_is_valid_imgid(id))
-      dt_mipmap_cache_get(NULL, id, mip, DT_MIPMAP_PREFETCH, 'r');
-  }
-  sqlite3_finalize(stmt);
+  const dt_thumbnail_t *prev = (table->list)->data;
+  id = dt_collection_neighbor_imgid(prev->rowid, FALSE, table->navigate_inside_selection);
+  if(dt_is_valid_imgid(id))
+    dt_mipmap_cache_get(NULL, id, mip, DT_MIPMAP_PREFETCH, 'r');
 }
 
 static gboolean _thumbs_recreate_list_at(dt_culling_t *table,

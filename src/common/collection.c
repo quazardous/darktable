@@ -4492,6 +4492,39 @@ gboolean dt_collection_selected_rowid_range(int *min, int *max)
   return found;
 }
 
+dt_imgid_t dt_collection_neighbor_imgid(const int rowid,
+                                        const gboolean after,
+                                        const gboolean selected_only)
+{
+  gchar *query;
+  if(selected_only)
+  {
+    // clang-format off
+    query = g_strdup_printf
+      ("SELECT m.imgid"
+       " FROM memory.collected_images AS m, main.selected_images AS s"
+       " WHERE m.imgid = s.imgid"
+       "   AND m.rowid %s %d"
+       " ORDER BY m.rowid %s"
+       " LIMIT 1",
+       after ? ">" : "<", rowid, after ? "" : "DESC ");
+    // clang-format on
+  }
+  else
+  {
+    // clang-format off
+    query = g_strdup_printf
+      ("SELECT m.imgid"
+       " FROM memory.collected_images AS m"
+       " WHERE m.rowid %s %d"
+       " ORDER BY m.rowid %s"
+       " LIMIT 1",
+       after ? ">" : "<", rowid, after ? "" : "DESC ");
+    // clang-format on
+  }
+  return _collection_int(query, NO_IMGID);
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent
