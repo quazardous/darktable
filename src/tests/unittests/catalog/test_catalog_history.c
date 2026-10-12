@@ -251,6 +251,72 @@ static void test_get_masks_rows(void **state)
   _exec("DELETE FROM memory.snapshot_masks_history");
 }
 
+static void test_write_item(void **state)
+{
+  const dt_imgid_t imgid = dt_test_catalog_image("bayer4.crw");
+  dt_history_delete_rows(imgid);
+  assert_int_equal(dt_history_next_num(imgid), 0);
+
+  const int params[2] = { 1, 2 };
+  const char blend[2] = { 9, 8 };
+  // a missing row is inserted
+  dt_history_write_item(imgid, 0, "exposure", params, sizeof(params), 6, 1,
+                        blend, sizeof(blend), 13, 0, "first", 1);
+  assert_int_equal(dt_history_next_num(imgid), 1);
+
+  // an existing row is updated in place, not duplicated
+  const int other[2] = { 3, 4 };
+  dt_history_write_item(imgid, 0, "exposure", other, sizeof(other), 7, 0,
+                        blend, sizeof(blend), 14, 2, "second", 0);
+  dt_history_write_item(imgid, 3, "colorin", params, sizeof(params), 2, 1,
+                        blend, sizeof(blend), 13, 0, "", 0);
+  assert_int_equal(dt_history_count_items(imgid), 2);
+  assert_int_equal(dt_history_next_num(imgid), 4);
+
+  GList *rows = dt_history_get_rows(imgid, -1);
+  assert_int_equal(g_list_length(rows), 2);
+  const dt_history_row_t *r = rows->data;
+  assert_int_equal(r->num, 0);
+  assert_string_equal(r->operation, "exposure");
+  assert_int_equal(r->module_version, 7);
+  assert_int_equal(r->enabled, 0);
+  assert_memory_equal(r->op_params, other, sizeof(other));
+  assert_int_equal(r->blendop_version, 14);
+  assert_int_equal(r->multi_priority, 2);
+  assert_string_equal(r->multi_name, "second");
+  assert_int_equal(r->multi_name_hand_edited, 0);
+  g_list_free_full(rows, dt_history_row_free);
+}
+
+static void test_masks_item_and_delete(void **state)
+{
+  const dt_imgid_t imgid = dt_test_catalog_image("mire1.cr2");
+  const float points[6] = { 1, 2, 3, 4, 5, 6 };
+  const float source[3] = { 0.1f, 0.2f, 0.3f };
+  dt_history_insert_masks_item(imgid, 0, 77, 2, "brush", 6, points, sizeof(points), 3,
+                               source, sizeof(source));
+
+  GList *rows = dt_history_get_masks_rows(imgid, -1, 1);
+  assert_int_equal(g_list_length(rows), 1);
+  const dt_history_masks_row_t *m = rows->data;
+  assert_int_equal(m->formid, 77);
+  assert_int_equal(m->type, 2);
+  assert_string_equal(m->name, "brush");
+  assert_int_equal(m->version, 6);
+  assert_int_equal(m->points_count, 3);
+  assert_memory_equal(m->points, points, sizeof(points));
+  assert_int_equal(m->source_size, sizeof(source));
+  g_list_free_full(rows, dt_history_masks_row_free);
+
+  // the image's history and mask history go, and nothing of another image
+  const dt_imgid_t other = dt_test_catalog_image("hlrecovery.arw");
+  const int keep = dt_history_count_items(other);
+  dt_history_delete_rows(imgid);
+  assert_int_equal(dt_history_count_items(imgid), 0);
+  assert_null(dt_history_get_masks_rows(imgid, -1, 100));
+  assert_int_equal(dt_history_count_items(other), keep);
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -259,6 +325,8 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_get_rows),
     cmocka_unit_test(test_snapshot_memory),
     cmocka_unit_test(test_get_masks_rows),
+    cmocka_unit_test(test_write_item),
+    cmocka_unit_test(test_masks_item_and_delete),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }
