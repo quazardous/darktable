@@ -3738,6 +3738,442 @@ void dt_collection_module_order_counts(const char *where, int *counts)
   g_free(query);
 }
 
+void dt_collection_list_row_free(gpointer data)
+{
+  dt_collection_list_row_t *r = data;
+  g_free(r->text);
+  g_free(r);
+}
+
+GList *dt_collection_list_rows(const int property,
+                               const char *where_ext,
+                               const gboolean sort_descending,
+                               gboolean *has_query)
+{
+  char query[1024] = { 0 };
+
+  switch(property)
+  {
+    case DT_COLLECTION_PROP_CAMERA:; // camera
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT TRIM(cm.maker || ' ' || cm.model) AS camera,"
+                 "       1, COUNT(*) AS count"
+                 "  FROM main.images AS mi, main.cameras AS cm"
+                 "  WHERE mi.camera_id = cm.id"
+                 "    AND %s "
+                 "  GROUP BY LOWER(camera)"
+                 "  ORDER BY LOWER(camera) %s",
+                 where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_HISTORY: // History
+      // images without history are counted as if they were basic
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT CASE"
+                 "       WHEN basic_hash == current_hash THEN '%s'"
+                 "       WHEN auto_hash == current_hash THEN '%s'"
+                 "       WHEN current_hash IS NOT NULL THEN '%s'"
+                 "       ELSE '%s'"
+                 "     END as altered, 1, COUNT(*) AS count,"
+                 "     CASE"
+                 "       WHEN basic_hash == current_hash THEN 0"
+                 "       WHEN auto_hash == current_hash THEN 1"
+                 "       WHEN current_hash IS NOT NULL THEN 3"
+                 "       ELSE 2"
+                 "     END AS force_order"
+                 " FROM main.images AS mi"
+                 " LEFT JOIN (SELECT DISTINCT imgid, basic_hash, auto_hash, current_hash"
+                 "            FROM main.history_hash) ON id = imgid"
+                 " WHERE %s"
+                 " GROUP BY force_order"
+                 " ORDER BY force_order %s",
+                 _("basic"), _("auto applied"), _("altered"), _("basic"),
+                 where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_LOCAL_COPY: // local copy, 2 hardcoded alternatives
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT CASE "
+                 "         WHEN (flags & %d) THEN '%s'"
+                 "         ELSE '%s'"
+                 "       END as lcp, 1, COUNT(*) AS count,"
+                 "       CASE "
+                 "         WHEN (flags & %d) THEN 0"
+                 "         ELSE 1"
+                 "       END as force_order"
+                 " FROM main.images AS mi "
+                 " WHERE %s"
+                 " GROUP BY force_order ORDER BY force_order %s",
+                 DT_IMAGE_LOCAL_COPY,
+                 _("copied locally"),
+                 _("not copied locally"),
+                 DT_IMAGE_LOCAL_COPY, where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_ASPECT_RATIO: // aspect ratio, 3 hardcoded alternatives
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT ROUND(aspect_ratio,2), 1, COUNT(*) AS count"
+                 " FROM main.images AS mi "
+                 " WHERE %s"
+                 " GROUP BY ROUND(aspect_ratio,2)"
+                 " ORDER BY ROUND(aspect_ratio,2) %s",
+                 where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_COLORLABEL: // colorlabels
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT CASE color"
+                 "         WHEN 0 THEN '%s'"
+                 "         WHEN 1 THEN '%s'"
+                 "         WHEN 2 THEN '%s'"
+                 "         WHEN 3 THEN '%s'"
+                 "         WHEN 4 THEN '%s'"
+                 "         ELSE ''"
+                 "       END, color, COUNT(*) AS count"
+                 " FROM main.images AS mi"
+                 " JOIN "
+                 "   (SELECT imgid AS color_labels_id, color FROM main.color_labels)"
+                 " ON id = color_labels_id "
+                 " WHERE %s"
+                 " GROUP BY color"
+                 " ORDER BY color %s",
+                 _("red"), _("yellow"), _("green"), _("blue"), _("purple"),
+                 where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_LENS: // lens
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT CASE LOWER(TRIM(ln.name))"
+                 "         WHEN 'n/a' THEN ''"
+                 "         ELSE ln.name"
+                 "       END AS lens, 1, COUNT(*) AS count"
+                 "  FROM main.images AS mi, main.lens AS ln"
+                 "  WHERE mi.lens_id = ln.id"
+                 "    AND %s"
+                 "  GROUP BY LOWER(lens)"
+                 "  ORDER BY LOWER(lens) %s", where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_WHITEBALANCE: // white balance
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT wb.name AS whitebalance, 1, COUNT(*) AS count"
+                 "  FROM main.images AS mi, main.whitebalance AS wb"
+                 "  WHERE mi.whitebalance_id = wb.id"
+                 "    AND %s"
+                 "  GROUP BY LOWER(whitebalance)"
+                 "  ORDER BY LOWER(whitebalance) %s", where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_FLASH: // white balance
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT fl.name AS flash, 1, COUNT(*) AS count"
+                 "  FROM main.images AS mi, main.flash AS fl"
+                 "  WHERE mi.flash_id = fl.id"
+                 "    AND %s"
+                 "  GROUP BY LOWER(flash)"
+                 "  ORDER BY LOWER(flash) %s", where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_EXPOSURE_PROGRAM: // exposure program
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT ep.name AS exposure_program, 1, COUNT(*) AS count"
+                 "  FROM main.images AS mi, main.exposure_program AS ep"
+                 "  WHERE mi.exposure_program_id = ep.id"
+                 "    AND %s"
+                 "  GROUP BY LOWER(exposure_program)"
+                 "  ORDER BY LOWER(exposure_program) %s", where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_METERING_MODE: // metering mode
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT mm.name AS metering_mode, 1, COUNT(*) AS count"
+                 "  FROM main.images AS mi, main.metering_mode AS mm"
+                 "  WHERE mi.metering_mode_id = mm.id"
+                 "    AND %s"
+                 "  GROUP BY LOWER(metering_mode)"
+                 "  ORDER BY LOWER(metering_mode) %s", where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_FOCAL_LENGTH: // focal length
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT CAST(focal_length AS INTEGER) AS focal_length, 1,"
+                 "       COUNT(*) AS count"
+                 " FROM main.images AS mi"
+                 " WHERE %s"
+                 " GROUP BY CAST(focal_length AS INTEGER)"
+                 " ORDER BY CAST(focal_length AS INTEGER) %s",
+                 where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_ISO: // iso
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT CAST(iso AS INTEGER) AS iso, 1, COUNT(*) AS count"
+                 " FROM main.images AS mi"
+                 " WHERE %s"
+                 " GROUP BY iso"
+                 " ORDER BY iso %s",
+                 where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_APERTURE: // aperture
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT ROUND(aperture,1) AS aperture, 1, COUNT(*) AS count"
+                 " FROM main.images AS mi"
+                 " WHERE %s"
+                 " GROUP BY aperture"
+                 " ORDER BY aperture %s",
+                 where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_EXPOSURE: // exposure
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT CASE"
+                 "         WHEN (exposure < 0.4) THEN '1/' || CAST(1/exposure + 0.9 AS INTEGER) "
+                 "         ELSE ROUND(exposure,2) || '\"'"
+                 "       END AS _exposure, 1, COUNT(*) AS count"
+                 " FROM main.images AS mi"
+                 " WHERE %s"
+                 " GROUP BY _exposure"
+                 " ORDER BY exposure %s",
+                 where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_EXPOSURE_BIAS: // exposure bias
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT ROUND(exposure_bias,2), 1, COUNT(*) AS count"
+                 " FROM main.images AS mi"
+                 " WHERE %s"
+                 " GROUP BY ROUND(exposure_bias,2)"
+                 " ORDER BY ROUND(exposure_bias,2) %s",
+                 where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_FILENAME: // filename
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT filename, 1, COUNT(*) AS count"
+                 " FROM main.images AS mi"
+                 " WHERE %s"
+                 " GROUP BY lower(filename)"
+                 " ORDER BY lower(filename) %s",
+                 where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_GROUP_ID: // group_id
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT mi.group_id, 1, COUNT(*) AS count"
+                 "  FROM main.images AS mi"
+                 "  WHERE %s"
+                 "  GROUP BY group_id"
+                 "  HAVING COUNT(*) > 1"
+                 "  ORDER BY group_id %s", where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_MODULE: // module
+      // clang-format off
+      snprintf(query, sizeof(query),
+               "SELECT m.name AS module_name, 1, COUNT(*) AS count"
+               " FROM main.images AS mi"
+               " JOIN (SELECT DISTINCT imgid, operation"
+               "       FROM main.history"
+               "       WHERE enabled = 1) AS h"
+               "  ON h.imgid = mi.id"
+               " JOIN memory.darktable_iop_names AS m"
+               "  ON m.operation = h.operation"
+               " WHERE %s"
+               " GROUP BY lower(module_name)"
+               " ORDER BY lower(module_name) %s",
+               where_ext,
+               sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    case DT_COLLECTION_PROP_ORDER: // modules order
+      {
+        char *orders = NULL;
+        for(int i = 0; i < DT_IOP_ORDER_LAST; i++)
+        {
+          dt_util_str_cat(&orders, "WHEN mo.version = %d THEN '%s' ",
+                                   i, _(dt_iop_order_string(i)));
+        }
+        dt_util_str_cat(&orders, "ELSE '%s' ", _("none"));
+        // clang-format off
+        snprintf(query, sizeof(query),
+                 "SELECT CASE %s END as ver, 1, COUNT(*) AS count"
+                 " FROM main.images AS mi"
+                 " LEFT JOIN (SELECT imgid, version FROM main.module_order) mo"
+                 "  ON mo.imgid = mi.id"
+                 " WHERE %s"
+                 " GROUP BY ver"
+                 " ORDER BY ver %s",
+                 orders, where_ext,
+                 sort_descending ? "DESC" : "ASC");
+        // clang-format on
+        g_free(orders);
+      }
+      break;
+
+    case DT_COLLECTION_PROP_RATING: // image rating
+      {
+      // clang-format off
+        g_snprintf(query, sizeof(query),
+                   "SELECT CASE WHEN (flags & 8) == 8"
+                   "        THEN -1 ELSE (flags & 7) END AS rating, 1,"
+                   " COUNT(*) AS count"
+                   " FROM main.images AS mi"
+                   " WHERE %s"
+                   " GROUP BY rating"
+                   " ORDER BY rating %s", where_ext,
+                   sort_descending ? "DESC" : "ASC");
+        // clang-format on
+      }
+      break;
+
+    case DT_COLLECTION_PROP_MONTH: // capture month
+      // clang-format off
+      g_snprintf(query, sizeof(query),
+                 "SELECT CAST(strftime('%%m', datetime_taken / 86400000000.0"
+                 "            + julianday('0001-01-01')) AS INTEGER) AS month_num,"
+                 "        1, COUNT(*) AS count"
+                 " FROM main.images AS mi"
+                 " WHERE datetime_taken IS NOT NULL AND datetime_taken <> 0"
+                 " AND %s"
+                 " GROUP BY month_num"
+                 " ORDER BY month_num %s",
+                 where_ext,
+                 sort_descending ? "DESC" : "ASC");
+      // clang-format on
+      break;
+
+    default:
+      if(property >= DT_COLLECTION_PROP_METADATA_OFFSET)
+      {
+        const int keyid = property - DT_COLLECTION_PROP_METADATA_OFFSET;
+        // clang-format off
+        snprintf(query, sizeof(query),
+                  "SELECT"
+                  " CASE WHEN value IS NULL THEN '%s' ELSE value END AS value,"
+                  " 1, COUNT(*) AS count,"
+                  " CASE WHEN value IS NULL THEN 0 ELSE 1 END AS force_order"
+                  " FROM main.images AS mi"
+                  " LEFT JOIN (SELECT id AS meta_data_id, value"
+                  "            FROM main.meta_data"
+                  "            WHERE key = %d)"
+                  "  ON id = meta_data_id"
+                  " WHERE %s"
+                  " GROUP BY lower(value)"
+                  " ORDER BY force_order ASC, lower(value) %s",
+                  _("not defined"), keyid, where_ext,
+                  sort_descending ? "DESC" : "ASC");
+        // clang-format on
+      }
+      else
+      // filmroll
+      {
+        gchar *order_by = NULL;
+
+        const gboolean sort_by_import_time =
+          dt_conf_is_equal("plugins/collect/filmroll_sort", "import time");
+
+        if(sort_by_import_time)
+        {
+          order_by = g_strdup(sort_descending ? "film_rolls_id DESC" : "film_rolls_id ASC");
+        }
+        else
+        {
+          order_by = g_strdup(sort_descending ? "lower(folder) DESC" : "lower(folder) ASC");
+        }
+
+        // clang-format off
+        g_snprintf(query, sizeof(query),
+                   "SELECT folder, film_rolls_id, COUNT(*) AS count, status"
+                   " FROM main.images AS mi"
+                   " JOIN (SELECT fr.id AS film_rolls_id, folder, status"
+                   "       FROM main.film_rolls AS fr"
+                   "        JOIN memory.film_folder AS ff"
+                   "        ON ff.id = fr.id)"
+                   "   ON film_id = film_rolls_id "
+                   " WHERE %s"
+                   " GROUP BY folder"
+                   " ORDER BY %s", where_ext, order_by);
+        // clang-format on
+
+        g_free(order_by);
+      }
+      break;
+  }
+
+  *has_query = strlen(query) > 0;
+  if(!*has_query) return NULL;
+
+  GList *rows = NULL;
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+  const int cols = sqlite3_column_count(stmt);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    dt_collection_list_row_t *r = g_new0(dt_collection_list_row_t, 1);
+    r->text = g_strdup((const char *)sqlite3_column_text(stmt, 0));
+    r->v0 = sqlite3_column_int(stmt, 0);
+    r->v1 = sqlite3_column_int(stmt, 1);
+    r->count = sqlite3_column_int(stmt, 2);
+    r->v3 = cols > 3 ? sqlite3_column_int(stmt, 3) : 0;
+    rows = g_list_prepend(rows, r);
+  }
+  sqlite3_finalize(stmt);
+  return g_list_reverse(rows);
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

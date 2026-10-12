@@ -340,6 +340,30 @@ void dt_collection_history_counts(const char *where, int counts[3]);
     counts must hold DT_IOP_ORDER_LAST + 1 ints */
 void dt_collection_module_order_counts(const char *where, int *counts);
 
+/** a row of the collect module's list view: column 0 as text (NULL for a
+    NULL value) and as an int, column 1 (an id, or 1), column 2 the image
+    count, column 3 (the film roll status, 0 when absent) */
+typedef struct dt_collection_list_row_t
+{
+  char *text;
+  int v0;
+  int v1;
+  int count;
+  int v3;
+} dt_collection_list_row_t;
+
+void dt_collection_list_row_free(gpointer data);
+
+/** the values of a collection property among the images matching where_ext,
+    with their image counts, as the collect module lists them; labels such
+    as "basic" or color names come translated. *has_query is FALSE for a
+    property the list view does not handle. Free with
+    g_list_free_full(list, dt_collection_list_row_free) */
+GList *dt_collection_list_rows(const int property,
+                               const char *where_ext,
+                               const gboolean sort_descending,
+                               gboolean *has_query);
+
 typedef struct dt_collection_date_count_t
 {
   int64_t value; // a GDateTime-based timestamp, too wide for a double

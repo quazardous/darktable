@@ -219,6 +219,29 @@ static void test_history_state_counts(void **state)
   assert_int_equal(total, 3);
 }
 
+static void test_list_rows(void **state)
+{
+  gboolean has_query = FALSE;
+  GList *rows = dt_collection_list_rows(DT_COLLECTION_PROP_CAMERA, "1=1", FALSE, &has_query);
+  assert_true(has_query);
+  int total = 0;
+  for(GList *l = rows; l; l = g_list_next(l))
+  {
+    const dt_collection_list_row_t *r = l->data;
+    assert_non_null(r->text);
+    total += r->count;
+  }
+  assert_int_equal(total, 3);
+  g_list_free_full(rows, dt_collection_list_row_free);
+
+  // the film rolls: one, holding the three images
+  rows = dt_collection_list_rows(DT_COLLECTION_PROP_FILMROLL, "1=1", FALSE, &has_query);
+  assert_true(has_query);
+  assert_int_equal(g_list_length(rows), 1);
+  assert_int_equal(((dt_collection_list_row_t *)rows->data)->count, 3);
+  g_list_free_full(rows, dt_collection_list_row_free);
+}
+
 // last in the list: it adds a duplicate, which the totals above do not expect
 static void test_duplicate_counts(void **state)
 {
@@ -247,6 +270,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_filename_counts),
     cmocka_unit_test(test_misc_counts),
     cmocka_unit_test(test_history_state_counts),
+    cmocka_unit_test(test_list_rows),
     cmocka_unit_test(test_duplicate_counts),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
