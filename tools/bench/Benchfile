@@ -20,7 +20,7 @@ run = [
  && dnf -y install git cmake ninja-build gcc-c++ ccache gdb sqlite libcmocka-devel \
       ImageMagick dbus-daemon labwc grim wtype wlrctl wl-clipboard \
       xdotool xprop setxkbmap wlr-randr xorg-x11-server-Xwayland procps-ng bc \
-      python3 python3-pip python3-pyyaml \
+      python3 python3-pip python3-pyyaml python3-pillow \
  && dnf clean all""",
   # the pixel runner's Python dependencies (src/tests/integration/requirements.txt)
   """python3 -m venv /opt/dt-tests-venv \
