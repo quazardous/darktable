@@ -427,6 +427,9 @@ typedef struct dt_collection_culling_row_t
 GList *dt_collection_culling_rows(const int offset,
                                   const int count,
                                   const gboolean selected_only);
+/** the first collected image, or the last one, and its rowid when rowid
+    is not NULL; NO_IMGID, rowid untouched, when the collection is empty */
+dt_imgid_t dt_collection_edge_imgid(const gboolean last, int *rowid);
 /** up to limit collected images before rowid, nearest first, after
     rowid in order, or from rowid on; aspect_ratio is left at 0.
     Free with g_list_free_full(list, g_free) */

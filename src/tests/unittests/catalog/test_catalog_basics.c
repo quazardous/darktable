@@ -322,6 +322,12 @@ static void test_selected_navigation(void **state)
   assert_int_equal(g_list_length(rows), 1);
   assert_int_equal(((dt_collection_culling_row_t *)rows->data)->rowid, 2);
   g_list_free_full(rows, g_free);
+  // darkroom's ends of the collection
+  int edge_rowid = 0;
+  assert_int_equal(dt_collection_edge_imgid(FALSE, &edge_rowid), dt_collection_imgid_at_rowid(1));
+  assert_int_equal(edge_rowid, 1);
+  assert_int_equal(dt_collection_edge_imgid(TRUE, &edge_rowid), dt_collection_imgid_at_rowid(3));
+  assert_int_equal(edge_rowid, 3);
   rows = dt_collection_thumb_rows_from(2, 5);
   assert_int_equal(g_list_length(rows), 2);
   assert_int_equal(((dt_collection_culling_row_t *)rows->data)->rowid, 2);

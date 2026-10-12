@@ -91,13 +91,8 @@ static void _refresh_active_image_rowid(const dt_imgid_t imgid)
 {
   if(!dt_is_valid_imgid(imgid))
     return;
-  sqlite3_stmt *stmt;
-  gchar *q = g_strdup_printf("SELECT rowid FROM memory.collected_images WHERE imgid=%d", imgid);
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), q, -1, &stmt, NULL);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-    darktable.darkroom_active_imgid_rowid = sqlite3_column_int(stmt, 0);
-  sqlite3_finalize(stmt);
-  g_free(q);
+  darktable.darkroom_active_imgid_rowid =
+    dt_collection_rowid_of(imgid, darktable.darkroom_active_imgid_rowid);
 }
 
 /* signal handler for filmstrip image switching */
@@ -1228,16 +1223,7 @@ gboolean try_enter(dt_view_t *self)
   // of the current lighttable collection, so switching to darkroom
   // from the tab bar always opens whatever is visible there.
   if(!dt_is_valid_imgid(imgid))
-  {
-    sqlite3_stmt *stmt;
-    DT_DEBUG_SQLITE3_PREPARE_V2
-      (dt_database_get(darktable.db),
-       "SELECT imgid FROM memory.collected_images ORDER BY rowid LIMIT 1",
-       -1, &stmt, NULL);
-    if(stmt != NULL && sqlite3_step(stmt) == SQLITE_ROW)
-      imgid = sqlite3_column_int(stmt, 0);
-    if(stmt) sqlite3_finalize(stmt);
-  }
+    imgid = dt_collection_edge_imgid(FALSE, NULL);
 
   if(!dt_is_valid_imgid(imgid))
   {
@@ -1354,25 +1340,8 @@ static void _dev_change_image(dt_develop_t *dev,
   // then we change the selected image to the new one
   if(dt_is_valid_imgid(dev->requested_id))
   {
-    sqlite3_stmt *stmt;
-    // clang-format off
-    DT_DEBUG_SQLITE3_PREPARE_V2
-      (dt_database_get(darktable.db),
-       "SELECT m.imgid"
-       " FROM memory.collected_images as m, main.selected_images as s"
-       " WHERE m.imgid=s.imgid",
-       -1, &stmt, NULL);
-    // clang-format on
-    gboolean follow = FALSE;
-    if(sqlite3_step(stmt) == SQLITE_ROW)
-    {
-      if(sqlite3_column_int(stmt, 0) == dev->requested_id
-         && sqlite3_step(stmt) != SQLITE_ROW)
-      {
-        follow = TRUE;
-      }
-    }
-    sqlite3_finalize(stmt);
+    const gboolean follow = dt_collection_selected_count() == 1
+                            && dt_collection_is_selected(dev->requested_id);
     if(follow)
     {
       dt_selection_select_single(darktable.selection, imgid);
@@ -1747,15 +1716,7 @@ static void _dev_jump_image(dt_develop_t *dev, int diff, gboolean by_key)
   // is no longer in memory.collected_images and current_rowid will be 0 - in
   // that case we use the rowid stored at load time: the same rowid in the new
   // collection now points to whatever image came right after the removed one.
-  int current_rowid = 0;
-  sqlite3_stmt *stmt_pos;
-  gchar *query_pos =
-    g_strdup_printf("SELECT rowid FROM memory.collected_images WHERE imgid=%d", imgid);
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query_pos, -1, &stmt_pos, NULL);
-  if(sqlite3_step(stmt_pos) == SQLITE_ROW)
-    current_rowid = sqlite3_column_int(stmt_pos, 0);
-  sqlite3_finalize(stmt_pos);
-  g_free(query_pos);
+  const int current_rowid = dt_collection_rowid_of(imgid, 0);
 
   // target rowid in memory.collected_images. When the current image is still
   // there, simply step from its rowid. When it's been filtered out, the slot
@@ -1769,39 +1730,21 @@ static void _dev_jump_image(dt_develop_t *dev, int diff, gboolean by_key)
   else
     target_rowid = (diff > 0) ? 1 : -1;
 
-  sqlite3_stmt *stmt;
-  gchar *query = g_strdup_printf("SELECT rowid, imgid FROM memory.collected_images WHERE rowid=%d",
-                                 target_rowid);
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    new_offset = sqlite3_column_int(stmt, 0);
-    new_id = sqlite3_column_int(stmt, 1);
-  }
-  sqlite3_finalize(stmt);
-  g_free(query);
+  new_id = dt_collection_imgid_at_rowid(target_rowid);
+  if(dt_is_valid_imgid(new_id))
+    new_offset = target_rowid;
 
   if(!dt_is_valid_imgid(new_id))
   {
     // past the start/end of the collection - wrap around
-    sqlite3_stmt *stmt2;
-    DT_DEBUG_SQLITE3_PREPARE_V2(
-      dt_database_get(darktable.db),
-      diff > 0 ? "SELECT rowid, imgid FROM memory.collected_images ORDER BY rowid ASC LIMIT 1"
-               : "SELECT rowid, imgid FROM memory.collected_images ORDER BY rowid DESC LIMIT 1",
-      -1,
-      &stmt2,
-      NULL);
-    if(sqlite3_step(stmt2) == SQLITE_ROW)
+    new_id = dt_collection_edge_imgid(diff < 0, &new_offset);
+    if(dt_is_valid_imgid(new_id))
     {
-      new_offset = sqlite3_column_int(stmt2, 0);
-      new_id = sqlite3_column_int(stmt2, 1);
       if(diff > 0)
         dt_toast_log(_("past end of collection, looped to first image"));
       else
         dt_toast_log(_("past beginning of collection, looped to last image"));
     }
-    sqlite3_finalize(stmt2);
   }
 
   if(!dt_is_valid_imgid(new_id) || new_id == imgid) return;

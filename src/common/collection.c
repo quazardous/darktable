@@ -4621,6 +4621,26 @@ dt_imgid_t dt_collection_selected_imgid_before(const dt_imgid_t imgid)
   // clang-format on
 }
 
+dt_imgid_t dt_collection_edge_imgid(const gboolean last, int *rowid)
+{
+  dt_imgid_t id = NO_IMGID;
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(
+    dt_database_get(darktable.db),
+    last ? "SELECT rowid, imgid FROM memory.collected_images ORDER BY rowid DESC LIMIT 1"
+         : "SELECT rowid, imgid FROM memory.collected_images ORDER BY rowid ASC LIMIT 1",
+    -1,
+    &stmt,
+    NULL);
+  if(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    if(rowid) *rowid = sqlite3_column_int(stmt, 0);
+    id = sqlite3_column_int(stmt, 1);
+  }
+  sqlite3_finalize(stmt);
+  return id;
+}
+
 // rows of collected images with their selected state, as the thumbtable loads them
 static GList *_thumb_rows(gchar *query)
 {
