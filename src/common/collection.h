@@ -376,6 +376,11 @@ typedef struct dt_collection_culling_row_t
 GList *dt_collection_culling_rows(const int offset,
                                   const int count,
                                   const gboolean selected_only);
+/** up to limit collected images before rowid, nearest first, or after
+    rowid in order; aspect_ratio is left at 0.
+    Free with g_list_free_full(list, g_free) */
+GList *dt_collection_thumb_rows_before(const int rowid, const int limit);
+GList *dt_collection_thumb_rows_after(const int rowid, const int limit);
 
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
