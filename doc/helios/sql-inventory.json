@@ -8876,7 +8876,135 @@
   },
   {
    "file": "common/history.c",
-   "line": 1944,
+   "line": 1884,
+   "function": "dt_history_memory_count",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "memory.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT COUNT(*) FROM memory.history"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1901,
+   "function": "dt_history_memory_insert_default",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "INSERT"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "memory.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "INSERT INTO memory.history VALUES (?1, 0, ?2, ?3, ?4, 1, NULL, 0, 0, ?5, 0)"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1932,
+   "function": "dt_history_merge_memory",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "memory.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT rowid FROM memory.history ORDER BY rowid DESC"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1942,
+   "function": "dt_history_merge_memory",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "memory.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE memory.history SET num=?1 WHERE rowid=?2"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1969,
+   "function": "dt_history_merge_memory",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE main.history SET num=num+?1 WHERE imgid=?2"
+  },
+  {
+   "file": "common/history.c",
+   "line": 1981,
+   "function": "dt_history_merge_memory",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "INSERT",
+    "SELECT"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.history",
+    "memory.history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": true,
+   "sql": "INSERT INTO main.history SELECT imgid, num, module, operation, op_params, enabled, blendop_params, blendop_version, multi_priority, multi_name, multi_name_hand_edited FROM memory.history"
+  },
+  {
+   "file": "common/history.c",
+   "line": 2059,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8897,7 +9025,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1961,
+   "line": 2076,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8918,7 +9046,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 1998,
+   "line": 2113,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8939,7 +9067,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2027,
+   "line": 2142,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8960,7 +9088,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2108,
+   "line": 2223,
    "function": "dt_history_hash_write_from_history",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -8982,7 +9110,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2131,
+   "line": 2246,
    "function": "dt_history_hash_write",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9004,7 +9132,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2159,
+   "line": 2274,
    "function": "dt_history_hash_read",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9025,7 +9153,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2214,
+   "line": 2329,
    "function": "dt_history_hash_is_mipmap_synced",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9046,7 +9174,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2236,
+   "line": 2351,
    "function": "dt_history_hash_set_mipmap",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9067,7 +9195,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2252,
+   "line": 2367,
    "function": "dt_history_hash_unset_mipmap",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9088,7 +9216,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2281,
+   "line": 2396,
    "function": "dt_history_hash_get_status",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -14622,49 +14750,7 @@
   },
   {
    "file": "develop/develop.c",
-   "line": 1917,
-   "function": "_dev_get_module_nb_records",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "memory.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT count (*) FROM memory.history"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 1940,
-   "function": "_dev_insert_module",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "INSERT"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "memory.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "INSERT INTO memory.history VALUES (?1, 0, ?2, ?3, ?4, 1, NULL, 0, 0, ?5, 0)"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 2143,
+   "line": 2120,
    "function": "_dev_auto_apply_presets",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14687,7 +14773,7 @@
   },
   {
    "file": "develop/develop.c",
-   "line": 2167,
+   "line": 2144,
    "function": "_dev_auto_apply_presets",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "develop",
@@ -14707,113 +14793,6 @@
    ],
    "cross_schema": true,
    "sql": "SELECT op_params FROM data.presets WHERE autoapply=1 AND ((?2 LIKE model AND ?3 LIKE maker) OR (?4 LIKE model AND ?5 LIKE maker)) AND ?6 LIKE lens AND ?7 BETWEEN iso_min AND iso_max AND ?8 BETWEEN exposure_min AND exposure_max AND ?9 BETWEEN aperture_min AND aperture_max AND ?10 BETWEEN focal_length_min AND focal_length_max AND (format = 0 OR (format&?11 != 0 AND ~format&?12 != 0)) AND operation ="
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 2291,
-   "function": "_dev_merge_history",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "memory.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT COUNT(*) FROM memory.history"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 2313,
-   "function": "_dev_merge_history",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "memory.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT rowid FROM memory.history ORDER BY rowid DESC"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 2323,
-   "function": "_dev_merge_history",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "memory.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE memory.history SET num=?1 WHERE rowid=?2"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 2349,
-   "function": "_dev_merge_history",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE main.history SET num=num+?1 WHERE imgid=?2"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 2363,
-   "function": "_dev_merge_history",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "INSERT",
-    "SELECT"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.history",
-    "memory.history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": true,
-   "sql": "INSERT INTO main.history SELECT imgid, num, module, operation, op_params, enabled, blendop_params, blendop_version, multi_priority, multi_name, multi_name_hand_edited FROM memory.history"
   },
   {
    "file": "develop/imageop.c",
@@ -17647,7 +17626,7 @@
    "function": "_image_exists",
    "call": "sqlite3_prepare_v2",
    "layer": "mcp",
-   "step": "A",
+   "step": "interface",
    "ops": [
     "SELECT"
    ],
@@ -17668,7 +17647,7 @@
    "function": "_film_is_empty",
    "call": "sqlite3_prepare_v2",
    "layer": "mcp",
-   "step": "A",
+   "step": "interface",
    "ops": [
     "SELECT"
    ],
@@ -17689,7 +17668,7 @@
    "function": "_max_image_id",
    "call": "sqlite3_prepare_v2",
    "layer": "mcp",
-   "step": "A",
+   "step": "interface",
    "ops": [
     "SELECT"
    ],
@@ -17710,7 +17689,7 @@
    "function": "_film_images_since",
    "call": "sqlite3_prepare_v2",
    "layer": "mcp",
-   "step": "A",
+   "step": "interface",
    "ops": [
     "SELECT"
    ],
@@ -17731,7 +17710,7 @@
    "function": "_image_is_undeveloped",
    "call": "sqlite3_prepare_v2",
    "layer": "mcp",
-   "step": "A",
+   "step": "interface",
    "ops": [
     "SELECT"
    ],
@@ -17757,7 +17736,7 @@
    "function": "_drop_scratch",
    "call": "sqlite3_prepare_v2",
    "layer": "mcp",
-   "step": "A",
+   "step": "interface",
    "ops": [
     "DELETE"
    ],
@@ -17778,7 +17757,7 @@
    "function": "dt_bridge_list_film_rolls_json",
    "call": "sqlite3_prepare_v2",
    "layer": "mcp",
-   "step": "A",
+   "step": "interface",
    "ops": [],
    "write": false,
    "dynamic": true,
@@ -17799,7 +17778,7 @@
    "function": "dt_bridge_list_images_json",
    "call": "sqlite3_prepare_v2",
    "layer": "mcp",
-   "step": "A",
+   "step": "interface",
    "ops": [
     "SELECT"
    ],
@@ -17824,7 +17803,7 @@
    "function": "dt_bridge_get_history_json",
    "call": "sqlite3_prepare_v2",
    "layer": "mcp",
-   "step": "A",
+   "step": "interface",
    "ops": [],
    "write": false,
    "dynamic": true,
@@ -18006,7 +17985,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_history.c",
-   "line": 34,
+   "line": 35,
    "function": "_count_history",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "tests",
@@ -18027,7 +18006,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_history.c",
-   "line": 54,
+   "line": 55,
    "function": "test_insert_and_count",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "tests",
@@ -18048,7 +18027,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_history.c",
-   "line": 94,
+   "line": 95,
    "function": "_exec",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "tests",
@@ -18069,7 +18048,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_history.c",
-   "line": 101,
+   "line": 102,
    "function": "_count",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "tests",
@@ -18086,7 +18065,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_history.c",
-   "line": 207,
+   "line": 208,
    "function": "test_get_masks_rows",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "tests",
