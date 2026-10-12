@@ -1877,6 +1877,121 @@ void dt_history_delete_rows(const dt_imgid_t imgid)
   sqlite3_finalize(stmt);
 }
 
+int dt_history_memory_count(void)
+{
+  int cnt = 0;
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "SELECT COUNT(*) FROM memory.history",
+                              -1, &stmt, NULL);
+  if(sqlite3_step(stmt) == SQLITE_ROW)
+    cnt = sqlite3_column_int(stmt, 0);
+  sqlite3_finalize(stmt);
+  return cnt;
+}
+
+void dt_history_memory_insert_default(const dt_imgid_t imgid,
+                                      const int module_version,
+                                      const char *operation,
+                                      const void *params,
+                                      const int params_size,
+                                      const char *multi_name)
+{
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(
+    dt_database_get(darktable.db),
+    "INSERT INTO memory.history VALUES (?1, 0, ?2, ?3, ?4, 1, NULL, 0, 0, ?5, 0)",
+    -1, &stmt, NULL);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, module_version);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 3, operation, -1, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 4, params, params_size, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 5, multi_name ? multi_name : "", -1, SQLITE_TRANSIENT);
+  sqlite3_step(stmt);
+  sqlite3_finalize(stmt);
+}
+
+void dt_history_merge_memory(const dt_imgid_t imgid)
+{
+  const int cnt = dt_history_memory_count();
+  if(cnt <= 0) return;
+
+  sqlite3_stmt *stmt;
+
+  // workaround a sqlite3 "feature". The above statement to insert
+  // items into memory.history is complex and in this case sqlite
+  // does not give rowid a linear increment. But the following code
+  // really expect that the rowid in this table starts from 0 and
+  // increment one by one. So in the following code we rewrite the
+  // "num" values from 0 to cnt-1.
+
+  // get all rowids
+  GList *rowids = NULL;
+
+  // get the rowids in descending order since building the list will reverse the order
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "SELECT rowid FROM memory.history ORDER BY rowid DESC",
+                              -1, &stmt, NULL);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+    rowids = g_list_prepend(rowids, GINT_TO_POINTER(sqlite3_column_int(stmt, 0)));
+  sqlite3_finalize(stmt);
+
+  // update num accordingly
+  int v = 0;
+
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "UPDATE memory.history SET num=?1 WHERE rowid=?2",
+                              -1, &stmt, NULL);
+
+  // let's wrap this into a transaction, it might make it a little faster.
+  dt_database_start_transaction(darktable.db);
+
+  for(GList *r = rowids; r; r = g_list_next(r))
+  {
+    DT_DEBUG_SQLITE3_CLEAR_BINDINGS(stmt);
+    DT_DEBUG_SQLITE3_RESET(stmt);
+    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, v);
+    DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, GPOINTER_TO_INT(r->data));
+
+    if(sqlite3_step(stmt) != SQLITE_DONE) break;
+
+    v++;
+  }
+
+  dt_database_release_transaction(darktable.db);
+  sqlite3_finalize(stmt);
+
+  g_list_free(rowids);
+
+  // advance the current history by cnt amount, that is, make space
+  // for the preset/default iops that will be *prepended* into the
+  // history.
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "UPDATE main.history SET num=num+?1 WHERE imgid=?2",
+                              -1, &stmt, NULL);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, cnt);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, imgid);
+  const gboolean shifted = sqlite3_step(stmt) == SQLITE_DONE;
+  sqlite3_finalize(stmt);
+
+  if(shifted && dt_image_shift_history_end(imgid, cnt))
+  {
+    // and finally prepend the rest with increasing numbers (starting at 0)
+    // clang-format off
+    DT_DEBUG_SQLITE3_PREPARE_V2(
+      dt_database_get(darktable.db),
+      "INSERT INTO main.history"
+      " SELECT imgid, num, module, operation, op_params, enabled, "
+      "        blendop_params, blendop_version, multi_priority,"
+      "        multi_name, multi_name_hand_edited"
+      " FROM memory.history",
+      -1, &stmt, NULL);
+    // clang-format on
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+  }
+}
+
 GList *dt_history_duplicate(GList *hist)
 {
   GList *result = NULL;

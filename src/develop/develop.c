@@ -1911,24 +1911,10 @@ void dt_dev_write_history(dt_develop_t *dev)
   dt_database_release_transaction(darktable.db);
 }
 
-static int _dev_get_module_nb_records(void)
-{
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT count (*) FROM  memory.history",
-                              -1, &stmt, NULL);
-  sqlite3_step(stmt);
-  const int cnt = sqlite3_column_int(stmt, 0);
-  sqlite3_finalize(stmt);
-  return cnt;
-}
-
 static void _dev_insert_module(dt_develop_t *dev,
                                dt_iop_module_t *module,
                                const dt_imgid_t imgid)
 {
-  sqlite3_stmt *stmt;
-
   // we make sure that the multi-name is updated if possible with the
   // actual preset name if any is defined for the default parameters.
 
@@ -1937,18 +1923,9 @@ static void _dev_insert_module(dt_develop_t *dev,
      module->default_params, module->params_size, TRUE,
      module->blend_params, sizeof(dt_develop_blend_params_t));
 
-  DT_DEBUG_SQLITE3_PREPARE_V2(
-    dt_database_get(darktable.db),
-    "INSERT INTO memory.history VALUES (?1, 0, ?2, ?3, ?4, 1, NULL, 0, 0, ?5, 0)",
-    -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, module->version());
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 3, module->op, -1, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 4, module->default_params, module->params_size,
-                             SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 5, preset_name ? preset_name : "", -1, SQLITE_TRANSIENT);
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
+  dt_history_memory_insert_default(imgid, module->version(), module->op,
+                                   module->default_params, module->params_size,
+                                   preset_name);
 
   g_free(preset_name);
 
@@ -2282,101 +2259,6 @@ static void _dev_add_default_modules(dt_develop_t *dev,
   }
 }
 
-static void _dev_merge_history(dt_develop_t *dev,
-                               const dt_imgid_t imgid)
-{
-  sqlite3_stmt *stmt;
-
-  // count what we found:
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT COUNT(*) FROM memory.history", -1,
-                              &stmt, NULL);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    // if there is anything..
-    const int cnt = sqlite3_column_int(stmt, 0);
-    sqlite3_finalize(stmt);
-
-    // workaround a sqlite3 "feature". The above statement to insert
-    // items into memory.history is complex and in this case sqlite
-    // does not give rowid a linear increment. But the following code
-    // really expect that the rowid in this table starts from 0 and
-    // increment one by one. So in the following code we rewrite the
-    // "num" values from 0 to cnt-1.
-
-    if(cnt > 0)
-    {
-      // get all rowids
-      GList *rowids = NULL;
-
-      // get the rowids in descending order since building the list will reverse the order
-      DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                  "SELECT rowid FROM memory.history ORDER BY rowid DESC",
-                                  -1, &stmt, NULL);
-      while(sqlite3_step(stmt) == SQLITE_ROW)
-        rowids = g_list_prepend(rowids, GINT_TO_POINTER(sqlite3_column_int(stmt, 0)));
-      sqlite3_finalize(stmt);
-
-      // update num accordingly
-      int v = 0;
-
-      DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                  "UPDATE memory.history SET num=?1 WHERE rowid=?2",
-                                  -1, &stmt, NULL);
-
-      // let's wrap this into a transaction, it might make it a little faster.
-      dt_database_start_transaction(darktable.db);
-
-      for(GList *r = rowids; r; r = g_list_next(r))
-      {
-        DT_DEBUG_SQLITE3_CLEAR_BINDINGS(stmt);
-        DT_DEBUG_SQLITE3_RESET(stmt);
-        DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, v);
-        DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, GPOINTER_TO_INT(r->data));
-
-        if(sqlite3_step(stmt) != SQLITE_DONE) break;
-
-        v++;
-      }
-
-      dt_database_release_transaction(darktable.db);
-
-      g_list_free(rowids);
-
-      // advance the current history by cnt amount, that is, make space
-      // for the preset/default iops that will be *prepended* into the
-      // history.
-      DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                  "UPDATE main.history SET num=num+?1 WHERE imgid=?2",
-                                  -1, &stmt, NULL);
-      DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, cnt);
-      DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, imgid);
-
-      if(sqlite3_step(stmt) == SQLITE_DONE)
-      {
-        sqlite3_finalize(stmt);
-
-        if(dt_image_shift_history_end(imgid, cnt))
-        {
-          // and finally prepend the rest with increasing numbers (starting at 0)
-          // clang-format off
-          DT_DEBUG_SQLITE3_PREPARE_V2(
-            dt_database_get(darktable.db),
-            "INSERT INTO main.history"
-            " SELECT imgid, num, module, operation, op_params, enabled, "
-            "        blendop_params, blendop_version, multi_priority,"
-            "        multi_name, multi_name_hand_edited"
-            " FROM memory.history",
-            -1, &stmt, NULL);
-          // clang-format on
-          sqlite3_step(stmt);
-          sqlite3_finalize(stmt);
-        }
-      }
-    }
-  }
-}
-
 static void _dev_write_history(dt_develop_t *dev,
                                const dt_imgid_t imgid)
 {
@@ -2438,11 +2320,11 @@ void dt_dev_read_history_ext(dt_develop_t *dev,
     // Prepend all default modules to memory.history
 
     _dev_add_default_modules(dev, imgid);
-    const int default_modules_count = _dev_get_module_nb_records();
+    const int default_modules_count = dt_history_memory_count();
 
     // Maybe add auto-presets to memory.history
     first_run = _dev_auto_apply_presets(dev);
-    auto_apply_modules_count = _dev_get_module_nb_records() - default_modules_count;
+    auto_apply_modules_count = dt_history_memory_count() - default_modules_count;
 
     dt_print(DT_DEBUG_PARAMS,
              "[dt_dev_read_history_ext] temporary history initialised with"
@@ -2450,7 +2332,7 @@ void dt_dev_read_history_ext(dt_develop_t *dev,
 
     // Now merge memory.history into main.history
 
-    _dev_merge_history(dev, imgid);
+    dt_history_merge_memory(imgid);
 
     dt_print(DT_DEBUG_PARAMS,
              "[dt_dev_read_history_ext] temporary history merged with image history");

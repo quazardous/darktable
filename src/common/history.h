@@ -279,6 +279,23 @@ int dt_history_next_num(const dt_imgid_t imgid);
     (dt_history_delete_on_image also resets the image) */
 void dt_history_delete_rows(const dt_imgid_t imgid);
 
+/** number of rows in memory.history */
+int dt_history_memory_count(void);
+
+/** stage the default parameters of a module in memory.history, enabled,
+    with no blend parameters, at num 0 (dt_history_merge_memory renumbers) */
+void dt_history_memory_insert_default(const dt_imgid_t imgid,
+                                      const int module_version,
+                                      const char *operation,
+                                      const void *params,
+                                      const int params_size,
+                                      const char *multi_name);
+
+/** prepend memory.history to the image's history: number the staged rows
+    from 0, shift the image's rows and its history_end by their count,
+    then copy them into main.history. Nothing when memory.history is empty */
+void dt_history_merge_memory(const dt_imgid_t imgid);
+
 /** calculate history hash and save it to database*/
 void dt_history_hash_write_from_history(const dt_imgid_t imgid,
                                         const dt_history_hash_t type);
