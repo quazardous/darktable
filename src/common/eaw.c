@@ -261,7 +261,6 @@ static inline float dn_weight(const float *c1, const float *c2, const float inv_
     sum[c] /= wgt[c];                                                   				     \
     pcoarse[c] = sum[c];                                                                                     \
     det[c] = (px[c] - sum[c]);									             \
-    sum_sq[c] += (det[c]*det[c]);					                                     \
   }                                                                       				     \
   copy_pixel_nontemporal(pdetail, det);                                                                      \
   px += 4;                                                                                                   \
@@ -283,10 +282,8 @@ void eaw_dn_decompose(float *const restrict out, const float *const restrict in,
     };
   const int boundary = 2 * mult;
 
-  dt_aligned_pixel_t sum_sq = { 0.0f, 0.0f, 0.0f, 0.0f };
-
 #if !(defined(__apple_build_version__) && __apple_build_version__ < 11030000) //makes Xcode 11.3.1 compiler crash
-  DT_OMP_FOR(reduction(+: sum_sq[0:4]))
+  DT_OMP_FOR()
 #endif
   for(int rowid = 0; rowid < height; rowid++)
   {
@@ -358,6 +355,13 @@ void eaw_dn_decompose(float *const restrict out, const float *const restrict in,
       SUM_PIXEL_EPILOGUE;
     }
   }
+  // summed afterwards in a fixed order: a reduction(+) in the loop above
+  // adds the threads' partial sums in the order they finish, which made
+  // the denoising thresholds, and so the output, change from run to run
+  double sum_sq[4] = { 0.0, 0.0, 0.0, 0.0 };
+  for(size_t k = 0; k < (size_t)4 * width * height; k += 4)
+    for(int c = 0; c < 4; c++)
+      sum_sq[c] += detail[k + c] * detail[k + c];
   for_each_channel(c)
     sum_squared[c] = sum_sq[c];
 }

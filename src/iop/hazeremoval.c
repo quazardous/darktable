@@ -520,25 +520,27 @@ static float _ambient_light(const const_rgb_image img,
   free_gray_image(&bright_hazy);
   // average over the brightest pixels among the most hazy pixels to
   // estimate the diffusive ambient light
-  dt_aligned_pixel_t A0 = { 0.0f, 0.0f, 0.0f, 0.0f };
+  // a serial sum, in a fixed order: a parallel reduction(+) adds the
+  // threads' partial sums in the order they finish, which made the
+  // ambient light, and so the output, change from run to run
+  double A0[4] = { 0.0, 0.0, 0.0, 0.0 };
   size_t N_bright_hazy = 0;
   const float *const restrict data = dark_ch.data;
   const float *const restrict in_data = img.data;
-  DT_OMP_FOR(reduction(+ : A0[0:4]) reduction(+ : N_bright_hazy))
   for(size_t i = 0; i < size; i++)
   {
     const float *pixel_in = in_data + 4*i;
     if((data[i] >= crit_haze_level)
        && (pixel_in[0] + pixel_in[1] + pixel_in[2] >= crit_brightness))
     {
-      for_each_channel(c,aligned(pixel_in))
+      for(int c = 0; c < 4; c++)
         A0[c] += pixel_in[c];
       N_bright_hazy++;
     }
   }
   if(N_bright_hazy > 0)
   {
-    for_each_channel(c)
+    for(int c = 0; c < 4; c++)
       A0[c] /= N_bright_hazy;
   }
   (*pA0)[0] = A0[0];
