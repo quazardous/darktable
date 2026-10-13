@@ -1,0 +1,19 @@
+# wbox-mcp workspace for darktable: runs darktable in a nested compositor,
+# offscreen, for the equivalence bench and for interactive checks via MCP
+#   wbox-mcp serve tools/helios/wbox/config.yaml
+name: darktable-wbox
+compositor: labwc
+screen: 1600x1000
+input_backend: hybrid
+headless: true
+keyboard_layout: us
+clipboard_bridge: false
+log:
+  dir: ./log
+  level: info
+screenshot_dir: ./screenshots
+timeouts:
+  app_render: 5
+  stop: 20
+app:
+  command: ./darktable.sh
