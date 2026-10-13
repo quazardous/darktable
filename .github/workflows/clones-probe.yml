@@ -139,7 +139,9 @@ jobs:
           mkdir -p "$BUILD_DIR" "$INSTALL_PREFIX" && ./src/.ci/ci-script.sh > build-noclones.log 2>&1 || { tail -40 build-noclones.log; exit 1; }
       - name: Render and hash
         working-directory: src/src/tests/integration
+        shell: bash
         run: |
+          set -o pipefail
           for variant in clones noclones tunables; do
             install=${variant/tunables/clones}
             tunables=; [ $variant = tunables ] && tunables=glibc.cpu.hwcaps=-AVX512F,-AVX512VL,-AVX512DQ,-AVX512BW,-AVX512CD
@@ -148,6 +150,7 @@ jobs:
               echo "$variant $t $(identify -format '%#' $t/output.png 2>/dev/null || echo missing)"
             done
           done | tee ../../../../probe/hashes.txt
+          ! grep -q missing ../../../../probe/hashes.txt && [ -s ../../../../probe/hashes.txt ]
       - uses: actions/upload-artifact@v4
         if: always()
         with:
