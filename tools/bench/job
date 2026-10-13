@@ -39,7 +39,11 @@ case "${1:-}" in
   ctest) [ -d /build/obj ] || { echo "no build yet"; exit 4; }
          cd /build/obj && ctest --output-on-failure > /out/ctest.txt 2>&1
          status=$?; tail -5 /out/ctest.txt; exit $status ;;
-  run) need_build; "$bench/run.sh" /out/run "$prefix" ;;
+  # evict=1: start with the build, the test images and the work dir out of
+  # the page cache, as after a reboot (darktable #3955)
+  run) need_build
+       [ -z "${HELIOS_BENCH_EVICT:-}" ] || python3 "$bench/evict.py" "$prefix" "$src/src/tests/integration/images" "${HELIOS_BENCH_WORK:-${TMPDIR:-/tmp}/helios-bench-work}"
+       "$bench/run.sh" /out/run "$prefix" ;;
   gui-labels) need_build; "$bench/gui_labels.sh" /out/gui-labels "$prefix" ;;
   gui-metadata) need_build; "$bench/gui_metadata.sh" /out/gui-metadata "$prefix" ;;
   gui-tags) need_build; "$bench/gui_tags.sh" /out/gui-tags "$prefix" ;;
