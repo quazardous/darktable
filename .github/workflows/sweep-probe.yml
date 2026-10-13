@@ -1,0 +1,133 @@
+name: history sweep probe (fork only)
+
+# darktable #3986: at which history step do AMD and Intel runners part?
+# One generic build per runner, then 0120 and 0097 rendered with their
+# history cut after each step (.ci/history_sweep.sh), hashes recorded.
+
+on:
+  push:
+    branches: [helios/ci-sweep-probe]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: probe ${{ matrix.run }}
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:26.04
+      options: --tmpfs /tmp:exec
+    strategy:
+      fail-fast: false
+      matrix:
+        run: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    env:
+      CC: gcc-16
+      CXX: g++-16
+      CMAKE_BUILD_TYPE: RelWithDebInfo
+      GENERATOR: Ninja
+      TARGET: skiptest
+      ECO: -DDONT_USE_INTERNAL_LIBRAW=ON -DBINARY_PACKAGE_BUILD=ON
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Update base packages
+        run: |
+          apt-get --yes update
+          apt-get --yes install eatmydata
+          eatmydata apt-get --yes upgrade
+      - name: Install compiler
+        run: eatmydata apt-get --yes install gcc-16 g++-16
+      - name: Install Base Dependencies
+        run: |
+          eatmydata apt-get --yes install \
+            build-essential \
+            cmake \
+            appstream-util \
+            desktop-file-utils \
+            gettext \
+            git \
+            gdb \
+            intltool \
+            libarchive-dev \
+            libatk1.0-dev \
+            libavif-dev \
+            libcairo2-dev \
+            libcmocka-dev \
+            libcolord-dev \
+            libcolord-gtk-dev \
+            libcups2-dev \
+            libcurl4-gnutls-dev \
+            libexiv2-dev \
+            libgdk-pixbuf-2.0-dev \
+            libglib2.0-dev \
+            libgmic-dev \
+            libgphoto2-dev \
+            libgraphicsmagick1-dev \
+            libgtk-3-dev \
+            libheif-dev \
+            libjpeg-dev \
+            libjson-glib-dev \
+            liblcms2-dev \
+            liblensfun-dev \
+            liblua5.4-dev \
+            libonnxruntime-dev \
+            libopencv-calib3d-dev \
+            libopencv-core-dev \
+            libopencv-features2d-dev \
+            libopencv-flann-dev \
+            libopencv-imgproc-dev \
+            libopenexr-dev \
+            libopenjp2-7-dev \
+            libosmgpsmap-1.0-dev \
+            libpango1.0-dev \
+            libpng-dev \
+            libportmidi-dev \
+            libpotrace-dev \
+            libpugixml-dev \
+            libraw-dev \
+            librsvg2-dev \
+            libsaxon-java \
+            libsdl2-dev \
+            libsecret-1-dev \
+            libsqlite3-dev \
+            libtiff5-dev \
+            libwebp-dev \
+            libx11-dev \
+            libxml2-dev \
+            libxml2-utils \
+            ninja-build \
+            perl \
+            po4a \
+            python3-jsonschema \
+            xsltproc \
+            zlib1g-dev \
+            python3-venv imagemagick;
+      - uses: actions/checkout@v7
+        with:
+          submodules: false
+          path: src
+          fetch-depth: 1
+      - name: Submodules, the integration suite at depth 1
+        run: cd src && git submodule update --init --depth 1
+      - name: CPU
+        run: mkdir -p probe && { grep -m1 vendor_id /proc/cpuinfo; grep -m1 "model name" /proc/cpuinfo; } | tee probe/cpu.txt
+      - name: Build
+        env:
+          SRC_DIR: ${{ github.workspace }}/src
+          BUILD_DIR: ${{ github.workspace }}/build
+          INSTALL_PREFIX: ${{ github.workspace }}/install
+        run: mkdir -p "$BUILD_DIR" "$INSTALL_PREFIX" && ./src/.ci/ci-script.sh > build.log 2>&1 || { tail -40 build.log; exit 1; }
+      - name: Sweep
+        shell: bash
+        run: |
+          for t in 0120-blending-rgb-scene-2 0097-sigmoid; do
+            end=$(grep -o 'darktable:history_end="[0-9]*"' src/src/tests/integration/$t/*.xmp | grep -o '[0-9]*' | head -1)
+            src/.ci/history_sweep.sh "$GITHUB_WORKSPACE/install/bin/darktable-cli" src/src/tests/integration/$t 1 $(seq 0 $end) \
+              | sed "s/^/$t /" | tee -a probe/sweep.txt
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: probe-${{ matrix.run }}
+          path: probe
