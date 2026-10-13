@@ -1,0 +1,193 @@
+name: detection probe (fork only)
+
+# darktable #3986: which way of telling a real pixel change from runner
+# noise holds up? Each runner builds three commits: base (the commit before
+# the two test commits), head1 (base with real rawdenoise and lens commits
+# reverted) and head2 (head1 with exposure +0.01 EV). It renders the same
+# tests with each, and records its CPU vendor, the pixel hash of every
+# output, the count of pixels that differ from base on this runner, and the
+# suite's own verdict against the references.
+
+on:
+  push:
+    branches: [helios/ci-detect-probe]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: probe ${{ matrix.run }}
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:26.04
+      options: --tmpfs /tmp:exec
+    strategy:
+      fail-fast: false
+      matrix:
+        run: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    env:
+      CC: gcc-16
+      CXX: g++-16
+      CMAKE_BUILD_TYPE: RelWithDebInfo
+      GENERATOR: Ninja
+      TARGET: skiptest
+      ECO: -DDONT_USE_INTERNAL_LIBRAW=ON -DBINARY_PACKAGE_BUILD=ON
+      DEBIAN_FRONTEND: noninteractive
+      TESTS: 0001-exposure 0002-local-contrast 0004-masks 0082-demosaic-rcd 0083-colorbalancergb 0092-filmicrgb-v6 0086-diffuse 0145-lens-metadata-xtransIV-modversion-6 0146-lens-metadata-xtransIV-modversion-7 0096-lensfun 0049-rawdenoise 0068-rawdenoise-xtrans 0019-color-mapping 0136-posterize 0120-blending-rgb-scene-2 0103-almost-all
+    steps:
+      - name: Update base packages
+        run: |
+          apt-get --yes update
+          apt-get --yes install eatmydata
+          eatmydata apt-get --yes upgrade
+      - name: Install compiler
+        run: eatmydata apt-get --yes install gcc-16 g++-16
+      - name: Install Base Dependencies
+        run: |
+          eatmydata apt-get --yes install \
+            build-essential \
+            cmake \
+            appstream-util \
+            desktop-file-utils \
+            gettext \
+            git \
+            gdb \
+            intltool \
+            libarchive-dev \
+            libatk1.0-dev \
+            libavif-dev \
+            libcairo2-dev \
+            libcmocka-dev \
+            libcolord-dev \
+            libcolord-gtk-dev \
+            libcups2-dev \
+            libcurl4-gnutls-dev \
+            libexiv2-dev \
+            libgdk-pixbuf-2.0-dev \
+            libglib2.0-dev \
+            libgmic-dev \
+            libgphoto2-dev \
+            libgraphicsmagick1-dev \
+            libgtk-3-dev \
+            libheif-dev \
+            libjpeg-dev \
+            libjson-glib-dev \
+            liblcms2-dev \
+            liblensfun-dev \
+            liblua5.4-dev \
+            libonnxruntime-dev \
+            libopencv-calib3d-dev \
+            libopencv-core-dev \
+            libopencv-features2d-dev \
+            libopencv-flann-dev \
+            libopencv-imgproc-dev \
+            libopenexr-dev \
+            libopenjp2-7-dev \
+            libosmgpsmap-1.0-dev \
+            libpango1.0-dev \
+            libpng-dev \
+            libportmidi-dev \
+            libpotrace-dev \
+            libpugixml-dev \
+            libraw-dev \
+            librsvg2-dev \
+            libsaxon-java \
+            libsdl2-dev \
+            libsecret-1-dev \
+            libsqlite3-dev \
+            libtiff5-dev \
+            libwebp-dev \
+            libx11-dev \
+            libxml2-dev \
+            libxml2-utils \
+            ninja-build \
+            perl \
+            po4a \
+            python3-jsonschema \
+            xsltproc \
+            zlib1g-dev \
+            python3-venv imagemagick;
+      - uses: actions/checkout@v7
+        with:
+          submodules: false
+          path: src
+          fetch-depth: 3
+      - name: Submodules, the integration suite at depth 1
+        run: cd src && git submodule update --init --depth 1
+      - name: CPU
+        shell: bash
+        run: |
+          mkdir -p probe
+          { grep -m1 "vendor_id" /proc/cpuinfo; grep -m1 "model name" /proc/cpuinfo; } | tee probe/cpu.txt
+      - name: Build base, head1 and head2
+        shell: bash
+        run: |
+          set -e
+          git config --global --add safe.directory '*'
+          # resolved first: HEAD moves with each checkout
+          revs="base:$(git -C src rev-parse HEAD~2) head1:$(git -C src rev-parse HEAD~1) head2:$(git -C src rev-parse HEAD)"
+          for v in $revs; do
+            name=${v%%:*} rev=${v#*:}
+            git -C src checkout --quiet --detach "$rev"
+            echo "$name $(git -C src log --oneline -1)" | tee -a probe/commits.txt
+            mkdir -p "build-$name" "install-$name"
+            SRC_DIR=$GITHUB_WORKSPACE/src BUILD_DIR=$GITHUB_WORKSPACE/build-$name INSTALL_PREFIX=$GITHUB_WORKSPACE/install-$name \
+              ./src/.ci/ci-script.sh > "build-$name.log" 2>&1 || { tail -40 "build-$name.log"; exit 1; }
+            rm -rf "build-$name"
+            df -h . | tail -1
+          done
+          git -C src checkout --quiet --detach "${revs##*:}"
+      - name: Render, hash and compare
+        working-directory: src/src/tests/integration
+        shell: bash
+        run: |
+          set -o pipefail
+          out=$GITHUB_WORKSPACE/probe
+          for name in base head1 head2; do
+            DARKTABLE_CLI=$GITHUB_WORKSPACE/install-$name/bin/darktable-cli ./run --disable-opencl $TESTS > $out/run-$name.log 2>&1 || true
+            mkdir -p $out/png-$name
+            for t in $TESTS; do cp $t/output.png $out/png-$name/$t.png 2>/dev/null || true; done
+          done
+          for name in base head1 head2; do
+            for t in $TESTS; do
+              hash=$(identify -format '%#' $out/png-$name/$t.png 2>/dev/null || echo missing)
+              ae=-; [ $name != base ] && ae=$(compare -metric AE $out/png-base/$t.png $out/png-$name/$t.png null: 2>&1 | awk '{print $1}' || true)
+              verdict=$(awk -v t="$t" '$1=="Test" && $2==t {f=1; next} f && /^  (OK|FAILS)/ {print $1; exit} f && /^Test / {exit}' $out/run-$name.log)
+              maxde=$(awk -v t="$t" '$1=="Test" && $2==t {f=1; next} f && /Max dE/ {print $NF; exit} f && /^Test / {exit}' $out/run-$name.log)
+              echo "$name $t $hash ${ae:-?} ${verdict:-none} ${maxde:-none}"
+            done
+          done | tee $out/results.txt
+          rm -rf $out/png-*
+          ! grep -q missing $out/results.txt && [ -s $out/results.txt ]
+      - name: Where AMD and Intel part, history step by step
+        if: always()
+        working-directory: src/src/tests/integration
+        shell: bash
+        run: |
+          # each history truncated after step N, rendered by the base build
+          for t in 0120-blending-rgb-scene-2 0097-sigmoid; do
+            xmp=$(ls $t/*.xmp | head -1)
+            img=$(grep -o 'xmpMM:DerivedFrom="[^"]*"' $xmp | cut -d'"' -f2)
+            end=$(grep -o 'darktable:history_end="[0-9]*"' $xmp | grep -o '[0-9]*')
+            for n in $(seq 0 $end); do
+              sed "s/darktable:history_end=\"[0-9]*\"/darktable:history_end=\"$n\"/" $xmp > /tmp/step.xmp
+              rm -f /tmp/step.png
+              $GITHUB_WORKSPACE/install-base/bin/darktable-cli images/$img /tmp/step.xmp /tmp/step.png \
+                --width 2048 --height 2048 --hq true --apply-custom-presets false \
+                --core --disable-opencl --configdir /tmp/dt-step -t 4 \
+                --conf host_memory_limit=8192 --conf resourcelevel=reference --conf worker_threads=4 \
+                --conf plugins/lighttable/export/force_lcms2=FALSE \
+                --conf plugins/lighttable/export/pixel_interpolator=lanczos3 \
+                --conf plugins/lighttable/export/pixel_interpolator_warp=bicubic \
+                --conf plugins/lighttable/export/iccintent=0 > /dev/null 2>&1
+              op=$(grep -o 'darktable:operation="[a-z0-9]*"' $xmp | sed -n "${n}p" | cut -d'"' -f2)
+              echo "$t $n ${op:-none} $(identify -format '%#' /tmp/step.png 2>/dev/null || echo missing)"
+            done
+          done | tee $GITHUB_WORKSPACE/probe/steps.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: probe-${{ matrix.run }}
+          path: probe
