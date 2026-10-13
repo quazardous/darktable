@@ -145,7 +145,7 @@ jobs:
           for variant in clones noclones tunables; do
             install=${variant/tunables/clones}
             tunables=; [ $variant = tunables ] && tunables=glibc.cpu.hwcaps=-AVX512F,-AVX512VL,-AVX512DQ,-AVX512BW,-AVX512CD
-            GLIBC_TUNABLES=$tunables DARKTABLE_CLI=${{ github.workspace }}/install-$install/bin/darktable-cli ./run --disable-opencl --no-deltae $TESTS > ../../../../probe/run-$variant.log 2>&1 || true
+            GLIBC_TUNABLES=$tunables DARKTABLE_CLI=$GITHUB_WORKSPACE/install-$install/bin/darktable-cli ./run --disable-opencl --no-deltae $TESTS > ../../../../probe/run-$variant.log 2>&1 || true
             for t in $TESTS; do
               echo "$variant $t $(identify -format '%#' $t/output.png 2>/dev/null || echo missing)"
             done
