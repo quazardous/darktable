@@ -14019,6 +14019,50 @@
    "sql": "SELECT op_params FROM data.presets WHERE autoapply=1 AND ((?2 LIKE model AND ?3 LIKE maker) OR (?4 LIKE model AND ?5 LIKE maker)) AND ?6 LIKE lens AND ?7 BETWEEN iso_min AND iso_max AND ?8 BETWEEN exposure_min AND exposure_max AND ?9 BETWEEN aperture_min AND aperture_max AND ?10 BETWEEN focal_length_min AND focal_length_max AND (format = 0 OR (format&?11 != 0 AND ~format&?12 != 0)) AND operation ="
   },
   {
+   "file": "common/presets.c",
+   "line": 2007,
+   "function": "dt_presets_menu_rows_iop",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "data.presets",
+    "main.lens"
+   ],
+   "domains": [
+    "images",
+    "presets"
+   ],
+   "cross_schema": true,
+   "sql": "SELECT name, op_params, writeprotect, description, blendop_params, op_version, enabled FROM data.presets WHERE operation=?1 AND (filter=0 OR (((?2 LIKE model AND ?3 LIKE maker) OR (?4 LIKE model AND ?5 LIKE maker)) AND ?6 LIKE lens AND ?7 BETWEEN iso_min AND iso_max AND ?8 BETWEEN exposure_min AND exposure_max AND ?9 BETWEEN aperture_min AND aperture_max AND ?10 BETWEEN focal_length_min AND focal_"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 2051,
+   "function": "dt_presets_menu_rows_lib",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT name, op_params, writeprotect, description FROM data.presets WHERE operation=?1 AND op_version=?2 ORDER BY writeprotect %s, LOWER(name), rowidDESCASC"
+  },
+  {
    "file": "common/selection.c",
    "line": 91,
    "function": "_selection_select",
@@ -16485,23 +16529,6 @@
    ],
    "cross_schema": false,
    "sql": "SELECT COUNT(1) FROM images AS i1 WHERE EXISTS (SELECT 'y' FROM images AS i2 WHERE i2.id = ?1 AND i1.film_id = i2.film_id AND i1.filename = i2.filename)"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 1377,
-   "function": "dt_gui_presets_popup_menu_show",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [],
-   "domains": [
-    "?"
-   ],
-   "cross_schema": false,
-   "sql": "presetsactivates''editdeletenewupdatesmanagepresets"
   },
   {
    "file": "mcp/dt_bridge.c",
