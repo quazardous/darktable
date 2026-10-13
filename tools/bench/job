@@ -74,6 +74,15 @@ case "${1:-}" in
                  <(sed 's/#.*//' "$bench/integration-known-failures.txt" | awk 'NF { print $1 }' | sort -u))
          [ -z "$new" ] || { echo "new failures: $new"; exit 1; }
          echo "pixel-fast: ${#tests[@]} tests, no new failure" ;;
+  # a few tests rendered 10 times with OpenCL, with their pixel hashes
+  sweep-cl) need_build
+            { clinfo -l; "$prefix/bin/darktable-cltest"; } > /out/opencl.txt 2>&1
+            grep -i "nvidia\|FINALLY\|not available\|error" /out/opencl.txt | head -5
+            for t in 0026-haze-removal 0166-haze-removal-v2 0013-denoiseprofile-wavelets 0143-denoiseprofiled-wave-rgb 0103-almost-all; do
+              end=$(grep -o 'darktable:history_end="[0-9]*"' "$src/src/tests/integration/$t"/*.xmp | grep -o '[0-9]*' | head -1)
+              HELIOS_SWEEP_OPENCL=1 "$bench/history_sweep.sh" "$prefix/bin/darktable-cli" "$src/src/tests/integration/$t" 10 "$end" \
+                | sed "s/^/$t /" | tee -a /out/sweep.txt
+            done ;;
   # the fast subset at several OpenMP thread counts, and with -t 4 on 2
   # CPUs, each compared pixel by pixel with -t 4 (darktable #3807)
   threads) need_build

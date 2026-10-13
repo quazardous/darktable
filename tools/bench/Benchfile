@@ -22,6 +22,8 @@ run = [
       xdotool xprop setxkbmap wlr-randr xorg-x11-server-Xwayland procps-ng bc \
       python3 python3-pip python3-pyyaml python3-pillow \
  && dnf clean all""",
+  # OpenCL through the NVIDIA GPU (CDI brings the driver's libraries)
+  "dnf -y install ocl-icd clinfo && dnf clean all",
   # the pixel runner's Python dependencies (src/tests/integration/requirements.txt)
   """python3 -m venv /opt/dt-tests-venv \
  && /opt/dt-tests-venv/bin/pip install --quiet --upgrade pip \
@@ -127,6 +129,17 @@ cwd = "/work/darktable"
 command = "tools/bench/job pixel-fast"
 mounts = { "build/${branch:-main}" = "/build", results = "/results" }
 timeout = "20m"
+
+# the run-to-run hashes of a few tests rendered with OpenCL on the NVIDIA
+# GPU, 10 renders each (darktable #3986, darktable-org/darktable#22606)
+[jobs.sweep-cl]
+cores = 4
+memory = "4g"
+resources = ["gpu"]
+cwd = "/work/darktable"
+command = "tools/bench/job sweep-cl"
+mounts = { "build/${branch:-main}" = "/build" }
+timeout = "1h"
 
 # the fast subset at 1, 2, 4 and 8 OpenMP threads and with -t 4 on two
 # CPUs, compared pixel by pixel with -t 4 (darktable #3807): 8 threads so
