@@ -23,6 +23,7 @@
 #include <float.h>
 
 #include "catalog_fixture.h"
+#include "common/history.h"
 #include "common/presets.h"
 
 // a module that registers no preset of its own
@@ -414,6 +415,40 @@ static void test_lib_presets(void **state)
   dt_presets_delete_module(OP);
 }
 
+static void test_stage_auto_apply(void **state)
+{
+  // a user preset auto-applied to everything is staged in memory.history
+  const int params = 5;
+  dt_presets_write_t w = {
+    .name = "auto-all", .description = "", .model = "%", .maker = "%", .lens = "%",
+    .iso_min = 0.0, .iso_max = FLT_MAX, .exposure_min = 0.0, .exposure_max = 100000000.0,
+    .aperture_min = 0.0, .aperture_max = 100000000.0,
+    .focal_length_min = 0.0, .focal_length_max = 1000.0,
+    .autoapply = 1, .format = 0,
+    .iop = TRUE, .op_params = &params, .op_params_size = sizeof(params), .enabled = 1,
+    .multi_name = "", .operation = OP, .op_version = 1,
+  };
+  dt_presets_write(-1, &w);
+
+  dt_image_t image;
+  memset(&image, 0, sizeof(image));
+  dt_history_clear_memory();
+  const int before = dt_history_memory_count();
+  dt_presets_stage_auto_apply(1, &image, 0xFF, 0, TRUE, FALSE, FALSE);
+  assert_true(dt_history_memory_count() > before);
+  dt_history_clear_memory();
+
+  // the module order lookup: when found, the blob comes back
+  void *blob = NULL;
+  int size = 0;
+  if(dt_presets_find_auto_ioporder(1, &image, 0xFF, 0, &blob, &size))
+  {
+    assert_true(size > 0);
+    g_free(blob);
+  }
+  dt_presets_delete_module(OP);
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -424,6 +459,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_legacy_upgrade),
     cmocka_unit_test(test_builtin),
     cmocka_unit_test(test_lib_presets),
+    cmocka_unit_test(test_stage_auto_apply),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }
