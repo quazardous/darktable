@@ -197,3 +197,21 @@ jobs:
             echo "::warning title=integration test::$test differs from its reference"
           done
           grep -q '^Errors *[0-9]' run.log || { echo "::error::the suite did not report its results"; exit 1; }
+      - name: deltae C vs Python (fork test, darktable #3986)
+        if: always()
+        working-directory: src/src/tests/integration
+        shell: bash
+        run: |
+          echo "count-diff-pixels errors in run.log: $(grep -cE 'Traceback|ModuleNotFoundError|No module named' run.log)"
+          grep -m3 -E 'ModuleNotFoundError|No module named' run.log || true
+          python3 -m venv /tmp/venv && /tmp/venv/bin/pip install --quiet -r requirements.txt
+          same=0 differ=0
+          for d in ${{ matrix.tests }}; do
+            [ -f $d/output.png ] && [ -f $d/expected.png ] || continue
+            c=$(./deltae $d/expected.png $d/output.png 2>&1); cs=$?
+            p=$(/tmp/venv/bin/python deltae.py $d/expected.png $d/output.png 2>&1); ps=$?
+            cv=$(echo "$c" | grep -E 'Max dE|Avg dE|above tolerance'); pv=$(echo "$p" | grep -E 'Max dE|Avg dE|above tolerance')
+            if [ "$cs" = "$ps" ] && [ "$cv" = "$pv" ]; then same=$((same + 1)); else
+              differ=$((differ + 1)); echo "== $d exit C=$cs Python=$ps"; diff <(echo "$cv") <(echo "$pv") || true; fi
+          done
+          echo "deltae C vs Python: $same same, $differ differ" | tee -a "$GITHUB_STEP_SUMMARY"
