@@ -427,6 +427,16 @@ GArray *dt_collection_geo_points(const gboolean collected_only,
                                  const double lat1,
                                  const double lat2);
 
+/** the film rolls of the collected images, in the order of their first
+    image in the collection. Free with g_list_free() */
+GList *dt_collection_film_ids(void);
+
+/** fill memory.darktable_iop_names, which the module filters of the
+    collection join to, with each module's operation and name */
+void dt_collection_set_iop_names(const char *const *operations,
+                                 const char *const *names,
+                                 const int count);
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent
