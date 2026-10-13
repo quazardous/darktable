@@ -1,0 +1,182 @@
+name: sigill probe (fork only)
+
+# darktable #3981: does a -march=native build of ci.yml's LLVM22 Release job
+# crash with an illegal instruction on some runners, which instruction,
+# and does a generic build run on the same runner? A copy of that job on
+# several runners at once, recording the CPU, the features clang enables
+# with -march=native, and the faulting instruction under gdb.
+
+on:
+  push:
+    branches: [helios/ci-sigill-probe]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: probe ${{ matrix.run }}
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:26.04
+      options: --tmpfs /tmp:exec --cap-add=SYS_PTRACE --security-opt seccomp=unconfined
+    strategy:
+      fail-fast: false
+      matrix:
+        run: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    env:
+      CC: clang-22
+      CXX: clang++-22
+      SRC_DIR: ${{ github.workspace }}/src
+      BUILD_DIR: ${{ github.workspace }}/build
+      INSTALL_PREFIX: ${{ github.workspace }}/install
+      ECO: -DDONT_USE_INTERNAL_LIBRAW=ON
+      CMAKE_BUILD_TYPE: Release
+      GENERATOR: Ninja
+      TARGET: skiptest
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Update base packages
+        run: |
+          apt-get --yes update
+          apt-get --yes install eatmydata
+          eatmydata apt-get --yes upgrade
+      - name: Install compiler LLVM22
+        run: |
+          eatmydata apt-get --yes install clang-22 libomp-22-dev llvm-22-dev libc++-22-dev libc++abi1 lld-22 clang-tools-22 mlir-22-tools libmlir-22-dev
+      - name: Install Base Dependencies
+        run: |
+          eatmydata apt-get --yes install \
+            build-essential \
+            cmake \
+            appstream-util \
+            desktop-file-utils \
+            gettext \
+            git \
+            gdb \
+            intltool \
+            libarchive-dev \
+            libatk1.0-dev \
+            libavif-dev \
+            libcairo2-dev \
+            libcmocka-dev \
+            libcolord-dev \
+            libcolord-gtk-dev \
+            libcups2-dev \
+            libcurl4-gnutls-dev \
+            libexiv2-dev \
+            libgdk-pixbuf-2.0-dev \
+            libglib2.0-dev \
+            libgmic-dev \
+            libgphoto2-dev \
+            libgraphicsmagick1-dev \
+            libgtk-3-dev \
+            libheif-dev \
+            libjpeg-dev \
+            libjson-glib-dev \
+            liblcms2-dev \
+            liblensfun-dev \
+            liblua5.4-dev \
+            libonnxruntime-dev \
+            libopencv-calib3d-dev \
+            libopencv-core-dev \
+            libopencv-features2d-dev \
+            libopencv-flann-dev \
+            libopencv-imgproc-dev \
+            libopenexr-dev \
+            libopenjp2-7-dev \
+            libosmgpsmap-1.0-dev \
+            libpango1.0-dev \
+            libpng-dev \
+            libportmidi-dev \
+            libpotrace-dev \
+            libpugixml-dev \
+            libraw-dev \
+            librsvg2-dev \
+            libsaxon-java \
+            libsdl2-dev \
+            libsecret-1-dev \
+            libsqlite3-dev \
+            libtiff5-dev \
+            libwebp-dev \
+            libx11-dev \
+            libxml2-dev \
+            libxml2-utils \
+            ninja-build \
+            perl \
+            po4a \
+            python3-jsonschema \
+            xsltproc \
+            zlib1g-dev;
+      - name: CPU
+        run: |
+          mkdir -p probe
+          { grep -m1 "model name" /proc/cpuinfo; nproc
+            grep -m1 "^flags" /proc/cpuinfo
+            echo "clang -march=native:"
+            clang-22 -march=native -### -c -x c /dev/null 2>&1 | grep -o '"-target-cpu" "[^"]*"\|"+[a-z0-9_.-]*"' | tr '\n' ' '; echo
+          } | tee probe/cpu.txt
+      - uses: actions/checkout@v7
+        with:
+          submodules: false
+          path: src
+          fetch-depth: 1
+      - name: Get only those submodules that are needed for build
+        run: |
+          cd src
+          git submodule init
+          git config submodule.src/tests/integration.update none
+          git submodule update
+      - name: Build and Install (as ci.yml, -march=native)
+        run: |
+          cmake -E make_directory "${BUILD_DIR}" "${INSTALL_PREFIX}"
+          ./src/.ci/ci-script.sh > probe/build.log 2>&1 || { tail -50 probe/build.log; exit 1; }
+      - name: Check if it runs (as ci.yml)
+        id: native
+        run: |
+          set +e
+          ${INSTALL_PREFIX}/bin/darktable-cli --width 1000 --height 1000 --hq true --apply-custom-presets false \
+            "${SRC_DIR}/data/pixmaps/256x256/darktable.png" output.png \
+            --core --disable-opencl --conf host_memory_limit=8192 \
+            --conf worker_threads=4 -t 4 \
+            --conf plugins/lighttable/export/force_lcms2=FALSE \
+            --conf plugins/lighttable/export/iccintent=0
+          rc=$?
+          echo "native exit $rc" | tee -a probe/result.txt
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+      - name: The faulting instruction
+        if: steps.native.outputs.rc != '0'
+        run: |
+          gdb -batch -ex run -ex bt -ex 'x/3i $pc' -ex 'info symbol $pc' --args \
+            ${INSTALL_PREFIX}/bin/darktable-cli --width 1000 --height 1000 --hq true --apply-custom-presets false \
+            "${SRC_DIR}/data/pixmaps/256x256/darktable.png" output.png \
+            --core --disable-opencl --conf host_memory_limit=8192 \
+            --conf worker_threads=4 -t 4 \
+            --conf plugins/lighttable/export/force_lcms2=FALSE \
+            --conf plugins/lighttable/export/iccintent=0 2>&1 | tail -40 | tee probe/gdb.txt
+      - name: A generic build on the same runner
+        if: steps.native.outputs.rc != '0'
+        env:
+          BUILD_DIR: ${{ github.workspace }}/build-generic
+          INSTALL_PREFIX: ${{ github.workspace }}/install-generic
+          ECO: -DDONT_USE_INTERNAL_LIBRAW=ON -DBINARY_PACKAGE_BUILD=ON
+        run: |
+          cmake -E make_directory "${BUILD_DIR}" "${INSTALL_PREFIX}"
+          ./src/.ci/ci-script.sh > probe/build-generic.log 2>&1 || { tail -50 probe/build-generic.log; exit 1; }
+          set +e
+          ${INSTALL_PREFIX}/bin/darktable-cli --width 1000 --height 1000 --hq true --apply-custom-presets false \
+            "${SRC_DIR}/data/pixmaps/256x256/darktable.png" output.png \
+            --core --disable-opencl --conf host_memory_limit=8192 \
+            --conf worker_threads=4 -t 4 \
+            --conf plugins/lighttable/export/force_lcms2=FALSE \
+            --conf plugins/lighttable/export/iccintent=0
+          echo "generic exit $?" | tee -a probe/result.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: probe-${{ matrix.run }}
+          path: |
+            probe/cpu.txt
+            probe/result.txt
+            probe/gdb.txt
