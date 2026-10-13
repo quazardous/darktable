@@ -131,13 +131,14 @@ mounts = { "build/${branch:-main}" = "/build", results = "/results" }
 timeout = "20m"
 
 # the run-to-run hashes of a few tests rendered with OpenCL on the NVIDIA
-# GPU, 10 renders each (darktable #3986, darktable-org/darktable#22606)
+# GPU, 10 renders each (darktable #3986, darktable-org/darktable#22606);
+# test=<test> steps=<N>+<N>... reps=<n> sweeps one test's history instead
 [jobs.sweep-cl]
 cores = 4
 memory = "4g"
 resources = ["gpu"]
 cwd = "/work/darktable"
-command = "tools/bench/job sweep-cl"
+command = "SWEEP_TEST=${test:-} SWEEP_STEPS=${steps:-} SWEEP_REPS=${reps:-} tools/bench/job sweep-cl"
 mounts = { "build/${branch:-main}" = "/build" }
 timeout = "1h"
 
