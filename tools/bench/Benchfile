@@ -128,6 +128,16 @@ command = "tools/bench/job pixel-fast"
 mounts = { "build/${branch:-main}" = "/build", results = "/results" }
 timeout = "20m"
 
+# the operations each pixel test really runs, from darktable-cli -d pipe,
+# for the CI test selection (darktable #3986)
+[jobs.modules]
+cores = 4
+memory = "3g"
+cwd = "/work/darktable"
+command = "tools/bench/job modules"
+mounts = { "build/${branch:-main}" = "/build", results = "/results" }
+timeout = "1h"
+
 # the fast subset at 1, 2, 4 and 8 OpenMP threads and with -t 4 on two
 # CPUs, compared pixel by pixel with -t 4 (darktable #3807): 8 threads so
 # that t8 differs from the default
