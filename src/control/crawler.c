@@ -986,21 +986,7 @@ static void _crawler_ensure_current_collection(void)
 
   // the collection is materialised in memory.collected_images, so its
   // film rolls come out of a single query
-  GList *rolls = NULL;
-  sqlite3_stmt *stmt;
-  // clang-format off
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT i.film_id"
-                              " FROM memory.collected_images AS c, main.images AS i"
-                              " ON i.id = c.imgid"
-                              " GROUP BY i.film_id"
-                              " ORDER BY MIN(c.rowid)",
-                              -1, &stmt, NULL);
-  // clang-format on
-  while(sqlite3_step(stmt) == SQLITE_ROW)
-    rolls = g_list_prepend(rolls, GINT_TO_POINTER(sqlite3_column_int(stmt, 0)));
-  sqlite3_finalize(stmt);
-  rolls = g_list_reverse(rolls);
+  GList *rolls = dt_collection_film_ids();
 
   GList *found = NULL;
   for(GList *iter = rolls; iter; iter = g_list_next(iter))

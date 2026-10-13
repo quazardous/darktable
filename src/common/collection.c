@@ -4817,6 +4817,48 @@ GList *dt_collection_thumb_rows_from(const int rowid, const int limit)
   // clang-format on
 }
 
+GList *dt_collection_film_ids(void)
+{
+  GList *rolls = NULL;
+  sqlite3_stmt *stmt;
+  // clang-format off
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "SELECT i.film_id"
+                              " FROM memory.collected_images AS c, main.images AS i"
+                              " ON i.id = c.imgid"
+                              " GROUP BY i.film_id"
+                              " ORDER BY MIN(c.rowid)",
+                              -1, &stmt, NULL);
+  // clang-format on
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+    rolls = g_list_prepend(rolls, GINT_TO_POINTER(sqlite3_column_int(stmt, 0)));
+  sqlite3_finalize(stmt);
+  return g_list_reverse(rolls);
+}
+
+void dt_collection_set_iop_names(const char *const *operations,
+                                 const char *const *names,
+                                 const int count)
+{
+  gchar *module_list = NULL;
+  for(int i = 0; i < count; i++)
+    dt_util_str_cat(&module_list, "(\"%s\",\"%s\"),", operations[i], names[i]);
+
+  if(module_list)
+  {
+    module_list[strlen(module_list) - 1] = '\0';
+    gchar *query =
+      g_strdup_printf("INSERT INTO memory.darktable_iop_names (operation, name)"
+                      " VALUES %s", module_list);
+    sqlite3_stmt *stmt;
+    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    g_free(query);
+    g_free(module_list);
+  }
+}
+
 // clang-format off
 // modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
 // vim: shiftwidth=2 expandtab tabstop=2 cindent

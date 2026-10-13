@@ -1830,27 +1830,19 @@ void _iop_set_darktable_iop_table()
   // the iop list must have been set, so after dt_iop_load_modules_so()
   assert(darktable.iop && g_list_length(darktable.iop) > 0);
 
-  sqlite3_stmt *stmt;
-  gchar *module_list = NULL;
-  for(GList *iop = darktable.iop; iop; iop = g_list_next(iop))
+  const int count = g_list_length(darktable.iop);
+  const char **ops = g_new(const char *, count);
+  const char **names = g_new(const char *, count);
+  int i = 0;
+  for(GList *iop = darktable.iop; iop; iop = g_list_next(iop), i++)
   {
     dt_iop_module_so_t *module = iop->data;
-    dt_util_str_cat(&module_list, "(\"%s\",\"%s\"),",
-                                  module->op, module->name());
+    ops[i] = module->op;
+    names[i] = module->name();
   }
-
-  if(module_list)
-  {
-    module_list[strlen(module_list) - 1] = '\0';
-    gchar *query =
-      g_strdup_printf("INSERT INTO memory.darktable_iop_names (operation, name)"
-                      " VALUES %s", module_list);
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-    sqlite3_step(stmt);
-    sqlite3_finalize(stmt);
-    g_free(query);
-    g_free(module_list);
-  }
+  dt_collection_set_iop_names(ops, names, count);
+  g_free(ops);
+  g_free(names);
 }
 
 void dt_iop_load_modules_so(void)

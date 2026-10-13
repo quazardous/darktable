@@ -264,6 +264,12 @@ static void test_collected_rows(void **state)
   assert_int_equal(dt_collection_rowid_of(999999, NO_IMGID), NO_IMGID);
   assert_int_equal(dt_collection_imgid_at_rowid(999999), NO_IMGID);
 
+  // the three test images share one folder, so one film roll
+  GList *rolls = dt_collection_film_ids();
+  assert_int_equal(g_list_length(rolls), 1);
+  assert_true(GPOINTER_TO_INT(rolls->data) > 0);
+  g_list_free(rolls);
+
   // the timeline's capture dates: every image is collected, so both
   // bounds agree and every dated row carries its id, in date order
   GTimeSpan min = 0, max = 0, cmin = 0, cmax = 0;
