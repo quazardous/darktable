@@ -136,17 +136,21 @@ command = "tools/bench/job threads"
 mounts = { build = "/build" }
 timeout = "1h"
 
-# timings: alone on the machine
+# timings: alone on the machine, and under the box's timing profile (a
+# CPU cap that keeps the NUC out of thermal throttling, mcu #3900)
 [jobs.perf]
 cores = 4
 memory = "4g"
 exclusive = ["machine"]
+timing = true
 cwd = "/work/darktable"
 command = "PERF_RUNS=${runs:-3} tools/bench/job perf"
 mounts = { build = "/build", perf = "/perf" }
 timeout = "2h"
 
+# readers are applied on each upload: a project left out loses its access
 [volumes.darktable-cli]
+readers = ["helios"]
 cores = 6
 cwd = "/work/darktable"
 provision = "tools/bench/job install-to /volume"
@@ -154,5 +158,6 @@ mounts = { build = "/build", ccache = "/ccache" }
 timeout = "1h"
 
 [volumes.darktable-tests]
+readers = ["helios"]
 provision = "tar -C /work/darktable/src/tests/integration --exclude=.git --exclude=.venv -cf - . | tar -C /volume -xf -"
 timeout = "20m"
