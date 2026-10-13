@@ -257,3 +257,11 @@ query model, of ID lists by targets.
   8 are just over the tolerance (avg dE 0.03-0.6, not explained). So run pixel tests on a
   RelWithDebInfo build (build.sh's default), and judge a change by base vs branch outputs on the
   same build (`HELIOS_KEEP_OUTPUTS`), not by `expected.png`.
+- (2026-10-13) Parallel pixel runners at fewer threads each (darktable #3768): not adopted. With
+  the `-t` fix, the fast subset is byte-identical at 1, 2, 4 and 8 OpenMP threads except
+  `0045-vignetting` (t1 503741 px, t2 370008 px, max 13/255 against t4; t8 identical). Vignette's
+  dithering keeps one TEA state per thread and reseeds only `tea_state[0]` per row
+  (`src/iop/vignette.c:780`), so its noise depends on how rows are split across threads. Running N
+  suites at 12/N threads would test a split no user runs, so the suite keeps one runner at the
+  core count. Revisit if vignette's dithering becomes independent of the thread count. Upstream
+  also confirmed `0179-spektrafilm` as a known failure (darktable-org/darktable#22589).
