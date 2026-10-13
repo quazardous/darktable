@@ -533,6 +533,10 @@ changes (where available).
   being missing from the image's XMP sidecar while the library kept
   them.
 
+- Fixed haze removal and the wavelet mode of denoise (profiled)
+  giving slightly different pixels from one export of the same image
+  to the next.
+
 ## Lua
 
 ### API Version
