@@ -208,8 +208,8 @@ jobs:
           same=0 differ=0
           for d in ${{ matrix.tests }}; do
             [ -f $d/output.png ] && [ -f $d/expected.png ] || continue
-            c=$(./deltae $d/expected.png $d/output.png 2>&1); cs=$?
-            p=$(/tmp/venv/bin/python deltae.py $d/expected.png $d/output.png 2>&1); ps=$?
+            cs=0; c=$(./deltae $d/expected.png $d/output.png 2>&1) || cs=$?
+            ps=0; p=$(/tmp/venv/bin/python deltae.py $d/expected.png $d/output.png 2>&1) || ps=$?
             cv=$(echo "$c" | grep -E 'Max dE|Avg dE|above tolerance'); pv=$(echo "$p" | grep -E 'Max dE|Avg dE|above tolerance')
             if [ "$cs" = "$ps" ] && [ "$cv" = "$pv" ]; then same=$((same + 1)); else
               differ=$((differ + 1)); echo "== $d exit C=$cs Python=$ps"; diff <(echo "$cv") <(echo "$pv") || true; fi
