@@ -4,9 +4,13 @@ name: clones probe (fork only)
 # different runners? Each runner builds twice, as the integration shards do
 # and with __DT_CLONE_TARGETS__ emptied (no runtime CPU dispatch in
 # darktable's own code), renders the tests seen to vary, and records its
-# CPU and a hash of each output's pixels.
+# CPU and a hash of each output's pixels. A third render runs the clones
+# build with glibc's tunables masking AVX-512, to see whether the dispatch
+# can be steered at run time.
 
 on:
+  push:
+    branches: [helios/ci-clones-probe]
   workflow_dispatch:
 
 permissions:
@@ -136,8 +140,10 @@ jobs:
       - name: Render and hash
         working-directory: src/src/tests/integration
         run: |
-          for variant in clones noclones; do
-            DARKTABLE_CLI=${{ github.workspace }}/install-$variant/bin/darktable-cli ./run --disable-opencl --no-deltae $TESTS > ../../../../probe/run-$variant.log 2>&1 || true
+          for variant in clones noclones tunables; do
+            install=${variant/tunables/clones}
+            tunables=; [ $variant = tunables ] && tunables=glibc.cpu.hwcaps=-AVX512F,-AVX512VL,-AVX512DQ,-AVX512BW,-AVX512CD
+            GLIBC_TUNABLES=$tunables DARKTABLE_CLI=${{ github.workspace }}/install-$install/bin/darktable-cli ./run --disable-opencl --no-deltae $TESTS > ../../../../probe/run-$variant.log 2>&1 || true
             for t in $TESTS; do
               echo "$variant $t $(identify -format '%#' $t/output.png 2>/dev/null || echo missing)"
             done
