@@ -111,7 +111,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 159,
+   "line": 160,
    "function": "dt_collection_memory_update",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -132,7 +132,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 163,
+   "line": 164,
    "function": "dt_collection_memory_update",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -155,7 +155,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 172,
+   "line": 173,
    "function": "dt_collection_memory_update",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -179,7 +179,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 580,
+   "line": 581,
    "function": "_collection_update_aspect_ratio",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -198,7 +198,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 875,
+   "line": 876,
    "function": "_dt_collection_compute_count",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -215,7 +215,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 906,
+   "line": 907,
    "function": "dt_collection_get_selected_count",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -236,7 +236,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 919,
+   "line": 920,
    "function": "dt_collection_get_collected_count",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -257,7 +257,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 940,
+   "line": 941,
    "function": "dt_collection_get",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -280,7 +280,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 953,
+   "line": 954,
    "function": "dt_collection_get",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -301,7 +301,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 960,
+   "line": 961,
    "function": "dt_collection_get",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -322,7 +322,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 988,
+   "line": 989,
    "function": "dt_collection_get_nth",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -343,7 +343,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 2720,
+   "line": 2721,
    "function": "dt_collection_update_query",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -364,7 +364,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 2742,
+   "line": 2743,
    "function": "dt_collection_update_query",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -385,7 +385,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 2840,
+   "line": 2841,
    "function": "dt_collection_update_query",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -404,7 +404,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 2951,
+   "line": 2952,
    "function": "dt_collection_image_offset_with_collection",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -425,7 +425,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 3067,
+   "line": 3068,
    "function": "dt_collection_get_image_position",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -448,7 +448,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 3089,
+   "line": 3090,
    "function": "dt_collection_shift_image_positions",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -471,7 +471,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 3155,
+   "line": 3156,
    "function": "dt_collection_move_before",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -494,7 +494,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 3192,
+   "line": 3193,
    "function": "dt_collection_move_before",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -515,7 +515,7 @@
   },
   {
    "file": "common/collection.c",
-   "line": 3214,
+   "line": 3215,
    "function": "dt_collection_move_before",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -535,6 +535,605 @@
    ],
    "cross_schema": false,
    "sql": "UPDATE main.tagged_images SET position = ?1 WHERE imgid = ?2 AND tagid = ?3UPDATE main.images SET position = ?1 WHERE id = ?2"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3338,
+   "function": "dt_collection_numeric_counts",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.history",
+    "main.images"
+   ],
+   "domains": [
+    "history",
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "plugins/lighttable/collect/history%1dplugins/lighttable/collect/history_pos%1dplugins/lighttable/collect/history0apertureROUND(aperture,1)exposureexposureexposure_biasROUND(exposure_bias,2)focal_lengthROUND(focal_length,0)isoROUND(iso,0)aspect_ratioROUND(aspect_ratio,2)SELECT %s, COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY %s"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3361,
+   "function": "dt_collection_numeric_range",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "isoROUND(iso,0)aspect_ratioROUND(aspect_ratio,2)SELECT %s, COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY %sSELECT MIN(%s), MAX(%s) FROM main.images"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3386,
+   "function": "dt_collection_rating_counts",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT MIN(%s), MAX(%s) FROM main.imagesSELECT CASE WHEN (flags & 8) == 8 THEN -1 ELSE (flags & 7) END AS rating, COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY rating ORDER BY rating"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3411,
+   "function": "dt_collection_local_copy_counts",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT CASE WHEN (flags & 8) == 8 THEN -1 ELSE (flags & 7) END AS rating, COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY rating ORDER BY ratingSELECT CASE WHEN (flags & %d) THEN 0 ELSE 1 END as lcp, COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY lcp ORDER BY lcp ASC"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3454,
+   "function": "dt_collection_date_counts",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "import_timestampchange_timestampexport_timestampprint_timestampdatetime_takenSELECT %s AS date, COUNT(*) AS count FROM main.images AS mi WHERE %s IS NOT NULL AND %s GROUP BY date"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3479,
+   "function": "dt_collection_date_range",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT %s AS date, COUNT(*) AS count FROM main.images AS mi WHERE %s IS NOT NULL AND %s GROUP BY dateSELECT MIN(%s), MAX(%s) FROM main.images WHERE %s IS NOT NULL"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3509,
+   "function": "dt_collection_capture_bounds",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images",
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection",
+    "images"
+   ],
+   "cross_schema": true,
+   "sql": "SELECT MIN(%s), MAX(%s) FROM main.images WHERE %s IS NOT NULLSELECT MIN(db.datetime_taken) AS dt FROM main.images AS db, memory.collected_images AS col WHERE db.id=col.imgid AND db.datetime_taken > 1SELECT MIN(datetime_taken) AS dt FROM main.images WHERE datetime_taken > 1SELECT MAX(db.datetime_taken) AS dt FROM main.images AS db, memory.collected_images AS col WHERE db.id=col.imgidSELECT MAX(date"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3512,
+   "function": "dt_collection_capture_bounds",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images",
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection",
+    "images"
+   ],
+   "cross_schema": true,
+   "sql": "SELECT MIN(%s), MAX(%s) FROM main.images WHERE %s IS NOT NULLSELECT MIN(db.datetime_taken) AS dt FROM main.images AS db, memory.collected_images AS col WHERE db.id=col.imgid AND db.datetime_taken > 1SELECT MIN(datetime_taken) AS dt FROM main.images WHERE datetime_taken > 1SELECT MAX(db.datetime_taken) AS dt FROM main.images AS db, memory.collected_images AS col WHERE db.id=col.imgidSELECT MAX(date"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3529,
+   "function": "dt_collection_capture_rows_after",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images",
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection",
+    "images"
+   ],
+   "cross_schema": true,
+   "sql": "SELECT MIN(db.datetime_taken) AS dt FROM main.images AS db, memory.collected_images AS col WHERE db.id=col.imgid AND db.datetime_taken > 1SELECT MIN(datetime_taken) AS dt FROM main.images WHERE datetime_taken > 1SELECT MAX(db.datetime_taken) AS dt FROM main.images AS db, memory.collected_images AS col WHERE db.id=col.imgidSELECT MAX(datetime_taken) AS dt FROM main.imagesSELECT db.datetime_taken AS"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3557,
+   "function": "dt_collection_geo_bounds",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images",
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection",
+    "images"
+   ],
+   "cross_schema": true,
+   "sql": "SELECT db.datetime_taken AS dt, col.imgid FROM main.images AS db LEFT JOIN memory.collected_images AS col ON db.id=col.imgid WHERE dt > %lld ORDER BY dt ASCSELECT MIN(latitude), MAX(latitude), MIN(longitude), MAX(longitude), COUNT(*) FROM main.images AS i JOIN %s AS l ON l.imgid = i.id WHERE latitude NOT NULL AND longitude NOT NULLmain.selected_imagesmemory.collected_images"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3590,
+   "function": "dt_collection_geo_points",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images",
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection",
+    "images"
+   ],
+   "cross_schema": true,
+   "sql": "FROM main.images AS i JOIN %s AS l ON l.imgid = i.id WHERE latitude NOT NULL AND longitude NOT NULLmain.selected_imagesmemory.collected_imagesSELECT * FROM (SELECT id, longitude, latitude FROM %s WHERE longitude >= ?1 AND longitude <= ?2 AND latitude <= ?3 AND latitude >= ?4 AND longitude NOT NULL AND latitude NOT NULL)main.images i INNER JOIN memory.collected_images c ON i.id = c.imgidmain.images"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3625,
+   "function": "_text_counts",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images",
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection",
+    "images"
+   ],
+   "cross_schema": true,
+   "sql": "main.images i INNER JOIN memory.collected_images c ON i.id = c.imgidmain.images"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3751,
+   "function": "dt_collection_misc_counts",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT mi.group_id, COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY group_id HAVING COUNT(*) > 1 ORDER BY group_idSELECT mi.width || 'x' || mi.height AS dim, COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY dim ORDER BY dimSELECT t.name , COUNT(*) AS count FROM main.images AS mi JOIN main.%s AS t WHERE mi.%s_id = t.id AND %s GROUP BY name ORDER BY name"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3790,
+   "function": "dt_collection_duplicate_counts",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT CASE WHEN dups.min_version = version THEN 0 ELSE 1 END AS orig , COUNT(*) AS count FROM main.images AS mi JOIN ( SELECT film_id AS f_id , filename , MIN(version) AS min_version FROM main.images GROUP BY f_id , filename HAVING COUNT(*) > 1 ) dups ON mi.film_id = dups.f_id AND mi.filename = dups.filename WHERE %s GROUP BY orig ORDER BY orig ASC"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3820,
+   "function": "dt_collection_history_counts",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.history_hash",
+    "main.images"
+   ],
+   "domains": [
+    "history",
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": ", filename HAVING COUNT(*) > 1 ) dups ON mi.film_id = dups.f_id AND mi.filename = dups.filename WHERE %s GROUP BY orig ORDER BY orig ASCSELECT CASE WHEN basic_hash == current_hash THEN 0 WHEN auto_hash == current_hash THEN 1 WHEN current_hash IS NOT NULL THEN 2 ELSE 0 END as altered, COUNT(*) AS count FROM main.images AS mi LEFT JOIN (SELECT DISTINCT imgid, basic_hash, auto_hash, current_hash FROM"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 3844,
+   "function": "dt_collection_module_order_counts",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.history_hash",
+    "main.images",
+    "main.module_order"
+   ],
+   "domains": [
+    "history",
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT CASE WHEN basic_hash == current_hash THEN 0 WHEN auto_hash == current_hash THEN 1 WHEN current_hash IS NOT NULL THEN 2 ELSE 0 END as altered, COUNT(*) AS count FROM main.images AS mi LEFT JOIN (SELECT DISTINCT imgid, basic_hash, auto_hash, current_hash FROM main.history_hash) ON id = imgid WHERE %s GROUP BY altered ORDER BY altered ASCSELECT mo.version, COUNT(*) FROM main.images as mi LEFT "
+  },
+  {
+   "file": "common/collection.c",
+   "line": 4277,
+   "function": "dt_collection_list_rows",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.film_rolls",
+    "main.images",
+    "memory.film_folder"
+   ],
+   "domains": [
+    "film",
+    "images"
+   ],
+   "cross_schema": true,
+   "sql": "plugins/collect/filmroll_sortimport timefilm_rolls_id DESCfilm_rolls_id ASClower(folder) DESClower(folder) ASCSELECT folder, film_rolls_id, COUNT(*) AS count, status FROM main.images AS mi JOIN (SELECT fr.id AS film_rolls_id, folder, status FROM main.film_rolls AS fr JOIN memory.film_folder AS ff ON ff.id = fr.id) ON film_id = film_rolls_id WHERE %s GROUP BY folder ORDER BY %s"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 4453,
+   "function": "dt_collection_tree_rows",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images"
+   ],
+   "domains": [
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "datetime_takenimport_timestampchange_timestampexport_timestampprint_timestampSELECT %s AS date, 1, COUNT(*) AS count FROM main.images AS mi WHERE %s IS NOT NULL AND %s <> 0 AND %s GROUP BY date"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 4477,
+   "function": "dt_collection_imgid_at_rowid",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images",
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection",
+    "images"
+   ],
+   "cross_schema": true,
+   "sql": "SELECT %s AS date, 1, COUNT(*) AS count FROM main.images AS mi WHERE %s IS NOT NULL AND %s <> 0 AND %s GROUP BY dateSELECT imgid FROM memory.collected_images WHERE rowid=%d"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 4493,
+   "function": "dt_collection_rowid_of",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT imgid FROM memory.collected_images WHERE rowid=%dSELECT rowid FROM memory.collected_images WHERE imgid=%d"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 4508,
+   "function": "_collection_int",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT imgid FROM memory.collected_images WHERE rowid=%dSELECT rowid FROM memory.collected_images WHERE imgid=%d"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 4594,
+   "function": "dt_collection_selected_rowid_range",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.selected_images",
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection",
+    "selection"
+   ],
+   "cross_schema": true,
+   "sql": "SELECT MIN(rowid), MAX(rowid) FROM memory.collected_images AS col, main.selected_images as sel WHERE col.imgid=sel.imgid"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 4693,
+   "function": "dt_collection_culling_rows",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.images",
+    "main.selected_images",
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection",
+    "images",
+    "selection"
+   ],
+   "cross_schema": true,
+   "sql": "dynamicnewrowSELECT i1, i2, i3, i2, newrow FROM (SELECT m.rowid AS i1, m.imgid AS i2, b.aspect_ratio AS i3, (CASE WHEN m.rowid >= %d THEN m.rowid ELSE (SELECT MAX(rowid) FROM memory.collected_images) + %d - m.rowid END) AS newrow FROM memory.collected_images AS m, main.selected_images AS s, images AS b WHERE m.imgid = b.id AND m.imgid = s.imgid ORDER BY newrow LIMIT %d) ORDER BY i1SELECT m.rowid, "
+  },
+  {
+   "file": "common/collection.c",
+   "line": 4744,
+   "function": "dt_collection_edge_imgid",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT rowid, imgid FROM memory.collected_images ORDER BY rowid DESC LIMIT 1SELECT rowid, imgid FROM memory.collected_images ORDER BY rowid ASC LIMIT 1"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 4765,
+   "function": "_thumb_rows",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.selected_images",
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection",
+    "selection"
+   ],
+   "cross_schema": true,
+   "sql": "SELECT m.imgid FROM memory.collected_images AS m, main.selected_images AS s WHERE m.imgid=s.imgid AND m.rowid<(SELECT rowid FROM memory.collected_images WHERE imgid=%d) ORDER BY m.rowid DESC LIMIT 1SELECT rowid, imgid FROM memory.collected_images ORDER BY rowid DESC LIMIT 1SELECT rowid, imgid FROM memory.collected_images ORDER BY rowid ASC LIMIT 1"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 4825,
+   "function": "dt_collection_film_ids",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.images",
+    "memory.collected_images"
+   ],
+   "domains": [
+    "collection",
+    "images"
+   ],
+   "cross_schema": true,
+   "sql": "SELECT i.film_id FROM memory.collected_images AS c, main.images AS i ON i.id = c.imgid GROUP BY i.film_id ORDER BY MIN(c.rowid)"
+  },
+  {
+   "file": "common/collection.c",
+   "line": 4854,
+   "function": "dt_collection_set_iop_names",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "INSERT"
+   ],
+   "write": true,
+   "dynamic": true,
+   "tables": [
+    "main.images",
+    "memory.collected_images",
+    "memory.darktable_iop_names"
+   ],
+   "domains": [
+    "collection",
+    "images",
+    "presets"
+   ],
+   "cross_schema": true,
+   "sql": "WHERE mi.rowid>=%d LIMIT %dSELECT i.film_id FROM memory.collected_images AS c, main.images AS i ON i.id = c.imgid GROUP BY i.film_id ORDER BY MIN(c.rowid)(\\\"%s\\\",\\\"%s\\\"),INSERT INTO memory.darktable_iop_names (operation, name) VALUES %s"
   },
   {
    "file": "common/color_harmony.c",
@@ -2255,27 +2854,6 @@
    ],
    "cross_schema": false,
    "sql": "COMMIT"
-  },
-  {
-   "file": "common/database.c",
-   "line": 1177,
-   "function": "_upgrade_library_schema_step",
-   "call": "sqlite3_exec",
-   "layer": "schema",
-   "step": "backend",
-   "ops": [
-    "ALTER"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.film_rolls"
-   ],
-   "domains": [
-    "film"
-   ],
-   "cross_schema": false,
-   "sql": "ALTER TABLE film_rolls ADD COLUMN external_drive VARCHAR(1024)"
   },
   {
    "file": "common/database.c",
@@ -6547,23 +7125,6 @@
   },
   {
    "file": "common/exif.cc",
-   "line": 648,
-   "function": "_exif_decode_xmp_data",
-   "call": "sqlite3_prepare_v2",
-   "layer": "common",
-   "step": "B",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [],
-   "domains": [
-    "?"
-   ],
-   "cross_schema": false,
-   "sql": "[exiv2 read_xmp_tag] %s"
-  },
-  {
-   "file": "common/exif.cc",
    "line": 3790,
    "function": "_exif_import_tags",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
@@ -7581,6 +8142,153 @@
    ],
    "cross_schema": false,
    "sql": "SELECT id FROM main.images WHERE film_id = ?1"
+  },
+  {
+   "file": "common/film.c",
+   "line": 667,
+   "function": "dt_film_folder_exists",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.film_rolls"
+   ],
+   "domains": [
+    "film"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT 1 FROM main.film_rolls WHERE folder = ?1 OR folder LIKE ?2 LIMIT 1"
+  },
+  {
+   "file": "common/film.c",
+   "line": 694,
+   "function": "dt_film_folder_for",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.film_rolls"
+   ],
+   "domains": [
+    "film"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT folder FROM main.film_rolls WHERE folder = ?1"
+  },
+  {
+   "file": "common/film.c",
+   "line": 704,
+   "function": "dt_film_folder_for",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.film_rolls"
+   ],
+   "domains": [
+    "film"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT folder FROM main.film_rolls WHERE ?1 LIKE folder || ?2 ORDER BY LENGTH(folder) DESC LIMIT 1"
+  },
+  {
+   "file": "common/film.c",
+   "line": 718,
+   "function": "dt_film_folder_for",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.film_rolls"
+   ],
+   "domains": [
+    "film"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT folder FROM main.film_rolls WHERE folder LIKE ?1 ORDER BY LENGTH(folder) ASC LIMIT 1"
+  },
+  {
+   "file": "common/film.c",
+   "line": 736,
+   "function": "dt_film_relocate_folder",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.film_rolls"
+   ],
+   "domains": [
+    "film"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT id, folder FROM main.film_rolls WHERE folder LIKE ?1"
+  },
+  {
+   "file": "common/film.c",
+   "line": 761,
+   "function": "dt_film_relocate_folder",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.film_rolls"
+   ],
+   "domains": [
+    "film"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE main.film_rolls SET folder=?1 WHERE id=?2"
+  },
+  {
+   "file": "common/film.c",
+   "line": 776,
+   "function": "dt_film_get_id_like",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.film_rolls"
+   ],
+   "domains": [
+    "film"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT id FROM main.film_rolls WHERE folder LIKE ?1"
   },
   {
    "file": "common/grouping.c",
@@ -12244,7 +12952,7 @@
   },
   {
    "file": "common/presets.c",
-   "line": 62,
+   "line": 64,
    "function": "dt_presets_save_to_file",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -12267,7 +12975,7 @@
   },
   {
    "file": "common/presets.c",
-   "line": 271,
+   "line": 273,
    "function": "dt_presets_import_from_file",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -12291,7 +12999,7 @@
   },
   {
    "file": "common/presets.c",
-   "line": 381,
+   "line": 383,
    "function": "dt_get_active_preset_name",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -12312,7 +13020,7 @@
   },
   {
    "file": "common/presets.c",
-   "line": 445,
+   "line": 447,
    "function": "dt_presets_get_module_label",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -12328,6 +13036,987 @@
    ],
    "cross_schema": false,
    "sql": "darkroom/ui/auto_module_name_updateSELECT name, multi_name FROM data.presets WHERE operation = ?1 AND (op_params = ?2 %s) AND blendop_params = ?3OR op_params IS NULL"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 582,
+   "function": "dt_presets_exists",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT name FROM data.presets WHERE name = ?1 AND operation=?2 AND op_version=?3 LIMIT 1"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 603,
+   "function": "dt_presets_get_operation",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT operation, op_version FROM data.presets WHERE rowid = ?1"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 621,
+   "function": "dt_presets_delete_unprotected",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "DELETE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "DELETE FROM data.presets WHERE rowid=?1 AND writeprotect=0"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 636,
+   "function": "dt_presets_get_details",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "data.presets",
+    "main.lens"
+   ],
+   "domains": [
+    "images",
+    "presets"
+   ],
+   "cross_schema": true,
+   "sql": "SELECT rowid, description, model, maker, lens, iso_min, iso_max, exposure_min, exposure_max, aperture_min, aperture_max, focal_length_min, focal_length_max, autoapply, filter, format, op_params FROM data.presets WHERE name = ?1 AND operation = ?2 AND op_version = ?3"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 723,
+   "function": "dt_presets_write",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": true,
+   "tables": [
+    "data.presets",
+    "main.lens"
+   ],
+   "domains": [
+    "images",
+    "presets"
+   ],
+   "cross_schema": true,
+   "sql": "UPDATE data.presets SET name=?1, description=?2, model=?3, maker=?4, lens=?5, iso_min=?6, iso_max=?7, exposure_min=?8, exposure_max=?9, aperture_min=?10, aperture_max=?11, focal_length_min=?12, focal_length_max=?13, autoapply=?14, filter=?15, format=?16 %s WHERE rowid=%d, op_params=?19, enabled=?20, multi_name=?23, multi_name_hand_edited=?24INSERT INTO data.presets (name, description, model, maker"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 774,
+   "function": "dt_presets_update_params",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET op_version=?2, op_params=?3, enabled=?4, blendop_params=?5, blendop_version=?6 WHERE name=?7 AND operation=?1"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 809,
+   "function": "dt_presets_get_params",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT op_params, enabled, blendop_params, blendop_version, writeprotect, multi_name, multi_name_hand_edited, autoapply FROM data.presets WHERE operation = ?1 AND op_version = ?2 AND name = ?3"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 863,
+   "function": "dt_presets_adjacent_name",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT name FROM data.presets WHERE operation=?1 AND op_version=?2 AND (?3='' OR LOWER(name) %s LOWER(?3)) ORDER BY writeprotect %s, LOWER(name) %s LIMIT ?4<>ASCDESCDESCASC"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 915,
+   "function": "dt_presets_find_autoapply",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "data.presets",
+    "main.lens"
+   ],
+   "domains": [
+    "images",
+    "presets"
+   ],
+   "cross_schema": true,
+   "sql": "SELECT name, op_params, blendop_params FROM data.presets WHERE operation = ?1 AND ((autoapply=1 AND ((?2 LIKE model AND ?3 LIKE maker) OR (?4 LIKE model AND ?5 LIKE maker)) AND ?6 LIKE lens AND ?7 BETWEEN iso_min AND iso_max AND ?8 BETWEEN exposure_min AND exposure_max AND ?9 BETWEEN aperture_min AND aperture_max AND ?10 BETWEEN focal_length_min AND focal_length_max AND (%s) AND operation NOT IN ("
+  },
+  {
+   "file": "common/presets.c",
+   "line": 958,
+   "function": "dt_presets_list_names",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT name, writeprotect FROM data.presets WHERE operation=?1 ORDER BY writeprotect %s, LOWER(name), rowidDESCASC"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 986,
+   "function": "dt_presets_version_names",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT name FROM data.presets WHERE operation=?1 AND op_version=?2 ORDER BY writeprotect DESC, name, rowidSELECT name FROM data.presets WHERE operation=?1 AND op_version = ?2 ORDER BY name"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1014,
+   "function": "dt_presets_list_params",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT name, op_params FROM data.presets WHERE operation = ?1 AND op_version = ?2 AND writeprotect = 0SELECT name, op_params FROM data.presets WHERE operation = ?1 AND op_version = ?2"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1046,
+   "function": "dt_presets_delete_version",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "DELETE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "DELETE FROM data.presets WHERE operation = ?1 AND op_version = ?2"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1063,
+   "function": "dt_presets_rename",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET name=?1 WHERE name=?2 AND operation = ?3 AND op_version = ?4"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1105,
+   "function": "dt_presets_find_lib_autoapply",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "data.presets",
+    "main.lens"
+   ],
+   "domains": [
+    "images",
+    "presets"
+   ],
+   "cross_schema": true,
+   "sql": "WHERE name=?2 AND operation = ?3 AND op_version = ?4SELECT name FROM data.presets WHERE operation=?11 AND op_version=?1 AND autoapply=1 AND ((?2 LIKE model AND ?3 LIKE maker) OR (?4 LIKE model AND ?5 LIKE maker)) AND ?6 LIKE lens AND ?7 BETWEEN iso_min AND iso_max AND ?8 BETWEEN exposure_min AND exposure_max AND ?9 BETWEEN aperture_min AND aperture_max AND ?10 BETWEEN focal_length_min AND focal_le"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1129,
+   "function": "dt_presets_list_stored",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT name, op_version, op_params, blendop_version, blendop_params, rowid FROM data.presets WHERE operation = ?1"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1155,
+   "function": "dt_presets_names_by_rowid",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT name FROM data.presets WHERE operation=?1 ORDER BY writeprotect DESC, rowid"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1173,
+   "function": "dt_presets_set_op_version",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET op_version=?1 WHERE operation=?2 AND name=?3"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1194,
+   "function": "dt_presets_set_op_params",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET op_version=?1, op_params=?2 WHERE operation=?3 AND name=?4"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1216,
+   "function": "dt_presets_set_blendop_params",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET blendop_version=?1, blendop_params=?2 WHERE operation=?3 AND name=?4"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1234,
+   "function": "dt_presets_delete_builtin",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "DELETE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "DELETE FROM data.presets WHERE writeprotect = 1 AND operation = ?1"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1253,
+   "function": "dt_presets_insert_lib_preset",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "INSERT"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets",
+    "main.lens"
+   ],
+   "domains": [
+    "images",
+    "presets"
+   ],
+   "cross_schema": true,
+   "sql": "INSERT INTO data.presets (name, description, operation, op_version, op_params, blendop_params, blendop_version, enabled, model, maker, lens, iso_min, iso_max, exposure_min, exposure_max, aperture_min, aperture_max, focal_length_min, focal_length_max, writeprotect, autoapply, filter, def, format) VALUES (?1, '', ?2, ?3, ?4, NULL, 0, 1, '%', '%', '%', 0, 340282346638528859812000000000000000000, 0, 1"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1279,
+   "function": "dt_presets_get_params_any_version",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT op_params FROM data.presets WHERE operation=?2 AND name = ?1"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1298,
+   "function": "dt_presets_set_op_params_at",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET op_params=?1 WHERE rowid=?2"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1312,
+   "function": "dt_presets_delete_at",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "DELETE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "DELETE FROM data.presets WHERE rowid=?1"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1329,
+   "function": "dt_presets_update_mml",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets",
+    "main.lens"
+   ],
+   "domains": [
+    "images",
+    "presets"
+   ],
+   "cross_schema": true,
+   "sql": "UPDATE data.presets SET maker='%' || ?1 || '%', model=?2, lens=?3 WHERE operation=?4 AND op_version=?5 AND name=?6"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1368,
+   "function": "dt_presets_update_iso",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET iso_min=?1, iso_max=?2 WHERE operation=?3 AND op_version=?4 AND name=?5"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1392,
+   "function": "dt_presets_update_av",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET aperture_min=?1, aperture_max=?2 WHERE operation=?3 AND op_version=?4 AND name=?5"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1415,
+   "function": "dt_presets_update_tv",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET exposure_min=?1, exposure_max=?2 WHERE operation=?3 AND op_version=?4 AND name=?5"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1438,
+   "function": "dt_presets_update_fl",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET focal_length_min=?1, focal_length_max=?2 WHERE operation=?3 AND op_version=?4 AND name=?5"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1460,
+   "function": "dt_presets_update_format",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET format=?1 WHERE operation=?2 AND op_version=?3 AND name=?4"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1481,
+   "function": "dt_presets_update_autoapply",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET autoapply=?1 WHERE operation=?2 AND op_version=?3 AND name=?4"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1502,
+   "function": "dt_presets_update_filter",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET filter=?1 WHERE operation=?2 AND op_version=?3 AND name=?4"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1527,
+   "function": "dt_presets_add_builtin",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "INSERT",
+    "REPLACE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets",
+    "main.lens"
+   ],
+   "domains": [
+    "images",
+    "presets"
+   ],
+   "cross_schema": true,
+   "sql": "INSERT OR REPLACE INTO data.presets (name, description, operation, op_version, op_params, enabled, blendop_params, blendop_version, multi_priority, multi_name, model, maker, lens, iso_min, iso_max, exposure_min, exposure_max, aperture_min, aperture_max, focal_length_min, focal_length_max, writeprotect, autoapply, filter, def, format, multi_name_hand_edited) VALUES (?1, '', ?2, ?3, ?4, ?5, ?6, ?7, "
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1555,
+   "function": "dt_presets_delete_all_builtin",
+   "call": "DT_DEBUG_SQLITE3_EXEC",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "DELETE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "DELETE FROM data.presets WHERE writeprotect = 1"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1564,
+   "function": "dt_presets_remove",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "DELETE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "DELETE FROM data.presets WHERE name=?1 AND operation=?2 AND op_version=?3 AND writeprotect=0"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1594,
+   "function": "dt_presets_duplicate",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "INSERT",
+    "SELECT"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets",
+    "main.lens"
+   ],
+   "domains": [
+    "images",
+    "presets"
+   ],
+   "cross_schema": true,
+   "sql": "INSERT INTO data.presets (name, description, operation, op_version, op_params, blendop_params, blendop_version, enabled, model, maker, lens, iso_min, iso_max, exposure_min, exposure_max, aperture_min, aperture_max, focal_length_min, focal_length_max, writeprotect, autoapply, filter, def, format) SELECT ?1, description, operation, op_version, op_params, blendop_params, blendop_version, enabled, mod"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1631,
+   "function": "dt_presets_update_named",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET name = ?1, description = ?2, op_params = ?3 WHERE operation = ?4 AND op_version = ?5 AND name = ?6"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1657,
+   "function": "dt_presets_add_lib",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "INSERT",
+    "REPLACE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets",
+    "main.lens"
+   ],
+   "domains": [
+    "images",
+    "presets"
+   ],
+   "cross_schema": true,
+   "sql": "INSERT OR REPLACE INTO data.presets (name, description, operation, op_version, op_params, blendop_params, blendop_version, enabled, model, maker, lens, iso_min, iso_max, exposure_min, exposure_max, aperture_min, aperture_max, focal_length_min, focal_length_max, writeprotect, autoapply, filter, def, format) VALUES (?1, '', ?2, ?3, ?4, NULL, 0, 1, '%', '%', '%', 0, 3402823466385288598120000000000000"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1689,
+   "function": "dt_presets_delete_module",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "DELETE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "DELETE FROM data.presets WHERE operation=?1"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1706,
+   "function": "dt_presets_upgrade_at",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "UPDATE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "UPDATE data.presets SET op_version=?1, op_params=?2 WHERE rowid=?3"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1751,
+   "function": "dt_presets_list_lines",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [],
+   "write": false,
+   "dynamic": true,
+   "tables": [],
+   "domains": [
+    "?"
+   ],
+   "cross_schema": false,
+   "sql": "ORDER BY operation, name"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1767,
+   "function": "dt_presets_get_line",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [],
+   "write": false,
+   "dynamic": true,
+   "tables": [],
+   "domains": [
+    "?"
+   ],
+   "cross_schema": false,
+   "sql": "WHERE rowid = ?1"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1798,
+   "function": "dt_presets_list_all_params",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "data.presets"
+   ],
+   "domains": [
+    "presets"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT name, op_params FROM data.presets WHERE operation = ?1 ORDER BY writeprotect DESC, LOWER(name)SELECT name, op_params FROM data.presets WHERE operation=?1 ORDER BY writeprotect DESC"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1894,
+   "function": "dt_presets_stage_auto_apply",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "data.presets",
+    "main.lens"
+   ],
+   "domains": [
+    "images",
+    "presets"
+   ],
+   "cross_schema": true,
+   "sql": "AND operation NOT IN ('ioporder', 'metadata', 'modulegroups', 'export', 'tagging', 'collect'%s) AND (writeprotect = 0 OR (SELECT NOT EXISTS (SELECT op FROM presets WHERE autoapply = 1 AND operation = op AND writeprotect = 0 AND ((?2 LIKE model AND ?3 LIKE maker) OR (?4 LIKE model AND ?5 LIKE maker)) AND ?6 LIKE lens AND ?7 BETWEEN iso_min AND iso_max AND ?8 BETWEEN exposure_min AND exposure_max AN"
+  },
+  {
+   "file": "common/presets.c",
+   "line": 1921,
+   "function": "dt_presets_find_auto_ioporder",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "data.presets",
+    "main.lens"
+   ],
+   "domains": [
+    "images",
+    "presets"
+   ],
+   "cross_schema": true,
+   "sql": "SELECT op_params FROM data.presets WHERE autoapply=1 AND ((?2 LIKE model AND ?3 LIKE maker) OR (?4 LIKE model AND ?5 LIKE maker)) AND ?6 LIKE lens AND ?7 BETWEEN iso_min AND iso_max AND ?8 BETWEEN exposure_min AND exposure_max AND ?9 BETWEEN aperture_min AND aperture_max AND ?10 BETWEEN focal_length_min AND focal_length_max AND (format = 0 OR (format&?11 != 0 AND ~format&?12 != 0)) AND operation ="
   },
   {
    "file": "common/selection.c",
@@ -12355,7 +14044,24 @@
   },
   {
    "file": "common/selection.c",
-   "line": 169,
+   "line": 137,
+   "function": "_cached_stmt",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [],
+   "write": false,
+   "dynamic": true,
+   "tables": [],
+   "domains": [
+    "?"
+   ],
+   "cross_schema": false,
+   "sql": ""
+  },
+  {
+   "file": "common/selection.c",
+   "line": 210,
    "function": "dt_selection_invert",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12378,7 +14084,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 173,
+   "line": 214,
    "function": "dt_selection_invert",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12399,7 +14105,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 175,
+   "line": 216,
    "function": "dt_selection_invert",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12422,7 +14128,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 176,
+   "line": 217,
    "function": "dt_selection_invert",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12445,7 +14151,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 180,
+   "line": 221,
    "function": "dt_selection_invert",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12466,7 +14172,28 @@
   },
   {
    "file": "common/selection.c",
-   "line": 193,
+   "line": 234,
+   "function": "dt_selection_clear_silent",
+   "call": "DT_DEBUG_SQLITE3_EXEC",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "DELETE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.selected_images"
+   ],
+   "domains": [
+    "selection"
+   ],
+   "cross_schema": false,
+   "sql": "DELETE FROM main.selected_images"
+  },
+  {
+   "file": "common/selection.c",
+   "line": 240,
    "function": "dt_selection_clear",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12487,7 +14214,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 245,
+   "line": 292,
    "function": "dt_selection_deselect",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12511,7 +14238,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 259,
+   "line": 306,
    "function": "dt_selection_select_single",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12532,7 +14259,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 271,
+   "line": 318,
    "function": "dt_selection_toggle",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -12553,7 +14280,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 305,
+   "line": 352,
    "function": "dt_selection_select_all",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12574,7 +14301,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 307,
+   "line": 354,
    "function": "dt_selection_select_all",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12595,7 +14322,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 335,
+   "line": 382,
    "function": "dt_selection_select_range",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -12616,7 +14343,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 364,
+   "line": 411,
    "function": "dt_selection_select_range",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -12639,7 +14366,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 392,
+   "line": 439,
    "function": "dt_selection_select_range",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12660,7 +14387,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 399,
+   "line": 446,
    "function": "dt_selection_select_range",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -12683,7 +14410,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 423,
+   "line": 470,
    "function": "dt_selection_select_filmroll",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12704,7 +14431,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 425,
+   "line": 472,
    "function": "dt_selection_select_filmroll",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12727,7 +14454,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 429,
+   "line": 476,
    "function": "dt_selection_select_filmroll",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12748,7 +14475,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 432,
+   "line": 479,
    "function": "dt_selection_select_filmroll",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12773,7 +14500,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 440,
+   "line": 487,
    "function": "dt_selection_select_filmroll",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12794,7 +14521,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 458,
+   "line": 505,
    "function": "dt_selection_select_unaltered",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12815,7 +14542,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 461,
+   "line": 508,
    "function": "dt_selection_select_unaltered",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12841,7 +14568,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 499,
+   "line": 546,
    "function": "dt_selection_select_list",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "common",
@@ -12867,7 +14594,7 @@
   },
   {
    "file": "common/selection.c",
-   "line": 559,
+   "line": 606,
    "function": "dt_selection_get_list",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -12887,6 +14614,78 @@
    ],
    "cross_schema": true,
    "sql": "SELECT s.imgid FROM main.selected_images as s WHERE s.imgid IN (SELECT m.imgid FROM memory.collected_images as m)%s ORDER BY num DESCSELECT DISTINCT ng.id FROM (%s) AS ng WHERE ng.id IN (SELECT s.imgid FROM main.selected_images as s)SELECT imgid FROM main.selected_images"
+  },
+  {
+   "file": "common/selection.c",
+   "line": 626,
+   "function": "dt_selection_set_folder_images",
+   "call": "DT_DEBUG_SQLITE3_EXEC",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "DELETE"
+   ],
+   "write": true,
+   "dynamic": false,
+   "tables": [
+    "main.selected_images"
+   ],
+   "domains": [
+    "selection"
+   ],
+   "cross_schema": false,
+   "sql": "DELETE FROM main.selected_images"
+  },
+  {
+   "file": "common/selection.c",
+   "line": 636,
+   "function": "dt_selection_set_folder_images",
+   "call": "DT_DEBUG_SQLITE3_EXEC",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": true,
+   "tables": [
+    "main.film_rolls",
+    "main.images",
+    "main.selected_images"
+   ],
+   "domains": [
+    "film",
+    "images",
+    "selection"
+   ],
+   "cross_schema": false,
+   "sql": "%qDELETE FROM main.selected_imagesINSERT INTO main.selected_images (imgid) SELECT id FROM main.images WHERE film_id IN (SELECT id FROM main.film_rolls WHERE folder LIKE '%s%%')"
+  },
+  {
+   "file": "common/selection.c",
+   "line": 650,
+   "function": "dt_selection_drop_outside_collection",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "DELETE",
+    "SELECT"
+   ],
+   "write": true,
+   "dynamic": true,
+   "tables": [
+    "main.film_rolls",
+    "main.images",
+    "main.selected_images"
+   ],
+   "domains": [
+    "film",
+    "images",
+    "selection"
+   ],
+   "cross_schema": false,
+   "sql": "%qDELETE FROM main.selected_imagesINSERT INTO main.selected_images (imgid) SELECT id FROM main.images WHERE film_id IN (SELECT id FROM main.film_rolls WHERE folder LIKE '%s%%')DELETE FROM main.selected_images WHERE imgid NOT IN (%s)"
   },
   {
    "file": "common/styles.c",
@@ -14688,1183 +16487,8 @@
    "sql": "SELECT COUNT(1) FROM images AS i1 WHERE EXISTS (SELECT 'y' FROM images AS i2 WHERE i2.id = ?1 AND i1.film_id = i2.film_id AND i1.filename = i2.filename)"
   },
   {
-   "file": "control/control.c",
-   "line": 487,
-   "function": "dt_control_cleanup",
-   "call": "DT_DEBUG_SQLITE3_EXEC",
-   "layer": "control",
-   "step": "A",
-   "ops": [
-    "PRAGMA"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [],
-   "domains": [
-    "?"
-   ],
-   "cross_schema": false,
-   "sql": "PRAGMA incremental_vacuum(0)"
-  },
-  {
-   "file": "control/control.c",
-   "line": 488,
-   "function": "dt_control_cleanup",
-   "call": "DT_DEBUG_SQLITE3_EXEC",
-   "layer": "control",
-   "step": "A",
-   "ops": [
-    "VACUUM"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [],
-   "domains": [
-    "?"
-   ],
-   "cross_schema": false,
-   "sql": "vacuum"
-  },
-  {
-   "file": "control/crawler.c",
-   "line": 992,
-   "function": "_crawler_ensure_current_collection",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "control",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "images"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT i.film_id FROM memory.collected_images AS c, main.images AS i ON i.id = c.imgid GROUP BY i.film_id ORDER BY MIN(c.rowid)"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 2120,
-   "function": "_dev_auto_apply_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "data.presets",
-    "main.lens"
-   ],
-   "domains": [
-    "images",
-    "presets"
-   ],
-   "cross_schema": true,
-   "sql": "AND operation NOT IN ('ioporder', 'metadata', 'modulegroups', 'export', 'tagging', 'collect'%s) AND (writeprotect = 0 OR (SELECT NOT EXISTS (SELECT op FROM presets WHERE autoapply = 1 AND operation = op AND writeprotect = 0 AND ((?2 LIKE model AND ?3 LIKE maker) OR (?4 LIKE model AND ?5 LIKE maker)) AND ?6 LIKE lens AND ?7 BETWEEN iso_min AND iso_max AND ?8 BETWEEN exposure_min AND exposure_max AN"
-  },
-  {
-   "file": "develop/develop.c",
-   "line": 2144,
-   "function": "_dev_auto_apply_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets",
-    "main.lens"
-   ],
-   "domains": [
-    "images",
-    "presets"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT op_params FROM data.presets WHERE autoapply=1 AND ((?2 LIKE model AND ?3 LIKE maker) OR (?4 LIKE model AND ?5 LIKE maker)) AND ?6 LIKE lens AND ?7 BETWEEN iso_min AND iso_max AND ?8 BETWEEN exposure_min AND exposure_max AND ?9 BETWEEN aperture_min AND aperture_max AND ?10 BETWEEN focal_length_min AND focal_length_max AND (format = 0 OR (format&?11 != 0 AND ~format&?12 != 0)) AND operation ="
-  },
-  {
-   "file": "develop/imageop.c",
-   "line": 1584,
-   "function": "_init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT name, op_version, op_params, blendop_version, blendop_params FROM data.presets WHERE operation = ?1"
-  },
-  {
-   "file": "develop/imageop.c",
-   "line": 1627,
-   "function": "_init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET op_version=?1 WHERE operation=?2 AND name=?3"
-  },
-  {
-   "file": "develop/imageop.c",
-   "line": 1688,
-   "function": "_init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET op_version=?1, op_params=?2 WHERE operation=?3 AND name=?4"
-  },
-  {
-   "file": "develop/imageop.c",
-   "line": 1760,
-   "function": "_init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET blendop_version=?1, blendop_params=?2 WHERE operation=?3 AND name=?4"
-  },
-  {
-   "file": "develop/imageop.c",
-   "line": 1799,
-   "function": "_iop_preferences_changed",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM data.presets WHERE writeprotect = 1 AND operation = ?1"
-  },
-  {
-   "file": "develop/imageop.c",
-   "line": 1822,
-   "function": "_init_presets_actions",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT name FROM data.presets WHERE operation=?1 ORDER BY writeprotect DESC, rowid"
-  },
-  {
-   "file": "develop/imageop.c",
-   "line": 1914,
-   "function": "_iop_set_darktable_iop_table",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "INSERT"
-   ],
-   "write": true,
-   "dynamic": true,
-   "tables": [
-    "memory.darktable_iop_names"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "(\\\"%s\\\",\\\"%s\\\"),INSERT INTO memory.darktable_iop_names (operation, name) VALUES %s"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 62,
-   "function": "_thumb_get_imgid",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection"
-   ],
-   "cross_schema": false,
-   "sql": "dtgtk/culling.hcommon/collection.hcommon/debug.hcommon/selection.hcontrol/control.hgui/gtk.hviews/view.hplugins/lighttable/preview/max_in_memory_imagesSELECT imgid FROM memory.collected_images WHERE rowid=%d"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 80,
-   "function": "_thumb_get_rowid",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection"
-   ],
-   "cross_schema": false,
-   "sql": "plugins/lighttable/preview/max_in_memory_imagesSELECT imgid FROM memory.collected_images WHERE rowid=%dSELECT rowid FROM memory.collected_images WHERE imgid=%d"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 199,
-   "function": "_thumbs_move",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT m.rowid FROM memory.collected_images as m, main.selected_images as s WHERE m.imgid=s.imgid AND m.rowid<=%d ORDER BY m.rowid DESC LIMIT 1 OFFSET %d"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 216,
-   "function": "_thumbs_move",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT m.rowid FROM memory.collected_images as m, main.selected_images as s WHERE m.imgid=s.imgid AND m.rowid<=%d ORDER BY m.rowid DESC LIMIT 1 OFFSET %dSELECT m.rowid FROM memory.collected_images as m, main.selected_images as s WHERE m.imgid=s.imgid ORDER BY m.rowid LIMIT 1"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 252,
-   "function": "_thumbs_move",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "WHERE m.imgid=s.imgid ORDER BY m.rowid LIMIT 1you have reached the start of your selectionyou have reached the start of your collectionSELECT COUNT(m.rowid) FROM memory.collected_images as m, main.selected_images as s WHERE m.imgid=s.imgid AND m.rowid>%d"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 271,
-   "function": "_thumbs_move",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "you have reached the start of your collectionSELECT COUNT(m.rowid) FROM memory.collected_images as m, main.selected_images as s WHERE m.imgid=s.imgid AND m.rowid>%dSELECT m.rowid FROM memory.collected_images as m, main.selected_images as s WHERE m.imgid=s.imgid AND m.rowid>=%d ORDER BY m.rowid LIMIT 1 OFFSET %d"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 296,
-   "function": "_thumbs_move",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT m.rowid FROM memory.collected_images as m, main.selected_images as s WHERE m.imgid=s.imgid AND m.rowid>=%d ORDER BY m.rowid LIMIT 1 OFFSET %dyou have reached the end of your selectionSELECT COUNT(m.rowid) FROM memory.collected_images as m WHERE m.rowid>%d"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 1181,
-   "function": "_dt_selection_changed_callback",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT count(*) FROM memory.collected_images AS col, main.selected_images as sel WHERE col.imgid=sel.imgid"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 1451,
-   "function": "dt_culling_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT count(*) FROM memory.collected_images AS col, main.selected_images as sel WHERE col.imgid=sel.imgid"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 1485,
-   "function": "dt_culling_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT count(*) FROM memory.collected_images AS col, main.selected_images as sel WHERE col.imgid=sel.imgidno image selected!SELECT col.imgid FROM memory.collected_images AS col, main.selected_images AS sel WHERE col.imgid=sel.imgid AND col.imgid=%d"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 1507,
-   "function": "dt_culling_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT MIN(rowid), MAX(rowid) FROM memory.collected_images AS col, main.selected_images as sel WHERE col.imgid=sel.imgid"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 1580,
-   "function": "_thumbs_prefetch",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT m.imgid FROM memory.collected_images AS m, main.selected_images AS s WHERE m.imgid = s.imgid AND m.rowid > %d ORDER BY m.rowid LIMIT 1SELECT m.imgid FROM memory.collected_images AS m WHERE m.rowid > %d ORDER BY m.rowid LIMIT 1"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 1617,
-   "function": "_thumbs_prefetch",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT m.imgid FROM memory.collected_images AS m, main.selected_images AS s WHERE m.imgid = s.imgid AND m.rowid < %d ORDER BY m.rowid DESC LIMIT 1SELECT m.imgid FROM memory.collected_images AS m WHERE m.rowid < %d ORDER BY m.rowid DESC LIMIT 1"
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 1697,
-   "function": "_thumbs_recreate_list_at",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images",
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "images",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "dynamicnewrowSELECT i1, i2, i3, i2, newrow FROM (SELECT m.rowid AS i1, m.imgid AS i2, b.aspect_ratio AS i3, (CASE WHEN m.rowid >= %d THEN m.rowid ELSE (SELECT MAX(rowid) FROM memory.collected_images) + %d - m.rowid END) AS newrow FROM memory.collected_images AS m, main.selected_images AS s, images AS b WHERE m.imgid = b.id AND m.imgid = s.imgid ORDER BY newrow LIMIT %d) ORDER BY i1SELECT m.rowid, "
-  },
-  {
-   "file": "dtgtk/culling.c",
-   "line": 2268,
-   "function": "dt_culling_full_redraw",
-   "call": "DT_DEBUG_SQLITE3_EXEC",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images"
-   ],
-   "domains": [
-    "selection"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM main.selected_images"
-  },
-  {
-   "file": "dtgtk/thumbtable.c",
-   "line": 239,
-   "function": "_thumb_get_imgid",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT imgid FROM memory.collected_images WHERE rowid=%d"
-  },
-  {
-   "file": "dtgtk/thumbtable.c",
-   "line": 255,
-   "function": "_thumb_get_rowid",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT imgid FROM memory.collected_images WHERE rowid=%dSELECT rowid FROM memory.collected_images WHERE imgid=%d"
-  },
-  {
-   "file": "dtgtk/thumbtable.c",
-   "line": 625,
-   "function": "_thumbs_load_needed",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT mi.rowid, mi.imgid, si.imgid FROM memory.collected_images AS mi LEFT JOIN main.selected_images AS si ON mi.imgid = si.imgid WHERE mi.rowid<%d ORDER BY mi.rowid DESC LIMIT %d"
-  },
-  {
-   "file": "dtgtk/thumbtable.c",
-   "line": 677,
-   "function": "_thumbs_load_needed",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT mi.rowid, mi.imgid, si.imgid FROM memory.collected_images AS mi LEFT JOIN main.selected_images AS si ON mi.imgid = si.imgid WHERE rowid>%d ORDER BY rowid LIMIT %d"
-  },
-  {
-   "file": "dtgtk/thumbtable.c",
-   "line": 2339,
-   "function": "_dt_collection_changed_callback",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT m.imgid FROM memory.collected_images AS m, main.selected_images AS s WHERE m.imgid=s.imgid AND m.rowid>=(SELECT rowid FROM memory.collected_images WHERE imgid=%d) ORDER BY m.rowid LIMIT 1"
-  },
-  {
-   "file": "dtgtk/thumbtable.c",
-   "line": 2359,
-   "function": "_dt_collection_changed_callback",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT m.imgid FROM memory.collected_images AS m, main.selected_images AS s WHERE m.imgid=s.imgid AND m.rowid>=(SELECT rowid FROM memory.collected_images WHERE imgid=%d) ORDER BY m.rowid LIMIT 1SELECT m.imgid FROM memory.collected_images AS m, main.selected_images AS s WHERE m.imgid=s.imgid AND m.rowid<(SELECT rowid FROM memory.collected_images WHERE imgid=%d) ORDER BY m.rowid DESC LIMIT 1"
-  },
-  {
-   "file": "dtgtk/thumbtable.c",
-   "line": 3035,
-   "function": "dt_thumbtable_full_redraw",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT mi.rowid, mi.imgid, si.imgid FROM memory.collected_images AS mi LEFT JOIN main.selected_images AS si ON mi.imgid = si.imgid WHERE mi.rowid>=%d LIMIT %d"
-  },
-  {
-   "file": "dtgtk/thumbtable.c",
-   "line": 3630,
-   "function": "_filemanager_key_move",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT MAX(rowid) FROM memory.collected_images"
-  },
-  {
-   "file": "dtgtk/thumbtable.c",
-   "line": 3723,
-   "function": "_zoomable_key_move",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "dtgtk",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT MAX(rowid) FROM memory.collected_images"
-  },
-  {
-   "file": "gui/import_metadata.c",
-   "line": 253,
-   "function": "_import_metadata_presets_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT name, op_params FROM data.presets WHERE operation = 'metadata' ORDER BY writeprotect DESC, LOWER(name)"
-  },
-  {
-   "file": "gui/import_metadata.c",
-   "line": 314,
-   "function": "_import_tags_presets_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT name, op_params FROM data.presets WHERE operation = 'tagging' ORDER BY writeprotect DESC, LOWER(name)"
-  },
-  {
-   "file": "gui/preferences.c",
-   "line": 983,
-   "function": "tree_insert_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets",
-    "main.lens"
-   ],
-   "domains": [
-    "images",
-    "presets"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT rowid, name, operation, autoapply, model, maker, lens, iso_min, iso_max, exposure_min, exposure_max, aperture_min, aperture_max, focal_length_min, focal_length_max, writeprotect FROM data.presets ORDER BY operation, name"
-  },
-  {
-   "file": "gui/preferences.c",
-   "line": 1266,
-   "function": "edit_preset_response",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets",
-    "main.lens"
-   ],
-   "domains": [
-    "images",
-    "presets"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT rowid, name, operation, autoapply, model, maker, lens, iso_min, iso_max, exposure_min, exposure_max, aperture_min, aperture_max, focal_length_min, focal_length_max, writeprotect FROM data.presets WHERE rowid = ?1"
-  },
-  {
-   "file": "gui/preferences.c",
-   "line": 1451,
-   "function": "export_preset",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT rowid, name, operation FROM data.presets WHERE writeprotect = 0"
-  },
-  {
    "file": "gui/presets.c",
-   "line": 88,
-   "function": "dt_gui_presets_init",
-   "call": "DT_DEBUG_SQLITE3_EXEC",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM data.presets WHERE writeprotect = 1"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 120,
-   "function": "dt_gui_presets_add_with_blendop",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "INSERT",
-    "REPLACE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets",
-    "main.lens"
-   ],
-   "domains": [
-    "images",
-    "presets"
-   ],
-   "cross_schema": true,
-   "sql": "INSERT OR REPLACE INTO data.presets (name, description, operation, op_version, op_params, enabled, blendop_params, blendop_version, multi_priority, multi_name, model, maker, lens, iso_min, iso_max, exposure_min, exposure_max, aperture_min, aperture_max, focal_length_min, focal_length_max, writeprotect, autoapply, filter, def, format, multi_name_hand_edited) VALUES (?1, '', ?2, ?3, ?4, ?5, ?6, ?7, "
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 235,
-   "function": "_edit_preset_response",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT name FROM data.presets WHERE name = ?1 AND operation=?2 AND op_version=?3 LIMIT 1"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 321,
-   "function": "_edit_preset_response",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": true,
-   "tables": [
-    "data.presets",
-    "main.lens"
-   ],
-   "domains": [
-    "images",
-    "presets"
-   ],
-   "cross_schema": true,
-   "sql": "UPDATE data.presets SET name=?1, description=?2, model=?3, maker=?4, lens=?5, iso_min=?6, iso_max=?7, exposure_min=?8, exposure_max=?9, aperture_min=?10, aperture_max=?11, focal_length_min=?12, focal_length_max=?13, autoapply=?14, filter=?15, format=?16 %s WHERE rowid=%d, op_params=?19, enabled=?20, multi_name=?23, multi_name_hand_edited=?24INSERT INTO data.presets (name, description, model, maker"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 501,
-   "function": "dt_gui_presets_confirm_and_delete",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM data.presets WHERE rowid=?1 AND writeprotect=0"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 780,
-   "function": "_presets_show_edit_dialog",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets",
-    "main.lens"
-   ],
-   "domains": [
-    "images",
-    "presets"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT rowid, description, model, maker, lens, iso_min, iso_max, exposure_min, exposure_max, aperture_min, aperture_max, focal_length_min, focal_length_max, autoapply, filter, format, op_params FROM data.presets WHERE name = ?1 AND operation = ?2 AND op_version = ?3"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 944,
-   "function": "dt_gui_presets_show_edit_dialog",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT operation, op_version FROM data.presets WHERE rowid = ?1"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 1022,
-   "function": "_menuitem_update_preset",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET op_version=?2, op_params=?3, enabled=?4, blendop_params=?5, blendop_version=?6 WHERE name=?7 AND operation=?1"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 1066,
-   "function": "dt_gui_presets_apply_preset",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT op_params, enabled, blendop_params, blendop_version, writeprotect, multi_name, multi_name_hand_edited FROM data.presets WHERE operation = ?1 AND op_version = ?2 AND name = ?3"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 1166,
-   "function": "dt_gui_presets_apply_adjacent_preset",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "preset '%s' not found\\naccel/prefer_enabledaccel/prefer_unmasked(first)(last)SELECT name FROM data.presets WHERE operation=?1 AND op_version=?2 AND (?3='' OR LOWER(name) %s LOWER(?3)) ORDER BY writeprotect %s, LOWER(name) %s LIMIT ?4<>ASCDESCDESCASC"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 1240,
-   "function": "dt_gui_presets_autoapply_for_module",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "data.presets",
-    "main.lens"
-   ],
-   "domains": [
-    "images",
-    "presets"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT name, op_params, blendop_params FROM data.presets WHERE operation = ?1 AND ((autoapply=1 AND ((?2 LIKE model AND ?3 LIKE maker) OR (?4 LIKE model AND ?5 LIKE maker)) AND ?6 LIKE lens AND ?7 BETWEEN iso_min AND iso_max AND ?8 BETWEEN exposure_min AND exposure_max AND ?9 BETWEEN aperture_min AND aperture_max AND ?10 BETWEEN focal_length_min AND focal_length_max AND (%s) AND operation NOT IN ("
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 1459,
-   "function": "_menuitem_manage_quick_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT name FROM data.presets WHERE operation=?1 ORDER BY writeprotect DESC, LOWER(name), rowid"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 1560,
-   "function": "dt_gui_favorite_presets_menu_show",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "favoritesplugins/darkroom/default_presets_firstSELECT name, writeprotect FROM data.presets WHERE operation=?1 ORDER BY writeprotect %s, LOWER(name), rowidDESCASCplugins/darkroom/quick_preset_listplugins/darkroom/quick_preset_list"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 1655,
+   "line": 1377,
    "function": "dt_gui_presets_popup_menu_show",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "gui",
@@ -15878,1747 +16502,6 @@
    ],
    "cross_schema": false,
    "sql": "presetsactivates''editdeletenewupdatesmanagepresets"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 1956,
-   "function": "dt_gui_presets_update_mml",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets",
-    "main.lens"
-   ],
-   "domains": [
-    "images",
-    "presets"
-   ],
-   "cross_schema": true,
-   "sql": "UPDATE data.presets SET maker='%' || ?1 || '%', model=?2, lens=?3 WHERE operation=?4 AND op_version=?5 AND name=?6"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 1995,
-   "function": "dt_gui_presets_update_iso",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET iso_min=?1, iso_max=?2 WHERE operation=?3 AND op_version=?4 AND name=?5"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 2019,
-   "function": "dt_gui_presets_update_av",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET aperture_min=?1, aperture_max=?2 WHERE operation=?3 AND op_version=?4 AND name=?5"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 2042,
-   "function": "dt_gui_presets_update_tv",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET exposure_min=?1, exposure_max=?2 WHERE operation=?3 AND op_version=?4 AND name=?5"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 2065,
-   "function": "dt_gui_presets_update_fl",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET focal_length_min=?1, focal_length_max=?2 WHERE operation=?3 AND op_version=?4 AND name=?5"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 2087,
-   "function": "dt_gui_presets_update_format",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET format=?1 WHERE operation=?2 AND op_version=?3 AND name=?4"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 2108,
-   "function": "dt_gui_presets_update_autoapply",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET autoapply=?1 WHERE operation=?2 AND op_version=?3 AND name=?4"
-  },
-  {
-   "file": "gui/presets.c",
-   "line": 2129,
-   "function": "dt_gui_presets_update_filter",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET filter=?1 WHERE operation=?2 AND op_version=?3 AND name=?4"
-  },
-  {
-   "file": "gui/styles_dialog.c",
-   "line": 70,
-   "function": "_single_selected_imgid",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "gui",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images"
-   ],
-   "domains": [
-    "selection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT imgid FROM main.selected_images"
-  },
-  {
-   "file": "libs/collect.c",
-   "line": 496,
-   "function": "_view_popup_menu_onSearchFilmroll",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT",
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": true,
-   "tables": [
-    "main.film_rolls"
-   ],
-   "domains": [
-    "film"
-   ],
-   "cross_schema": false,
-   "sql": "update path to files_open_cancel%s%%SELECT id, folder FROM main.film_rolls WHERE folder LIKE ?1"
-  },
-  {
-   "file": "libs/collect.c",
-   "line": 523,
-   "function": "_view_popup_menu_onSearchFilmroll",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.film_rolls"
-   ],
-   "domains": [
-    "film"
-   ],
-   "cross_schema": false,
-   "sql": "%s%%SELECT id, folder FROM main.film_rolls WHERE folder LIKE ?1UPDATE main.film_rolls SET folder=?1 WHERE id=?2%s/%s"
-  },
-  {
-   "file": "libs/collect.c",
-   "line": 582,
-   "function": "_view_popup_menu_onRemove",
-   "call": "DT_DEBUG_SQLITE3_EXEC",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images"
-   ],
-   "domains": [
-    "selection"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM main.selected_images"
-  },
-  {
-   "file": "libs/collect.c",
-   "line": 594,
-   "function": "_view_popup_menu_onRemove",
-   "call": "DT_DEBUG_SQLITE3_EXEC",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.film_rolls",
-    "main.images",
-    "main.selected_images"
-   ],
-   "domains": [
-    "film",
-    "images",
-    "selection"
-   ],
-   "cross_schema": false,
-   "sql": "%qDELETE FROM main.selected_imagesINSERT INTO main.selected_images (imgid) SELECT id FROM main.images WHERE film_id IN (SELECT id FROM main.film_rolls WHERE folder LIKE '%s%%')"
-  },
-  {
-   "file": "libs/collect.c",
-   "line": 1263,
-   "function": "_lib_folders_update_collection",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": true,
-   "tables": [
-    "main.selected_images"
-   ],
-   "domains": [
-    "selection"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM main.selected_images WHERE imgid NOT IN (%s)"
-  },
-  {
-   "file": "libs/collect.c",
-   "line": 1320,
-   "function": "_create_filtered_model",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.film_rolls"
-   ],
-   "domains": [
-    "film"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT id FROM main.film_rolls WHERE folder LIKE ?1"
-  },
-  {
-   "file": "libs/collect.c",
-   "line": 1746,
-   "function": "_tree_view",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "datetime_takenimport_timestampchange_timestampexport_timestampprint_timestampSELECT %s AS date, 1, COUNT(*) AS count FROM main.images AS mi WHERE %s IS NOT NULL AND %s <> 0 AND %s GROUP BY date"
-  },
-  {
-   "file": "libs/collect.c",
-   "line": 2488,
-   "function": "_list_view",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.film_rolls",
-    "main.images",
-    "memory.film_folder"
-   ],
-   "domains": [
-    "film",
-    "images"
-   ],
-   "cross_schema": true,
-   "sql": "plugins/collect/filmroll_sortimport timefilm_rolls_id DESCfilm_rolls_id ASClower(folder) DESClower(folder) ASCSELECT folder, film_rolls_id, COUNT(*) AS count, status FROM main.images AS mi JOIN (SELECT fr.id AS film_rolls_id, folder, status FROM main.film_rolls AS fr JOIN memory.film_folder AS ff ON ff.id = fr.id) ON film_id = film_rolls_id WHERE %s GROUP BY folder ORDER BY %s"
-  },
-  {
-   "file": "libs/collect.c",
-   "line": 2957,
-   "function": "_folder_exists",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.film_rolls"
-   ],
-   "domains": [
-    "film"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT 1 FROM main.film_rolls WHERE folder = ?1 OR folder LIKE ?2 LIMIT 1"
-  },
-  {
-   "file": "libs/collect.c",
-   "line": 2984,
-   "function": "_filmroll_for_folder",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.film_rolls"
-   ],
-   "domains": [
-    "film"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT folder FROM main.film_rolls WHERE folder = ?1"
-  },
-  {
-   "file": "libs/collect.c",
-   "line": 2994,
-   "function": "_filmroll_for_folder",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.film_rolls"
-   ],
-   "domains": [
-    "film"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT folder FROM main.film_rolls WHERE ?1 LIKE folder || ?2 ORDER BY LENGTH(folder) DESC LIMIT 1"
-  },
-  {
-   "file": "libs/collect.c",
-   "line": 3008,
-   "function": "_filmroll_for_folder",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.film_rolls"
-   ],
-   "domains": [
-    "film"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT folder FROM main.film_rolls WHERE folder LIKE ?1 ORDER BY LENGTH(folder) ASC LIMIT 1"
-  },
-  {
-   "file": "libs/export.c",
-   "line": 446,
-   "function": "_export_with_preset",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT op_params FROM data.presets WHERE operation='export' AND name = ?1"
-  },
-  {
-   "file": "libs/export.c",
-   "line": 1368,
-   "function": "_fill_batch_export_list",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT name FROM data.presets WHERE operation='export' AND op_version = ?1 ORDER BY name"
-  },
-  {
-   "file": "libs/export.c",
-   "line": 1854,
-   "function": "init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT rowid, op_version, op_params, name FROM data.presets WHERE operation='export'"
-  },
-  {
-   "file": "libs/export.c",
-   "line": 1876,
-   "function": "init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM data.presets WHERE rowid=?1"
-  },
-  {
-   "file": "libs/export.c",
-   "line": 2013,
-   "function": "init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET op_params=?1 WHERE rowid=?2"
-  },
-  {
-   "file": "libs/export.c",
-   "line": 2039,
-   "function": "init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM data.presets WHERE rowid=?1"
-  },
-  {
-   "file": "libs/filters/aperture.c",
-   "line": 47,
-   "function": "_aperture_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "common/utility.hSELECT ROUND(aperture,1), COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY ROUND(aperture,1)"
-  },
-  {
-   "file": "libs/filters/aperture.c",
-   "line": 101,
-   "function": "_aperture_widget_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "f/%.1lf%.1fSELECT MIN(aperture), MAX(aperture) FROM main.images"
-  },
-  {
-   "file": "libs/filters/date.c",
-   "line": 64,
-   "function": "_date_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "import_timestampchange_timestampexport_timestampprint_timestampdatetime_takenSELECT %s AS date, COUNT(*) AS count FROM main.images AS mi WHERE %s IS NOT NULL AND %s GROUP BY date"
-  },
-  {
-   "file": "libs/filters/date.c",
-   "line": 236,
-   "function": "_date_widget_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT MIN(%s), MAX(%s) FROM main.images WHERE %s IS NOT NULL"
-  },
-  {
-   "file": "libs/filters/duplicates.c",
-   "line": 123,
-   "function": "_duplicates_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "$DUPLICATES_ONLYSELECT CASE WHEN dups.min_version = version THEN 0 ELSE 1 END AS orig , COUNT(*) AS count FROM main.images AS mi JOIN ( SELECT film_id AS f_id , filename , MIN(version) AS min_version FROM main.images GROUP BY f_id , filename HAVING COUNT(*) > 1 ) dups ON mi.film_id = dups.f_id AND mi.filename = dups.filename WHERE %s GROUP BY orig ORDER BY orig ASC"
-  },
-  {
-   "file": "libs/filters/exposure.c",
-   "line": 47,
-   "function": "_exposure_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "common/utility.hSELECT exposure, COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY exposure"
-  },
-  {
-   "file": "libs/filters/exposure.c",
-   "line": 119,
-   "function": "_exposure_widget_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "%.6lfSELECT MIN(exposure), MAX(exposure) FROM main.images"
-  },
-  {
-   "file": "libs/filters/exposure_bias.c",
-   "line": 47,
-   "function": "_exposure_bias_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "common/utility.hSELECT ROUND(exposure_bias,2), COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY ROUND(exposure_bias,2)"
-  },
-  {
-   "file": "libs/filters/exposure_bias.c",
-   "line": 104,
-   "function": "_exposure_bias_widget_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "%+.2f EV%+.2fSELECT MIN(exposure_bias), MAX(exposure_bias) FROM main.images"
-  },
-  {
-   "file": "libs/filters/filename.c",
-   "line": 125,
-   "function": "_filename_tree_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "REPLACE",
-    "SELECT"
-   ],
-   "write": true,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT rtrim(rtrim(filename, replace(filename, '.', '')), '.') AS fn, COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY fn ORDER BY filename"
-  },
-  {
-   "file": "libs/filters/filename.c",
-   "line": 148,
-   "function": "_filename_tree_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "REPLACE",
-    "SELECT"
-   ],
-   "write": true,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT rtrim(rtrim(filename, replace(filename, '.', '')), '.') AS fn, COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY fn ORDER BY filenameSELECT upper(replace(filename, rtrim(filename, replace(filename, '.', '')), '.')) AS ext, COUNT(*) AS count, flags FROM main.images AS mi WHERE %s GROUP BY ext ORDER BY ext"
-  },
-  {
-   "file": "libs/filters/focal.c",
-   "line": 46,
-   "function": "_focal_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT ROUND(focal_length,0), COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY ROUND(focal_length,0)"
-  },
-  {
-   "file": "libs/filters/focal.c",
-   "line": 99,
-   "function": "_focal_widget_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "%.0lf %smmSELECT MIN(focal_length), MAX(focal_length) FROM main.images"
-  },
-  {
-   "file": "libs/filters/history.c",
-   "line": 122,
-   "function": "_history_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.history_hash",
-    "main.images"
-   ],
-   "domains": [
-    "history",
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "$BASIC$AUTO_APPLIED$ALTEREDSELECT CASE WHEN basic_hash == current_hash THEN 0 WHEN auto_hash == current_hash THEN 1 WHEN current_hash IS NOT NULL THEN 2 ELSE 0 END as altered, COUNT(*) AS count FROM main.images AS mi LEFT JOIN (SELECT DISTINCT imgid, basic_hash, auto_hash, current_hash FROM main.history_hash) ON id = imgid WHERE %s GROUP BY altered ORDER BY altered ASC"
-  },
-  {
-   "file": "libs/filters/iso.c",
-   "line": 47,
-   "function": "_iso_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "common/utility.hSELECT ROUND(iso,0), COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY ROUND(iso, 0)"
-  },
-  {
-   "file": "libs/filters/iso.c",
-   "line": 120,
-   "function": "_iso_widget_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "%.0lf ISO%.0lfSELECT MIN(iso), MAX(iso) FROM main.images"
-  },
-  {
-   "file": "libs/filters/local_copy.c",
-   "line": 112,
-   "function": "_local_copy_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "$NO_LOCAL_COPY$LOCAL_COPYSELECT CASE WHEN (flags & %d) THEN 0 ELSE 1 END as lcp, COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY lcp ORDER BY lcp ASC"
-  },
-  {
-   "file": "libs/filters/misc.c",
-   "line": 195,
-   "function": "_misc_tree_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "WHERE %s GROUP BY group_id HAVING COUNT(*) > 1 ORDER BY group_idSELECT mi.width || 'x' || mi.height AS dim, COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY dim ORDER BY dimSELECT t.name , COUNT(*) AS count FROM main.images AS mi JOIN main.%s AS t WHERE mi.%s_id = t.id AND %s GROUP BY name ORDER BY name"
-  },
-  {
-   "file": "libs/filters/module_order.c",
-   "line": 122,
-   "function": "_module_order_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images",
-    "main.module_order"
-   ],
-   "domains": [
-    "history",
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "$0$1$2$3SELECT mo.version, COUNT(*) FROM main.images as mi LEFT JOIN (SELECT imgid, version FROM main.module_order) AS mo ON mo.imgid = mi.id WHERE %s GROUP BY mo.version"
-  },
-  {
-   "file": "libs/filters/rating_range.c",
-   "line": 47,
-   "function": "_rating_range_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT CASE WHEN (flags & 8) == 8 THEN -1 ELSE (flags & 7) END AS rating, COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY rating ORDER BY rating"
-  },
-  {
-   "file": "libs/filters/ratio.c",
-   "line": 47,
-   "function": "_ratio_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "common/utility.hSELECT ROUND(aspect_ratio,2), COUNT(*) AS count FROM main.images AS mi WHERE %s GROUP BY ROUND(aspect_ratio,2)"
-  },
-  {
-   "file": "libs/filters/ratio.c",
-   "line": 151,
-   "function": "_ratio_widget_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "%.2lf %sportrait %slandscape %ssquareSELECT MIN(aspect_ratio), MAX(aspect_ratio) FROM main.images"
-  },
-  {
-   "file": "libs/geotagging.c",
-   "line": 929,
-   "function": "_setup_selected_images_list",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images"
-   ],
-   "domains": [
-    "selection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT imgid FROM main.selected_images"
-  },
-  {
-   "file": "libs/image.c",
-   "line": 98,
-   "function": "_group_helper_function",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images"
-   ],
-   "domains": [
-    "selection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT imgid FROM main.selected_images"
-  },
-  {
-   "file": "libs/image.c",
-   "line": 127,
-   "function": "_ungroup_helper_function",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images"
-   ],
-   "domains": [
-    "selection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT imgid FROM main.selected_images"
-  },
-  {
-   "file": "libs/ioporder.c",
-   "line": 76,
-   "function": "_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT op_params, name FROM data.presets WHERE operation='ioporder' ORDER BY writeprotect DESC"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 82,
-   "function": "dt_lib_get_active_preset_name",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT name, op_params, writeprotect FROM data.presets WHERE operation=?1 AND op_version=?2"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 162,
-   "function": "_edit_preset",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT rowid FROM data.presets WHERE name = ?1 AND operation = ?2 AND op_version = ?3"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 211,
-   "function": "_menuitem_update_preset",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET op_version=?2, op_params=?3 WHERE name=?4 AND operation=?1"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 244,
-   "function": "_menuitem_new_preset",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "INSERT"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets",
-    "main.lens"
-   ],
-   "domains": [
-    "images",
-    "presets"
-   ],
-   "cross_schema": true,
-   "sql": "INSERT INTO data.presets (name, description, operation, op_version, op_params, blendop_params, blendop_version, enabled, model, maker, lens, iso_min, iso_max, exposure_min, exposure_max, aperture_min, aperture_max, focal_length_min, focal_length_max, writeprotect, autoapply, filter, def, format) VALUES (?1, '', ?2, ?3, ?4, NULL, 0, 1, '%', '%', '%', 0, 340282346638528859812000000000000000000, 0, 1"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 331,
-   "function": "dt_lib_presets_duplicate",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT name FROM data.presets WHERE operation = ?1 AND op_version = ?2 AND name = ?3"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 348,
-   "function": "dt_lib_presets_duplicate",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "INSERT",
-    "SELECT"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets",
-    "main.lens"
-   ],
-   "domains": [
-    "images",
-    "presets"
-   ],
-   "cross_schema": true,
-   "sql": "INSERT INTO data.presets (name, description, operation, op_version, op_params, blendop_params, blendop_version, enabled, model, maker, lens, iso_min, iso_max, exposure_min, exposure_max, aperture_min, aperture_max, focal_length_min, focal_length_max, writeprotect, autoapply, filter, def, format) SELECT ?1, description, operation, op_version, op_params, blendop_params, blendop_version, enabled, mod"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 381,
-   "function": "dt_lib_presets_remove",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM data.presets WHERE name=?1 AND operation=?2 AND op_version=?3 AND writeprotect=0"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 401,
-   "function": "dt_lib_presets_apply",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT op_params, writeprotect FROM data.presets WHERE operation = ?1 AND op_version = ?2 AND name = ?3"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 459,
-   "function": "dt_lib_presets_update",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET name = ?1, description = ?2, op_params = ?3 WHERE operation = ?4 AND op_version = ?5 AND name = ?6"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 702,
-   "function": "dt_lib_init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM data.presets WHERE operation=?1"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 715,
-   "function": "dt_lib_init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT rowid, op_version, op_params, name FROM data.presets WHERE operation=?1"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 748,
-   "function": "dt_lib_init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET op_version=?1, op_params=?2 WHERE rowid=?3"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 771,
-   "function": "dt_lib_init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM data.presets WHERE rowid=?1"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 794,
-   "function": "dt_lib_init_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT name FROM data.presets WHERE operation=?1 AND op_version=?2 ORDER BY writeprotect DESC, name, rowid"
-  },
-  {
-   "file": "libs/lib.c",
-   "line": 1500,
-   "function": "dt_lib_presets_add",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "INSERT",
-    "REPLACE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets",
-    "main.lens"
-   ],
-   "domains": [
-    "images",
-    "presets"
-   ],
-   "cross_schema": true,
-   "sql": "INSERT OR REPLACE INTO data.presets (name, description, operation, op_version, op_params, blendop_params, blendop_version, enabled, model, maker, lens, iso_min, iso_max, exposure_min, exposure_max, aperture_min, aperture_max, focal_length_min, focal_length_max, writeprotect, autoapply, filter, def, format) VALUES (?1, '', ?2, ?3, ?4, NULL, 0, 1, '%', '%', '%', 0, 3402823466385288598120000000000000"
-  },
-  {
-   "file": "libs/metadata_view.c",
-   "line": 1077,
-   "function": "_jump_to",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images"
-   ],
-   "domains": [
-    "selection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT imgid FROM main.selected_images"
-  },
-  {
-   "file": "libs/modulegroups.c",
-   "line": 1424,
-   "function": "_preset_retrieve_old_presets",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT name, op_params FROM data.presets WHERE operation = 'modulelist' AND op_version = 1 AND writeprotect = 0"
-  },
-  {
-   "file": "libs/modulegroups.c",
-   "line": 1467,
-   "function": "_preset_retrieve_old_presets",
-   "call": "DT_DEBUG_SQLITE3_EXEC",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM data.presets WHERE operation = 'modulelist' AND op_version = 1"
-  },
-  {
-   "file": "libs/modulegroups.c",
-   "line": 3110,
-   "function": "_dt_dev_image_changed_callback",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "data.presets",
-    "main.lens"
-   ],
-   "domains": [
-    "images",
-    "presets"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT name FROM data.presets WHERE operation='modulegroups' AND op_version=?1 AND autoapply=1 AND ((?2 LIKE model AND ?3 LIKE maker) OR (?4 LIKE model AND ?5 LIKE maker)) AND ?6 LIKE lens AND ?7 BETWEEN iso_min AND iso_max AND ?8 BETWEEN exposure_min AND exposure_max AND ?9 BETWEEN aperture_min AND aperture_max AND ?10 BETWEEN focal_length_min AND focal_length_max AND (%s) ORDER BY writeprotect D"
-  },
-  {
-   "file": "libs/modulegroups.c",
-   "line": 3959,
-   "function": "_preset_autoapply_changed",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT autoapply FROM data.presets WHERE operation = ?1 AND op_version = ?2 AND name = ?3"
-  },
-  {
-   "file": "libs/modulegroups.c",
-   "line": 4033,
-   "function": "_manage_editor_preset_action",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT name FROM data.presets WHERE operation = ?1 AND op_version = ?2"
-  },
-  {
-   "file": "libs/modulegroups.c",
-   "line": 4079,
-   "function": "_manage_editor_preset_action",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "UPDATE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "UPDATE data.presets SET name=?1 WHERE name=?2 AND operation = ?3 AND op_version = ?4"
-  },
-  {
-   "file": "libs/modulegroups.c",
-   "line": 4143,
-   "function": "_preset_autoapply_edit",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT rowid FROM data.presets WHERE operation = ?1 AND op_version = ?2 AND name = ?3"
-  },
-  {
-   "file": "libs/modulegroups.c",
-   "line": 4196,
-   "function": "_manage_editor_load",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT writeprotect, op_params, autoapply FROM data.presets WHERE operation = ?1 AND op_version = ?2 AND name = ?3"
-  },
-  {
-   "file": "libs/modulegroups.c",
-   "line": 4335,
-   "function": "_manage_preset_update_list",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "data.presets"
-   ],
-   "domains": [
-    "presets"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT name FROM data.presets WHERE operation=?1 AND op_version=?2 ORDER BY writeprotect DESC, name, rowid"
-  },
-  {
-   "file": "libs/tools/timeline.c",
-   "line": 562,
-   "function": "_time_read_bounds_from_db",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "%04d%04d:%02d%04d:%02d:%02d%04d:%02d:%02d %02d%04d:%02d:%02d %02d:%02dSELECT MIN(datetime_taken) AS dt FROM main.images WHERE datetime_taken > 1"
-  },
-  {
-   "file": "libs/tools/timeline.c",
-   "line": 574,
-   "function": "_time_read_bounds_from_db",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "%04d%04d:%02d%04d:%02d:%02d%04d:%02d:%02d %02d%04d:%02d:%02d %02d:%02dSELECT MIN(datetime_taken) AS dt FROM main.images WHERE datetime_taken > 1SELECT MAX(datetime_taken) AS dt FROM main.images"
-  },
-  {
-   "file": "libs/tools/timeline.c",
-   "line": 596,
-   "function": "_time_read_bounds_from_collection",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "images"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT MIN(datetime_taken) AS dt FROM main.images WHERE datetime_taken > 1SELECT MAX(datetime_taken) AS dt FROM main.imagesSELECT MIN(db.datetime_taken) AS dt FROM main.images AS db, memory.collected_images AS col WHERE db.id=col.imgid AND db.datetime_taken > 1"
-  },
-  {
-   "file": "libs/tools/timeline.c",
-   "line": 612,
-   "function": "_time_read_bounds_from_collection",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "images"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT MAX(datetime_taken) AS dt FROM main.imagesSELECT MIN(db.datetime_taken) AS dt FROM main.images AS db, memory.collected_images AS col WHERE db.id=col.imgid AND db.datetime_taken > 1SELECT MAX(db.datetime_taken) AS dt FROM main.images AS db, memory.collected_images AS col WHERE db.id=col.imgid"
-  },
-  {
-   "file": "libs/tools/timeline.c",
-   "line": 673,
-   "function": "_block_get_at_zoom",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "libs",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "images"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT db.datetime_taken AS dt, col.imgid FROM main.images AS db LEFT JOIN memory.collected_images AS col ON db.id=col.imgid WHERE dt > %lld ORDER BY dt ASC"
   },
   {
    "file": "mcp/dt_bridge.c",
@@ -17841,7 +16724,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_film.c",
-   "line": 37,
+   "line": 38,
    "function": "_count",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "tests",
@@ -17854,11 +16737,11 @@
     "?"
    ],
    "cross_schema": false,
-   "sql": "catalog_fixture.hcommon/database.hcommon/debug.hcommon/film.hcommon/grouping.hcommon/image.hcommon/image_cache.h"
+   "sql": "catalog_fixture.hcommon/database.hcommon/debug.hcommon/film.hcommon/grouping.hcommon/image.hcommon/image_cache.hcommon/selection.h"
   },
   {
    "file": "tests/unittests/catalog/test_catalog_film.c",
-   "line": 93,
+   "line": 94,
    "function": "test_image_lists",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "tests",
@@ -17879,7 +16762,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_film.c",
-   "line": 95,
+   "line": 96,
    "function": "test_image_lists",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "tests",
@@ -17901,7 +16784,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_film.c",
-   "line": 106,
+   "line": 107,
    "function": "test_history_end",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "tests",
@@ -17922,7 +16805,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_film.c",
-   "line": 212,
+   "line": 213,
    "function": "test_thumb_state",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "tests",
@@ -17943,7 +16826,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_film.c",
-   "line": 251,
+   "line": 252,
    "function": "test_jobs_queries",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "tests",
@@ -17964,7 +16847,7 @@
   },
   {
    "file": "tests/unittests/catalog/test_catalog_film.c",
-   "line": 309,
+   "line": 310,
    "function": "test_group_members",
    "call": "DT_DEBUG_SQLITE3_EXEC",
    "layer": "tests",
@@ -17982,6 +16865,27 @@
    ],
    "cross_schema": false,
    "sql": "DELETE FROM main.selected_images"
+  },
+  {
+   "file": "tests/unittests/catalog/test_catalog_film.c",
+   "line": 363,
+   "function": "_selected_count",
+   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
+   "layer": "tests",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.selected_images"
+   ],
+   "domains": [
+    "selection"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT COUNT(*) FROM main.selected_images"
   },
   {
    "file": "tests/unittests/catalog/test_catalog_history.c",
@@ -18297,296 +17201,6 @@
    ],
    "cross_schema": false,
    "sql": "[%s]\\n%d / %d tests failed\\n\\n/home/test/Images/IMG_0123.CR2/home/test/$(FILE_FOLDER)/exported/$(FILE_NAME)/home/test/Images/exported/IMG_0123/home/test/$(JOBCODE)/img_$(SEQUENCE)/home/test//home/test//img_0023\\/$(FILE_FOLDER/\\\\/home/X)X/test/ImagesD:\\\\photos\\\\$(FILE_NAME)D:/photos/IMG_0123foo\\\\$(barfoo/$(bar"
-  },
-  {
-   "file": "views/darkroom.c",
-   "line": 96,
-   "function": "_refresh_active_image_rowid",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "data.presets",
-    "data.styles",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "presets",
-    "styles"
-   ],
-   "cross_schema": true,
-   "sql": "gui/presets.hgui/styles.himageio/imageio_common.himageio/imageio_module.hlibs/colorpicker.hviews/view.hviews/view_api.hosx/osx.hlua/image.hSELECT rowid FROM memory.collected_images WHERE imgid=%d"
-  },
-  {
-   "file": "views/darkroom.c",
-   "line": 1233,
-   "function": "try_enter",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT imgid FROM memory.collected_images ORDER BY rowid LIMIT 1"
-  },
-  {
-   "file": "views/darkroom.c",
-   "line": 1359,
-   "function": "_dev_change_image",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "selection"
-   ],
-   "cross_schema": true,
-   "sql": "SELECT m.imgid FROM memory.collected_images as m, main.selected_images as s WHERE m.imgid=s.imgid"
-  },
-  {
-   "file": "views/darkroom.c",
-   "line": 1754,
-   "function": "_dev_jump_image",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection"
-   ],
-   "cross_schema": false,
-   "sql": "filmstrip/ui/auto_scrollfilecan't change image in GIMP plugin modeSELECT rowid FROM memory.collected_images WHERE imgid=%d"
-  },
-  {
-   "file": "views/darkroom.c",
-   "line": 1775,
-   "function": "_dev_jump_image",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection"
-   ],
-   "cross_schema": false,
-   "sql": "can't change image in GIMP plugin modeSELECT rowid FROM memory.collected_images WHERE imgid=%dSELECT rowid, imgid FROM memory.collected_images WHERE rowid=%d"
-  },
-  {
-   "file": "views/darkroom.c",
-   "line": 1788,
-   "function": "_dev_jump_image",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT rowid, imgid FROM memory.collected_images ORDER BY rowid ASC LIMIT 1SELECT rowid, imgid FROM memory.collected_images ORDER BY rowid DESC LIMIT 1"
-  },
-  {
-   "file": "views/lighttable.c",
-   "line": 229,
-   "function": "_lighttable_check_layout",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT rowid FROM memory.collected_images WHERE imgid=%dplugins/lighttable/culling_last_id"
-  },
-  {
-   "file": "views/map.c",
-   "line": 3033,
-   "function": "_view_map_center_on_image_list",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images"
-   ],
-   "domains": [
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "zoomSELECT MIN(latitude), MAX(latitude), MIN(longitude), MAX(longitude), COUNT(*) FROM main.images AS i JOIN %s AS l ON l.imgid = i.id WHERE latitude NOT NULL AND longitude NOT NULL"
-  },
-  {
-   "file": "views/map.c",
-   "line": 3302,
-   "function": "_view_map_build_main_query",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.images",
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection",
-    "images"
-   ],
-   "cross_schema": true,
-   "sql": "plugins/map/max_images_drawnplugins/map/filter_images_drawnplugins/map/images_thumbnailthumbnailcountplugins/map/filter_images_drawnSELECT * FROM (SELECT id, longitude, latitude FROM %s WHERE longitude >= ?1 AND longitude <= ?2 AND latitude <= ?3 AND latitude >= ?4 AND longitude NOT NULL AND latitude NOT NULL)main.images i INNER JOIN memory.collected_images c ON i.id = c.imgidmain.images"
-  },
-  {
-   "file": "views/slideshow.c",
-   "line": 106,
-   "function": "_get_image_at_rank",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [],
-   "domains": [
-    "?"
-   ],
-   "cross_schema": false,
-   "sql": ""
-  },
-  {
-   "file": "views/slideshow.c",
-   "line": 478,
-   "function": "enter",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "memory.collected_images"
-   ],
-   "domains": [
-    "collection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT rowid FROM memory.collected_images WHERE imgid=%d"
-  },
-  {
-   "file": "views/view.c",
-   "line": 63,
-   "function": "dt_view_manager_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images"
-   ],
-   "domains": [
-    "selection"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT imgid FROM main.selected_images WHERE imgid = ?1"
-  },
-  {
-   "file": "views/view.c",
-   "line": 66,
-   "function": "dt_view_manager_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [
-    "DELETE"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images"
-   ],
-   "domains": [
-    "selection"
-   ],
-   "cross_schema": false,
-   "sql": "DELETE FROM main.selected_images WHERE imgid = ?1"
-  },
-  {
-   "file": "views/view.c",
-   "line": 69,
-   "function": "dt_view_manager_init",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "views",
-   "step": "A",
-   "ops": [
-    "INSERT"
-   ],
-   "write": true,
-   "dynamic": false,
-   "tables": [
-    "main.selected_images"
-   ],
-   "domains": [
-    "selection"
-   ],
-   "cross_schema": false,
-   "sql": "INSERT OR IGNORE INTO main.selected_images (imgid) VALUES (?1)"
   }
  ],
  "triggers": [
