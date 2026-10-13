@@ -1,3 +1,4 @@
+/* selection test */
 /*
   This file is part of darktable,
   Copyright (C) 2015-2026 darktable developers.
