@@ -112,6 +112,9 @@ def scan(src):
       for m in CALLS.finditer(text):
         if text[max(0, m.start() - 8):m.start()].rstrip().endswith('define'):
           continue
+        # a call in a line comment is dead code, not a site
+        if '//' in text[text.rfind('\n', 0, m.start()) + 1:m.start()]:
+          continue
         line = text.count('\n', 0, m.start()) + 1
         args = call_args(text, m.end() - 1)
         sql = ''.join(STRING.findall(args))
