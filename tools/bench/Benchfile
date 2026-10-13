@@ -75,7 +75,7 @@ cores = 4
 memory = "3g"
 exclusive = ["machine"]
 cwd = "/work/darktable"
-command = "tools/bench/job run"
+command = "HELIOS_BENCH_EVICT=${evict:-} tools/bench/job run"
 mounts = { build = "/build" }
 timeout = "20m"
 
