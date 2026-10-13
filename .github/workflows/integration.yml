@@ -15,7 +15,7 @@ permissions:
 jobs:
   suite:
     if: github.repository == 'quazardous/darktable'
-    name: suite run ${{ matrix.run }}
+    name: suite run ${{ matrix.run }} ${{ matrix.mode }}
     runs-on: ubuntu-latest
     timeout-minutes: 150
     container:
@@ -24,7 +24,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        run: [1, 2, 3]
+        # strict: the suite's verdict; tolerant: .ci/deltae's DT_TESTS_TOLERANT
+        include:
+          - { run: 1, mode: strict }
+          - { run: 2, mode: tolerant }
     env:
       CC: gcc-16
       CXX: g++-16
@@ -87,7 +90,10 @@ jobs:
         env:
           DARKTABLE_CLI: ${{ github.workspace }}/install/bin/darktable-cli
           XDG_DATA_HOME: ${{ github.workspace }}/xdg-data
+          DT_TESTS_TOLERANT: ${{ matrix.mode == 'tolerant' && '1' || '' }}
         run: |
+          # the drop-in: pixel-equality shortcut, and the tolerant verdict
+          cp ../../../.ci/deltae deltae
           /usr/bin/time -f "suite: %e s wall, %U s user" ./run --disable-opencl 2>&1 | tee ../../../../suite.log || true
           tail -30 ../../../../suite.log
       - name: dE statistics, timed on their own
