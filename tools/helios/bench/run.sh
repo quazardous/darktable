@@ -48,6 +48,11 @@ if [ "$status" = ok ] && ! HELIOS_DTLUA_TIMEOUT=600 dtlua "dofile('$here/scenari
   status="scenario call failed"
 fi
 end=$(date +%s.%N)
+# sidecars are written by a background job that picks up its queue every
+# 0.25 s and sleeps 1 s when idle, and drops what is still queued when
+# darktable quits (control/jobs/sidecar_jobs.c, darktable #3955): give it
+# one full cycle so that the scenario's last writes land
+sleep 1.5
 quit=$(session_quit)
 [ "$status" = ok ] && status="$quit"
 
