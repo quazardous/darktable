@@ -27,6 +27,15 @@ build() {
   echo "build ok: $(git -C "$src" log --oneline -1)"
 }
 
+# keep <dir> as /results/<job>/<commit>, where the compare job finds it
+# (darktable #3958); the commit is the checkout's, 12 hex digits
+keep() {
+  [ -d /results ] || return 0
+  local dest="/results/$1/$(git -C "$src" rev-parse --short=12 HEAD)"
+  rm -rf "$dest" && mkdir -p "$(dirname "$dest")" && cp -r "$2" "$dest"
+  echo "kept: ${dest#/results/}"
+}
+
 need_build() {
   [ -x "$prefix/bin/darktable" ] || { echo "no build yet: run the build job first"; exit 4; }
 }
@@ -43,21 +52,23 @@ case "${1:-}" in
   # the page cache, as after a reboot (darktable #3955)
   run) need_build
        [ -z "${HELIOS_BENCH_EVICT:-}" ] || python3 "$bench/evict.py" "$prefix" "$src/src/tests/integration/images" "${HELIOS_BENCH_WORK:-${TMPDIR:-/tmp}/helios-bench-work}"
-       "$bench/run.sh" /out/run "$prefix" ;;
-  gui-labels) need_build; "$bench/gui_labels.sh" /out/gui-labels "$prefix" ;;
-  gui-metadata) need_build; "$bench/gui_metadata.sh" /out/gui-metadata "$prefix" ;;
-  gui-tags) need_build; "$bench/gui_tags.sh" /out/gui-tags "$prefix" ;;
+       "$bench/run.sh" /out/run "$prefix" && keep run /out/run ;;
+  gui-labels) need_build; "$bench/gui_labels.sh" /out/gui-labels "$prefix" && keep gui-labels /out/gui-labels ;;
+  gui-metadata) need_build; "$bench/gui_metadata.sh" /out/gui-metadata "$prefix" && keep gui-metadata /out/gui-metadata ;;
+  gui-tags) need_build; "$bench/gui_tags.sh" /out/gui-tags "$prefix" && keep gui-tags /out/gui-tags ;;
   # catalog timings on a synthetic 100,000-image library (darktable #3741);
   # the library lives in the perf cache, built once with fresh statistics
   perf) need_build
          HELIOS_BENCH_WORK=/perf/work "$bench/perf.sh" /out/perf "${PERF_RUNS:-3}" "$prefix" ;;
   pixel) need_build
-         HELIOS_KEEP_OUTPUTS=/out/pixel-outputs "$bench/integration.sh" "$prefix" /out/pixel.log ;;
+         HELIOS_KEEP_OUTPUTS=/out/pixel-outputs "$bench/integration.sh" "$prefix" /out/pixel.log
+         st=$?; keep pixel /out/pixel-outputs; exit $st ;;
   # the fast subset; fails only on a failure outside the known list of a
   # RelWithDebInfo build (darktable #3767)
   pixel-fast) need_build
          mapfile -t tests < <(sed 's/#.*//' "$bench/integration-fast.txt" | awk 'NF { print $1 }')
          HELIOS_KEEP_OUTPUTS=/out/pixel-outputs "$bench/integration.sh" "$prefix" /out/pixel.log "${tests[@]}"
+         keep pixel-fast /out/pixel-outputs
          failed=$(sed -n '/^Errors /,$p' /out/pixel.log | sed -n 's/^   - //p')
          new=$(comm -23 <(printf '%s\n' $failed | sort -u) \
                  <(sed 's/#.*//' "$bench/integration-known-failures.txt" | awk 'NF { print $1 }' | sort -u))
@@ -68,5 +79,9 @@ case "${1:-}" in
   threads) need_build
          mapfile -t tests < <(sed 's/#.*//' "$bench/integration-fast.txt" | awk 'NF { print $1 }')
          "$bench/threads_compare.sh" "$prefix" /out/threads t4 t1 t2 t8 cpus2 -- "${tests[@]}" ;;
+  # base=<commit> new=<commit>: compare their kept outputs on the box
+  compare) [ -n "${CMP_BASE:-}" ] && [ -n "${CMP_NEW:-}" ] || { echo "usage: compare base=<commit> new=<commit>"; exit 2; }
+           "$bench/compare_results.sh" /results "$CMP_BASE" "$CMP_NEW" /out | tee /out/verdict.txt
+           exit "${PIPESTATUS[0]}" ;;
   *) echo "unknown job: ${1:-}"; exit 2 ;;
 esac

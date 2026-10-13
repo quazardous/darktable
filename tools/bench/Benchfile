@@ -47,17 +47,20 @@ repo = "https://github.com/quazardous/darktable.git"
 ref = "${branch}"
 submodules = true
 
-[cache]
-build = { about = "the build tree and the installed prefix, one per branch", per = "branch", lock = true }
+[storage]
+build = { about = "the build trees and installed prefixes, one per branch (build/<branch>)", lock = true }
 ccache = "the compiler cache, shared by every branch"
 perf = { about = "the perf bench's synthetic 100,000-image library, built once", lock = true }
+# the outputs of the pixel, run and gui jobs, as results/<job>/<commit>, for
+# the compare job (darktable #3958); prune with storage prune
+results = { about = "kept job outputs, compared on the box", tmp = false }
 
 [jobs.build]
 cores = 6
 memory = "4g"
 cwd = "/work/darktable"
 command = "tools/bench/job build"
-mounts = { build = "/build", ccache = "/ccache" }
+mounts = { "build/${branch:-main}" = "/build", ccache = "/ccache" }
 timeout = "1h"
 
 [jobs.ctest]
@@ -65,7 +68,7 @@ cores = 2
 memory = "2g"
 cwd = "/work/darktable"
 command = "tools/bench/job ctest"
-mounts = { build = "/build" }
+mounts = { "build/${branch:-main}" = "/build" }
 timeout = "30m"
 
 # the equivalence and GUI benches compare outputs, not durations, but they
@@ -76,7 +79,7 @@ memory = "3g"
 exclusive = ["machine"]
 cwd = "/work/darktable"
 command = "HELIOS_BENCH_EVICT=${evict:-} tools/bench/job run"
-mounts = { build = "/build" }
+mounts = { "build/${branch:-main}" = "/build", results = "/results" }
 timeout = "20m"
 
 [jobs.gui-labels]
@@ -85,7 +88,7 @@ memory = "3g"
 exclusive = ["machine"]
 cwd = "/work/darktable"
 command = "tools/bench/job gui-labels"
-mounts = { build = "/build" }
+mounts = { "build/${branch:-main}" = "/build", results = "/results" }
 timeout = "20m"
 
 [jobs.gui-metadata]
@@ -94,7 +97,7 @@ memory = "3g"
 exclusive = ["machine"]
 cwd = "/work/darktable"
 command = "tools/bench/job gui-metadata"
-mounts = { build = "/build" }
+mounts = { "build/${branch:-main}" = "/build", results = "/results" }
 timeout = "20m"
 
 [jobs.gui-tags]
@@ -103,7 +106,7 @@ memory = "3g"
 exclusive = ["machine"]
 cwd = "/work/darktable"
 command = "tools/bench/job gui-tags"
-mounts = { build = "/build" }
+mounts = { "build/${branch:-main}" = "/build", results = "/results" }
 timeout = "20m"
 
 # the pixel suite pins OpenMP to 4 threads (its run script); its outputs do
@@ -114,7 +117,7 @@ cores = 4
 memory = "4g"
 cwd = "/work/darktable"
 command = "tools/bench/job pixel"
-mounts = { build = "/build" }
+mounts = { "build/${branch:-main}" = "/build", results = "/results" }
 timeout = "2h"
 
 [jobs.pixel-fast]
@@ -122,7 +125,7 @@ cores = 4
 memory = "3g"
 cwd = "/work/darktable"
 command = "tools/bench/job pixel-fast"
-mounts = { build = "/build" }
+mounts = { "build/${branch:-main}" = "/build", results = "/results" }
 timeout = "20m"
 
 # the fast subset at 1, 2, 4 and 8 OpenMP threads and with -t 4 on two
@@ -133,7 +136,7 @@ cores = 8
 memory = "4g"
 cwd = "/work/darktable"
 command = "tools/bench/job threads"
-mounts = { build = "/build" }
+mounts = { "build/${branch:-main}" = "/build" }
 timeout = "1h"
 
 # timings: alone on the machine, and under the box's timing profile (a
@@ -145,8 +148,18 @@ exclusive = ["machine"]
 timing = true
 cwd = "/work/darktable"
 command = "PERF_RUNS=${runs:-3} tools/bench/job perf"
-mounts = { build = "/build", perf = "/perf" }
+mounts = { "build/${branch:-main}" = "/build", perf = "/perf" }
 timeout = "2h"
+
+# the kept outputs of two commits compared on the box, only the verdict
+# comes back: run compare branch=<any> base=<commit> new=<commit>
+[jobs.compare]
+cores = 2
+memory = "3g"
+cwd = "/work/darktable"
+command = "CMP_BASE=${base:-} CMP_NEW=${new:-} tools/bench/job compare"
+mounts = { results = "/results" }
+timeout = "30m"
 
 # readers are applied on each upload: a project left out loses its access
 [volumes.darktable-cli]
@@ -154,7 +167,7 @@ readers = ["helios"]
 cores = 6
 cwd = "/work/darktable"
 provision = "tools/bench/job install-to /volume"
-mounts = { build = "/build", ccache = "/ccache" }
+mounts = { "build/${branch:-main}" = "/build", ccache = "/ccache" }
 timeout = "1h"
 
 [volumes.darktable-tests]
