@@ -65,6 +65,16 @@ jobs:
           cd src
           git submodule update --init --depth 1
           du -sh src/tests/integration
+      - name: spektrafilm data pack (0179, 0180)
+        # the module reads a pack installed by hand from
+        # $XDG_DATA_HOME/darktable/spektrafilm (src/iop/spektrafilm.c); the
+        # commit is pinned so the references do not move with the pack
+        run: |
+          git clone --quiet --no-checkout --filter=blob:none https://github.com/darktable-org/darktable-spektrafilm.git sf
+          git -C sf checkout --quiet b15cfe18fb35ec15084f78c986b0ebc730338e6e -- packs/0.3.3
+          mkdir -p "$GITHUB_WORKSPACE/xdg-data/darktable"
+          cp -r sf/packs/0.3.3 "$GITHUB_WORKSPACE/xdg-data/darktable/spektrafilm"
+          ls -R "$GITHUB_WORKSPACE/xdg-data/darktable/spektrafilm" | head
       - name: Build (RelWithDebInfo)
         run: |
           cmake -E make_directory "$BUILD_DIR" "$INSTALL_PREFIX"
@@ -76,6 +86,7 @@ jobs:
         working-directory: src/src/tests/integration
         env:
           DARKTABLE_CLI: ${{ github.workspace }}/install/bin/darktable-cli
+          XDG_DATA_HOME: ${{ github.workspace }}/xdg-data
         run: |
           /usr/bin/time -f "suite: %e s wall, %U s user" ./run --disable-opencl 2>&1 | tee ../../../../suite.log || true
           tail -30 ../../../../suite.log
