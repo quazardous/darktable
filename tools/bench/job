@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+# a darktable bench job, inside the container (Benchfile, or bench.toml in
+# repository mode): $DT_SRC (/src by default) is the checkout of the
+# requested branch, /build and /ccache the project's caches, /out the
+# results.
+# The build type is RelWithDebInfo, as for upstream's pixel references
+# (darktable #3786: a Release build adds -ffast-math).
+
+set -uo pipefail
+mkdir -p "$HOME"
+# labwc puts its Wayland socket here (wbox, for the run and GUI jobs)
+mkdir -m 700 -p "$XDG_RUNTIME_DIR"
+src="${DT_SRC:-/src}"
+prefix=/build/prefix
+bench="$src/tools/helios/bench"
+
+build() {
+  cmake -S "$src" -B /build/obj -G Ninja \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTING=ON \
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_INSTALL_PREFIX="$prefix" > /out/cmake.log 2>&1 \
+    || { tail -30 /out/cmake.log; return 1; }
+  cmake --build /build/obj 2>&1 | tee /out/build.log | grep -E 'warning|error'
+  [ "${PIPESTATUS[0]}" = 0 ] || { tail -30 /out/build.log; return 1; }
+  cmake --install /build/obj > /out/install.log 2>&1
+  ccache -s > /out/ccache.txt 2>&1
+  echo "build ok: $(git -C "$src" log --oneline -1)"
+}
+
+# keep <dir> as /results/<job>/<commit>, where the compare job finds it
+# (darktable #3958); the commit is the checkout's, 12 hex digits
+keep() {
+  [ -d /results ] || return 0
+  local dest="/results/$1/$(git -C "$src" rev-parse --short=12 HEAD)"
+  rm -rf "$dest" && mkdir -p "$(dirname "$dest")" && cp -r "$2" "$dest"
+  echo "kept: ${dest#/results/}"
+}
+
+need_build() {
+  [ -x "$prefix/bin/darktable" ] || { echo "no build yet: run the build job first"; exit 4; }
+}
+
+case "${1:-}" in
+  build) build ;;
+  # provisioning of the darktable-cli volume: the install prefix, for other
+  # projects' parity jobs (darktable is relocatable, so it runs from there)
+  install-to) build && cmake --install /build/obj --prefix "${2:?usage: install-to <dir>}" > /out/install-to.log 2>&1 ;;
+  ctest) [ -d /build/obj ] || { echo "no build yet"; exit 4; }
+         cd /build/obj && ctest --output-on-failure > /out/ctest.txt 2>&1
+         status=$?; tail -5 /out/ctest.txt; exit $status ;;
+  # evict=1: start with the build, the test images and the work dir out of
+  # the page cache, as after a reboot (darktable #3955)
+  run) need_build
+       [ -z "${HELIOS_BENCH_EVICT:-}" ] || python3 "$bench/evict.py" "$prefix" "$src/src/tests/integration/images" "${HELIOS_BENCH_WORK:-${TMPDIR:-/tmp}/helios-bench-work}"
+       "$bench/run.sh" /out/run "$prefix" && keep run /out/run ;;
+  gui-labels) need_build; "$bench/gui_labels.sh" /out/gui-labels "$prefix" && keep gui-labels /out/gui-labels ;;
+  gui-metadata) need_build; "$bench/gui_metadata.sh" /out/gui-metadata "$prefix" && keep gui-metadata /out/gui-metadata ;;
+  gui-tags) need_build; "$bench/gui_tags.sh" /out/gui-tags "$prefix" && keep gui-tags /out/gui-tags ;;
+  # catalog timings on a synthetic 100,000-image library (darktable #3741);
+  # the library lives in the perf cache, built once with fresh statistics
+  perf) need_build
+         HELIOS_BENCH_WORK=/perf/work "$bench/perf.sh" /out/perf "${PERF_RUNS:-3}" "$prefix" ;;
+  pixel) need_build
+         HELIOS_KEEP_OUTPUTS=/out/pixel-outputs "$bench/integration.sh" "$prefix" /out/pixel.log
+         st=$?; keep pixel /out/pixel-outputs; exit $st ;;
+  # the fast subset; fails only on a failure outside the known list of a
+  # RelWithDebInfo build (darktable #3767)
+  pixel-fast) need_build
+         mapfile -t tests < <(sed 's/#.*//' "$bench/integration-fast.txt" | awk 'NF { print $1 }')
+         HELIOS_KEEP_OUTPUTS=/out/pixel-outputs "$bench/integration.sh" "$prefix" /out/pixel.log "${tests[@]}"
+         keep pixel-fast /out/pixel-outputs
+         failed=$(sed -n '/^Errors /,$p' /out/pixel.log | sed -n 's/^   - //p')
+         new=$(comm -23 <(printf '%s\n' $failed | sort -u) \
+                 <(sed 's/#.*//' "$bench/integration-known-failures.txt" | awk 'NF { print $1 }' | sort -u))
+         [ -z "$new" ] || { echo "new failures: $new"; exit 1; }
+         echo "pixel-fast: ${#tests[@]} tests, no new failure" ;;
+  # one test's history rendered on the CPU, <reps> times per step, with
+  # threads=<n> OpenMP threads; the reference's hash comes first
+  sweep) need_build
+         [ -n "${SWEEP_TEST:-}" ] && [ -n "${SWEEP_STEPS:-}" ] || { echo "usage: sweep test=<test> steps=<N>+<N>... [reps=<n>] [threads=<n>]"; exit 2; }
+         dir="$src/src/tests/integration/$SWEEP_TEST"
+         echo "$SWEEP_TEST expected $(identify -format '%#' "$dir/expected.png" | cut -c1-12)" | tee /out/sweep.txt
+         HELIOS_SWEEP_THREADS="${SWEEP_THREADS:-4}" "$bench/history_sweep.sh" "$prefix/bin/darktable-cli" "$dir" \
+           "${SWEEP_REPS:-8}" ${SWEEP_STEPS//+/ } | sed "s/^/$SWEEP_TEST t${SWEEP_THREADS:-4} /" | tee -a /out/sweep.txt ;;
+  # a few tests rendered 10 times with OpenCL, with their pixel hashes
+  sweep-cl) need_build
+            { clinfo -l; "$prefix/bin/darktable-cltest"; } > /out/opencl.txt 2>&1
+            grep -i "nvidia\|FINALLY\|not available\|error" /out/opencl.txt | head -5
+            if [ -n "${SWEEP_TEST:-}" ]; then
+              HELIOS_SWEEP_OPENCL=1 "$bench/history_sweep.sh" "$prefix/bin/darktable-cli" "$src/src/tests/integration/$SWEEP_TEST" \
+                "${SWEEP_REPS:-8}" ${SWEEP_STEPS//+/ } | sed "s/^/$SWEEP_TEST /" | tee -a /out/sweep.txt
+            else
+              for t in 0026-haze-removal 0166-haze-removal-v2 0013-denoiseprofile-wavelets 0143-denoiseprofiled-wave-rgb 0103-almost-all; do
+                end=$(grep -o 'darktable:history_end="[0-9]*"' "$src/src/tests/integration/$t"/*.xmp | grep -o '[0-9]*' | head -1)
+                HELIOS_SWEEP_OPENCL=1 "$bench/history_sweep.sh" "$prefix/bin/darktable-cli" "$src/src/tests/integration/$t" 10 "$end" \
+                  | sed "s/^/$t /" | tee -a /out/sweep.txt
+              done
+            fi ;;
+  # the fast subset at several OpenMP thread counts, and with -t 4 on 2
+  # CPUs, each compared pixel by pixel with -t 4 (darktable #3807)
+  threads) need_build
+         mapfile -t tests < <(sed 's/#.*//' "$bench/integration-fast.txt" | awk 'NF { print $1 }')
+         "$bench/threads_compare.sh" "$prefix" /out/threads t4 t1 t2 t8 cpus2 -- "${tests[@]}" ;;
+  # base=<commit> new=<commit>: compare their kept outputs on the box
+  compare) [ -n "${CMP_BASE:-}" ] && [ -n "${CMP_NEW:-}" ] || { echo "usage: compare base=<commit> new=<commit>"; exit 2; }
+           "$bench/compare_results.sh" /results "$CMP_BASE" "$CMP_NEW" /out | tee /out/verdict.txt
+           exit "${PIPESTATUS[0]}" ;;
+  *) echo "unknown job: ${1:-}"; exit 2 ;;
+esac

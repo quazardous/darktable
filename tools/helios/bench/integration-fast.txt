@@ -1,0 +1,17 @@
+# the fast subset of the pixel tests for check.sh --integration (darktable
+# #3767): one per family, ~45 s of rendering on the dev machine, none that
+# fails on a RelWithDebInfo or a Release build here, none of the tests that
+# vary from run to run (0026, 0058, 0102, 0159, 0166)
+0001-exposure                  # exposure
+0047-demosaic-amaze            # demosaic
+0049-rawdenoise                # raw denoise
+0148-filmicv7-gamut-mapping    # filmic
+0175-agx                       # agx
+0085-channelmixerrgb           # channel mixer
+0108-colorin-clip              # input color profile
+0004-masks                     # drawn masks
+0122-blending-lab-1            # blending
+0045-vignetting                # vignetting
+0030-framing                   # framing
+0079-toneequal-gf              # tone equalizer
+0060-rgbcurve-indep            # rgb curve
