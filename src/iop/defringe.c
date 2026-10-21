@@ -268,7 +268,11 @@ void process(dt_iop_module_t *self,
   }
 
   const float use_global_average = MODE_GLOBAL_AVERAGE == d->op_mode;
-  DT_OMP_FOR_SIMD(reduction(+ : avg_edge_chroma))
+  // accumulated in double: the reduction adds the threads' partial sums
+  // in the order they finish, and in float that order changed the
+  // threshold, and so the output, from run to run
+  double edge_chroma_sum = 0.0;
+  DT_OMP_FOR_SIMD(reduction(+ : edge_chroma_sum))
   for(size_t j = 0; j < (size_t)height * width * 4; j += 4)
   {
     // edge-detect on color channels
@@ -280,13 +284,13 @@ void process(dt_iop_module_t *self,
     // save local edge chroma in out[.. +3] , this is later compared with threshold
     out[j + 3] = edge;
     // the average chroma of the edge-layer in the roi
-    avg_edge_chroma += edge * use_global_average;
+    edge_chroma_sum += edge * use_global_average;
   }
 
   float thresh;
   if(use_global_average)
   {
-    avg_edge_chroma = avg_edge_chroma / (width * height) + 10.0 * FLT_EPSILON;
+    avg_edge_chroma = edge_chroma_sum / (width * height) + 10.0 * FLT_EPSILON;
     thresh = fmax(0.1f, 4.0 * d->thresh * avg_edge_chroma / MAGIC_THRESHOLD_COEFF);
   }
   else
@@ -295,6 +299,11 @@ void process(dt_iop_module_t *self,
     avg_edge_chroma = MAGIC_THRESHOLD_COEFF;
     thresh = fmax(0.1f, d->thresh);
   }
+
+  // each pixel starts from this average: carried over from the previous
+  // pixel of the same thread, a local average depended on how the rows
+  // were spread over the threads, and changed from run to run
+  const float base_edge_chroma = avg_edge_chroma;
 
   // dynamically/guided scheduled due to possible uneven edge-chroma
   // distribution (thanks to rawtherapee code for this hint!)
@@ -308,6 +317,7 @@ void process(dt_iop_module_t *self,
     {
       const size_t index = ch * ((size_t)v * width + t);
       float local_thresh = thresh;
+      float pixel_edge_chroma = base_edge_chroma;
       // think of compiler setting "-funswitch-loops" to maybe improve these things:
       if(MODE_LOCAL_AVERAGE == d->op_mode && out[index + 3] > thresh)
       {
@@ -321,8 +331,8 @@ void process(dt_iop_module_t *self,
           const int y = CLAMP(v + dy, 0, height - 1);
           local_avg += out[((size_t)y * width + x) * ch + 3];
         }
-        avg_edge_chroma = fmax(0.01f, (float)local_avg / samples_avg);
-        local_thresh = fmax(0.1f, 4.0 * d->thresh * avg_edge_chroma / MAGIC_THRESHOLD_COEFF);
+        pixel_edge_chroma = fmax(0.01f, (float)local_avg / samples_avg);
+        local_thresh = fmax(0.1f, 4.0 * d->thresh * pixel_edge_chroma / MAGIC_THRESHOLD_COEFF);
       }
 
       if(out[index + 3] > local_thresh
@@ -355,7 +365,7 @@ void process(dt_iop_module_t *self,
           const size_t idx = ch * ((size_t)y * width + x);
           // inverse chroma weighted average of neighbouring pixels inside window
           // also taking average edge chromaticity into account (either global or local average)
-          weight = 1.0 / (out[idx + 3] + avg_edge_chroma);
+          weight = 1.0 / (out[idx + 3] + pixel_edge_chroma);
           atot += weight * in[idx + 1];
           btot += weight * in[idx + 2];
           norm += weight;
