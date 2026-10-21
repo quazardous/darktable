@@ -1,0 +1,209 @@
+# darktable's jobs on a bench box (the mcu repository), as a Benchfile:
+# what each job runs and requests (threads, a memory estimate, exclusive
+# resources, mounts, a timeout). The box refuses a request above its
+# envelope and learns each job's real memory peak.
+#
+#   run <job> branch=<branch>          a pushed branch of the fork
+#   provision darktable-cli branch=<branch>
+#   debug <job> branch=<branch>        (ssh -t) a shell in the job's container
+#
+# Upload it with `config benchfile < tools/bench/Benchfile`, after
+# `config file bwrap < tools/bench/image/bwrap`. Each job has its own
+# checkout at /work/darktable, so jobs on different branches run side by
+# side; the build tree is kept per branch and used by one job at a time.
+
+[image]
+from = "registry.fedoraproject.org/fedora:44"
+run = [
+  """dnf -y install dnf-plugins-core \
+ && dnf -y builddep darktable \
+ && dnf -y install git cmake ninja-build gcc-c++ ccache gdb sqlite libcmocka-devel \
+      ImageMagick dbus-daemon labwc grim wtype wlrctl wl-clipboard \
+      xdotool xprop setxkbmap wlr-randr xorg-x11-server-Xwayland procps-ng bc \
+      python3 python3-pip python3-pyyaml python3-pillow \
+ && dnf clean all""",
+  # OpenCL through the NVIDIA GPU (CDI brings the driver's libraries)
+  "dnf -y install ocl-icd clinfo && dnf clean all",
+  # the pixel runner's Python dependencies (src/tests/integration/requirements.txt)
+  """python3 -m venv /opt/dt-tests-venv \
+ && /opt/dt-tests-venv/bin/pip install --quiet --upgrade pip \
+ && /opt/dt-tests-venv/bin/pip install --quiet "colour-science>=0.4.4" "numpy>=1.24" \
+      "scipy>=1.10" "imageio>=2.9" "pillow>=9.0" "packaging>=20.0" "matplotlib>=3.7\"""",
+  # uploaded files arrive without their execute bit (config file stores
+  # them 0664, and COPY keeps the mode); glycin runs bwrap
+  "chmod 755 /usr/local/bin/bwrap",
+  # branches older than DT_SRC (tools/bench/job before d78da2c13) build
+  # from /src, the repository-mode checkout: point it at the job's own
+  "ln -s /work/darktable /src",
+  # wbox drives darktable in a headless labwc for the benches
+  """python3 -m venv /opt/wbox \
+ && /opt/wbox/bin/pip install --quiet "git+https://github.com/quazardous/wbox-mcp.git\"""",
+]
+# GTK icons go through glycin, which needs bwrap; see image/bwrap
+copy = { "bwrap" = "/usr/local/bin/bwrap" }
+# labwc runs headless with the pixman renderer: no GPU in the container
+env = { CCACHE_DIR = "/ccache", WBOX_PYTHON = "/opt/wbox/bin/python3", DARKTABLE_TESTS_VENV = "/opt/dt-tests-venv", HOME = "/tmp/home", XDG_RUNTIME_DIR = "/tmp/xdg", WLR_RENDERER = "pixman", DT_SRC = "/work/darktable" }
+
+[checkout.darktable]
+repo = "https://github.com/quazardous/darktable.git"
+ref = "${branch}"
+submodules = true
+
+[storage]
+build = { about = "the build trees and installed prefixes, one per branch (build/<branch>)", lock = true }
+ccache = "the compiler cache, shared by every branch"
+perf = { about = "the perf bench's synthetic 100,000-image library, built once", lock = true }
+# the outputs of the pixel, run and gui jobs, as results/<job>/<commit>, for
+# the compare job (darktable #3958); prune with storage prune
+results = { about = "kept job outputs, compared on the box", tmp = false }
+
+[jobs.build]
+cores = 6
+memory = "4g"
+cwd = "/work/darktable"
+command = "tools/bench/job build"
+mounts = { "build/${branch:-main}" = "/build", ccache = "/ccache" }
+timeout = "1h"
+
+[jobs.ctest]
+cores = 2
+memory = "2g"
+cwd = "/work/darktable"
+command = "tools/bench/job ctest"
+mounts = { "build/${branch:-main}" = "/build" }
+timeout = "30m"
+
+# the equivalence and GUI benches compare outputs, not durations, but they
+# diverge under CPU load (late writes): they hold the whole machine
+[jobs.run]
+cores = 4
+memory = "3g"
+exclusive = ["machine"]
+cwd = "/work/darktable"
+command = "HELIOS_BENCH_EVICT=${evict:-} tools/bench/job run"
+mounts = { "build/${branch:-main}" = "/build", results = "/results" }
+timeout = "20m"
+
+[jobs.gui-labels]
+cores = 4
+memory = "3g"
+exclusive = ["machine"]
+cwd = "/work/darktable"
+command = "tools/bench/job gui-labels"
+mounts = { "build/${branch:-main}" = "/build", results = "/results" }
+timeout = "20m"
+
+[jobs.gui-metadata]
+cores = 4
+memory = "3g"
+exclusive = ["machine"]
+cwd = "/work/darktable"
+command = "tools/bench/job gui-metadata"
+mounts = { "build/${branch:-main}" = "/build", results = "/results" }
+timeout = "20m"
+
+[jobs.gui-tags]
+cores = 4
+memory = "3g"
+exclusive = ["machine"]
+cwd = "/work/darktable"
+command = "tools/bench/job gui-tags"
+mounts = { "build/${branch:-main}" = "/build", results = "/results" }
+timeout = "20m"
+
+# the pixel suite pins OpenMP to 4 threads (its run script); its outputs do
+# not depend on load, and each container has its own /tmp, so it shares
+# the box with other jobs
+[jobs.pixel]
+cores = 4
+memory = "4g"
+cwd = "/work/darktable"
+command = "tools/bench/job pixel"
+mounts = { "build/${branch:-main}" = "/build", results = "/results" }
+timeout = "2h"
+
+[jobs.pixel-fast]
+cores = 4
+memory = "3g"
+cwd = "/work/darktable"
+command = "tools/bench/job pixel-fast"
+mounts = { "build/${branch:-main}" = "/build", results = "/results" }
+timeout = "20m"
+
+# the run-to-run hashes of a few tests rendered with OpenCL on the NVIDIA
+# GPU, 10 renders each (darktable #3986, darktable-org/darktable#22606);
+# test=<test> steps=<N>+<N>... reps=<n> sweeps one test's history instead
+[jobs.sweep-cl]
+cores = 4
+memory = "4g"
+resources = ["gpu"]
+cwd = "/work/darktable"
+command = "SWEEP_TEST=${test:-} SWEEP_STEPS=${steps:-} SWEEP_REPS=${reps:-} tools/bench/job sweep-cl"
+mounts = { "build/${branch:-main}" = "/build" }
+timeout = "1h"
+
+# tests=<test>+<test>...: these tests in one run of the suite, in order
+[jobs.tests]
+cores = 4
+memory = "4g"
+cwd = "/work/darktable"
+command = "RUN_TESTS=${tests:-} tools/bench/job tests"
+mounts = { "build/${branch:-main}" = "/build" }
+timeout = "1h"
+
+# test=<test> steps=<N>+<N>... reps=<n> threads=<n>: one test's history
+# on the CPU with a chosen OpenMP thread count (default 4, as the runner)
+[jobs.sweep]
+cores = 4
+memory = "4g"
+cwd = "/work/darktable"
+command = "SWEEP_TEST=${test:-} SWEEP_STEPS=${steps:-} SWEEP_REPS=${reps:-} SWEEP_THREADS=${threads:-} tools/bench/job sweep"
+mounts = { "build/${branch:-main}" = "/build" }
+timeout = "1h"
+
+# the fast subset at 1, 2, 4 and 8 OpenMP threads and with -t 4 on two
+# CPUs, compared pixel by pixel with -t 4 (darktable #3807): 8 threads so
+# that t8 differs from the default
+[jobs.threads]
+cores = 8
+memory = "4g"
+cwd = "/work/darktable"
+command = "tools/bench/job threads"
+mounts = { "build/${branch:-main}" = "/build" }
+timeout = "1h"
+
+# timings: alone on the machine, and under the box's timing profile (a
+# CPU cap that keeps the NUC out of thermal throttling, mcu #3900)
+[jobs.perf]
+cores = 4
+memory = "4g"
+exclusive = ["machine"]
+timing = true
+cwd = "/work/darktable"
+command = "PERF_RUNS=${runs:-3} tools/bench/job perf"
+mounts = { "build/${branch:-main}" = "/build", perf = "/perf" }
+timeout = "2h"
+
+# the kept outputs of two commits compared on the box, only the verdict
+# comes back: run compare branch=<any> base=<commit> new=<commit>
+[jobs.compare]
+cores = 2
+memory = "3g"
+cwd = "/work/darktable"
+command = "CMP_BASE=${base:-} CMP_NEW=${new:-} tools/bench/job compare"
+mounts = { results = "/results" }
+timeout = "30m"
+
+# readers are applied on each upload: a project left out loses its access
+[volumes.darktable-cli]
+readers = ["helios"]
+cores = 6
+cwd = "/work/darktable"
+provision = "tools/bench/job install-to /volume"
+mounts = { "build/${branch:-main}" = "/build", ccache = "/ccache" }
+timeout = "1h"
+
+[volumes.darktable-tests]
+readers = ["helios"]
+provision = "tar -C /work/darktable/src/tests/integration --exclude=.git --exclude=.venv -cf - . | tar -C /volume -xf -"
+timeout = "20m"
