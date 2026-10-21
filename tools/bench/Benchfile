@@ -142,6 +142,16 @@ command = "SWEEP_TEST=${test:-} SWEEP_STEPS=${steps:-} SWEEP_REPS=${reps:-} tool
 mounts = { "build/${branch:-main}" = "/build" }
 timeout = "1h"
 
+# test=<test> steps=<N>+<N>... reps=<n> threads=<n>: one test's history
+# on the CPU with a chosen OpenMP thread count (default 4, as the runner)
+[jobs.sweep]
+cores = 4
+memory = "4g"
+cwd = "/work/darktable"
+command = "SWEEP_TEST=${test:-} SWEEP_STEPS=${steps:-} SWEEP_REPS=${reps:-} SWEEP_THREADS=${threads:-} tools/bench/job sweep"
+mounts = { "build/${branch:-main}" = "/build" }
+timeout = "1h"
+
 # the fast subset at 1, 2, 4 and 8 OpenMP threads and with -t 4 on two
 # CPUs, compared pixel by pixel with -t 4 (darktable #3807): 8 threads so
 # that t8 differs from the default

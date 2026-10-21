@@ -74,6 +74,14 @@ case "${1:-}" in
                  <(sed 's/#.*//' "$bench/integration-known-failures.txt" | awk 'NF { print $1 }' | sort -u))
          [ -z "$new" ] || { echo "new failures: $new"; exit 1; }
          echo "pixel-fast: ${#tests[@]} tests, no new failure" ;;
+  # one test's history rendered on the CPU, <reps> times per step, with
+  # threads=<n> OpenMP threads; the reference's hash comes first
+  sweep) need_build
+         [ -n "${SWEEP_TEST:-}" ] && [ -n "${SWEEP_STEPS:-}" ] || { echo "usage: sweep test=<test> steps=<N>+<N>... [reps=<n>] [threads=<n>]"; exit 2; }
+         dir="$src/src/tests/integration/$SWEEP_TEST"
+         echo "$SWEEP_TEST expected $(identify -format '%#' "$dir/expected.png" | cut -c1-12)" | tee /out/sweep.txt
+         HELIOS_SWEEP_THREADS="${SWEEP_THREADS:-4}" "$bench/history_sweep.sh" "$prefix/bin/darktable-cli" "$dir" \
+           "${SWEEP_REPS:-8}" ${SWEEP_STEPS//+/ } | sed "s/^/$SWEEP_TEST t${SWEEP_THREADS:-4} /" | tee -a /out/sweep.txt ;;
   # a few tests rendered 10 times with OpenCL, with their pixel hashes
   sweep-cl) need_build
             { clinfo -l; "$prefix/bin/darktable-cltest"; } > /out/opencl.txt 2>&1
