@@ -505,7 +505,7 @@ static void _process_common_setup(dt_iop_module_t *self,
     }
   }
 
-  const float white = exposure2white(exposure);
+  const float white = exposure2white(exposure); // control: no change to the pixels
   if(d->black >= white)
     d->black = white - 0.01f;
   d->scale = 1.0f / (white - d->black);
