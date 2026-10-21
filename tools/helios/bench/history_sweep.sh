@@ -8,6 +8,7 @@
 # usage: tools/helios/bench/history_sweep.sh <darktable-cli> <test dir> <reps> <N>...
 #   prints "<N> <operation of step N> <hash>..." with 12-character hashes
 #   HELIOS_SWEEP_OPENCL=1 renders with OpenCL instead of --disable-opencl
+#   HELIOS_SWEEP_THREADS=<n> renders with -t <n> instead of the runner's 4
 
 set -uo pipefail
 
@@ -20,6 +21,7 @@ mapfile -t ops < <(grep -o 'darktable:operation="[a-z0-9_]*"' "$xmp" | cut -d'"'
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 opencl=--disable-opencl
+threads=${HELIOS_SWEEP_THREADS:-4}
 # the compiled OpenCL kernels are cached in the cache directory, kept
 # across renders so that only the first one compiles them
 [ -n "${HELIOS_SWEEP_OPENCL:-}" ] && opencl="--cachedir $work/cache"
@@ -30,9 +32,9 @@ for n in "$@"; do
   for _ in $(seq "$reps"); do
     rm -rf "$work/config" "$work/out.png"
     # the options of src/tests/integration/run
-    OMP_THREAD_LIMIT=4 "$cli" "$integ/images/$img" "$work/step.xmp" "$work/out.png" \
+    OMP_THREAD_LIMIT=$threads "$cli" "$integ/images/$img" "$work/step.xmp" "$work/out.png" \
       --width 2048 --height 2048 --hq true --apply-custom-presets false \
-      --core $opencl --configdir "$work/config" -t 4 \
+      --core $opencl --configdir "$work/config" -t "$threads" \
       --conf host_memory_limit=8192 --conf resourcelevel=reference --conf worker_threads=4 \
       --conf plugins/lighttable/export/force_lcms2=FALSE \
       --conf plugins/lighttable/export/pixel_interpolator=lanczos3 \
