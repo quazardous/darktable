@@ -34,6 +34,7 @@ set -uo pipefail
 refs="$1" out="$2"
 shift 2
 vendor=$(awk -F': *' '/^vendor_id/ { print $2; exit }' /proc/cpuinfo)
+model=$(awk -F': *' '/^model name/ { print $2; exit }' /proc/cpuinfo)
 ref="$refs/$vendor.txt"
 [ -f "$ref" ] || echo "no reference file for CPU vendor '$vendor': hashes recorded, not compared"
 
@@ -53,5 +54,5 @@ for test in "$@"; do
   fi
 done
 
-echo "$vendor: $# tests, ${#differ[@]} with a different output"
+echo "$vendor ($model): $# tests, ${#differ[@]} with a different output"
 [ ${#differ[@]} -eq 0 ]
