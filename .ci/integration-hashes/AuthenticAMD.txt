@@ -1,5 +1,6 @@
 # pixel hash of each integration test's output.png on AuthenticAMD CPUs,
-# built with DT_NO_CLONE_TARGETS (see .ci/integration-hashes.sh)
+# built with DT_NO_CLONE_TARGETS (see .ci/integration-hashes.sh); a test
+# whose output varies between runs lists every output seen
 0000-nop 7024d55b7f77b727113ef0a759cc2c9ce624ce52af4f7cdefddb7febf8fed33b
 0001-exposure e691e696ab444b5a7a854ec8f5168253ccf1f65fa8e9a2d8a426dfac974b7756
 0002-local-contrast ee93722c3dc5cf9efbcc33c26af79a46fd1be1859f4d198ae8db8b81f1194197
@@ -58,7 +59,8 @@
 0055-rgblevels-indep fcd12d79875c7bd1d280790c6de8127d1b1bb6be96872336bd50b5b13aeb6b13
 0056-vibrance 750f8911dccccb1a9ebad1b1ff184df77d398578854befbb6e30ac1f10029b5b
 0057-colorize 352c06570bd0deb3b8346acabcd5f12747e3f6bf659c637d5a476ef75c78648c
-# 0058-defringe: output varies from run to run, darktable-org/darktable#22723
+# 0058 varies from run to run, darktable-org/darktable#22723
+0058-defringe 695a3840faba8e564342cac25178cd4621cc7d32557eb624e7adac14b83a4c2d 9cd4e757028b9e86fc9c3cb5f24662dc9e43524e149b7d785286d5fabc85484d
 0059-grain db1e06e6a47e910538b17cb877e3bf6eeab9526143b9879b0d2b37c43da6cbd6
 0060-rgbcurve-indep 3197501cd979c5ed7411e5694f9944471779c65c44da9de94d5a7b459b5bf921
 0061-lowlight 43b6a7901544ea4011b3035f664e4240d3b0b431efa4f59e6fd0c1a1a84fd035
@@ -153,7 +155,8 @@
 0150-detail-mask ad23cc5f00b1f89a76e40e699037482dda1480e0cc110ea39b17e9eca4ea27f8
 0151-sigmoid-no-hue-preservation 475da8edd38a5ff6046192fa3931492309b366836fbe84aa18b0e031a3a42f60
 0152-rgb-primaries c07be0a7cd6a195571c0bdb6b55e60b2e26bda7894cd1914288c3ad44e85caa1
-# 0153-hl-reconstruct-filmicrgb: output varied once in 11 runs, being looked into
+# 0153 varies from run to run in filmicrgb's highlight reconstruction
+0153-hl-reconstruct-filmicrgb b04d5f3ba076938cff91e3f1825106a0fba7dd4a6b07af17eb7438ed82411c2b 636b2471bb02a95c5f5f84cf921f558fb7d5102a4f72060030f22c1f4818c6cf
 0154-framing-100 5b57edc9f5ee606c1ccf4482ca39fb431a6e8305dde2bef7e54bfd8356c462d7
 0155-framing-line-169 5c6ecf4632f1470e8c25a1f65662210bfe15ca466058397f4bbaac62804ddbd4
 0156-exposure-guided-filter-new-feather 0ff00bf8c372103e74b5bb2a1566e59ea6ea1e1ed1fa4b713cdbdc832aadeb61

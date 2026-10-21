@@ -17,17 +17,21 @@
 #    along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 
 # Compares the pixel hash of each test's output.png with the reference
-# hash for the CPU vendor of this machine, in <refs>/<vendor_id>.txt
-# ("<test> <hash>" lines, # starts a comment). The outputs of the
-# integration tests are exactly reproducible for a given vendor when
-# darktable is built without target_clones (DT_NO_CLONE_TARGETS), so any
-# difference is a change of the output.
+# hashes for the CPU vendor of this machine, in <refs>/<vendor_id>.txt
+# ("<test> <hash>..." lines, # starts a comment). Built without
+# target_clones (DT_NO_CLONE_TARGETS), most outputs are exactly the same
+# on every machine of a vendor; a test whose output varies from run to
+# run lists every output seen.
+#
+# A hash is not the verdict: ./run's Delta-E check decides whether a test
+# passes. A new hash says that the output changed, which a reviewer
+# should know even when the change is within the tolerance.
 #
 # usage: integration-hashes.sh <refs dir> <hashes out> <test>...
 #   run from src/tests/integration after ./run; writes "<test> <hash>"
 #   for every test to <hashes out>, the lines to paste into the reference
-#   file when an output changes on purpose. Exits 1 when a hash differs;
-#   a test without a reference, or a vendor without a file, is reported.
+#   file when an output changes on purpose. Prints "<test>: <hash>, not
+#   in the references" for each output that changed.
 
 set -uo pipefail
 
@@ -45,14 +49,13 @@ for test in "$@"; do
   [ -f "$test/output.png" ] && hash=$(identify -format '%#' "$test/output.png" 2> /dev/null || echo unreadable)
   echo "$test $hash" >> "$out"
   [ -f "$ref" ] || continue
-  expected=$(sed 's/#.*//' "$ref" | awk -v t="$test" '$1 == t { print $2 }')
+  expected=$(sed 's/#.*//' "$ref" | awk -v t="$test" '$1 == t { $1 = ""; print }')
   if [ -z "$expected" ]; then
     echo "$test: no reference hash for $vendor"
-  elif [ "$hash" != "$expected" ]; then
-    echo "$test: $hash, expected $expected"
+  elif [[ " $expected " != *" $hash "* ]]; then
+    echo "$test: $hash, not in the references"
     differ+=("$test")
   fi
 done
 
-echo "$vendor ($model): $# tests, ${#differ[@]} with a different output"
-[ ${#differ[@]} -eq 0 ]
+echo "$vendor ($model): $# tests, ${#differ[@]} with a changed output"

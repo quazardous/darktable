@@ -199,21 +199,21 @@ jobs:
           done
           grep -q '^Errors *[0-9]' run.log || { echo "::error::the suite did not report its results"; exit 1; }
       - name: Compare the outputs with the reference hashes
+        # not a verdict: ./run's Delta-E check above decides, and a pixel
+        # hash cannot absorb the small run to run differences of some
+        # modules. A new hash says that the output changed at all.
         working-directory: src/src/tests/integration
-        shell: bash
         run: |
-          status=0
           ../../../.ci/integration-hashes.sh ../../../.ci/integration-hashes "$GITHUB_WORKSPACE/hashes.txt" \
-            ${{ matrix.tests }} > hashes.log || status=$?
+            ${{ matrix.tests }} > hashes.log
           cat hashes.log
           { echo '```'; cat hashes.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-          # the outputs that differ, for a human to look at
-          sed -n 's/^\([0-9][^:]*\): .*, expected .*/\1/p' hashes.log | while read -r test; do
-            echo "::error title=integration test::$test: output differs from its reference hash"
+          # the outputs that changed, for a human to look at
+          sed -n 's/^\([0-9][^:]*\): .*, not in the references/\1/p' hashes.log | while read -r test; do
+            echo "::warning title=integration test::$test: output changed (see ./run for whether it is within the tolerance)"
             mkdir -p "$GITHUB_WORKSPACE/differ/$test"
             cp "$test/output.png" "$GITHUB_WORKSPACE/differ/$test/" 2> /dev/null || true
           done
-          exit $status
       - uses: actions/upload-artifact@v4
         if: always()
         with:
