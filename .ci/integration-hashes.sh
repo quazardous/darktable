@@ -23,15 +23,15 @@
 # on every machine of a vendor; a test whose output varies from run to
 # run lists every output seen.
 #
-# A hash is not the verdict: ./run's Delta-E check decides whether a test
-# passes. A new hash says that the output changed, which a reviewer
-# should know even when the change is within the tolerance.
+# An output among its reference hashes is the reference output, whatever
+# its Delta-E against expected.png, which was rendered on another machine.
+# Any other output is left to ./run's Delta-E check.
 #
 # usage: integration-hashes.sh <refs dir> <hashes out> <test>...
 #   run from src/tests/integration after ./run; writes "<test> <hash>"
 #   for every test to <hashes out>, the lines to paste into the reference
-#   file when an output changes on purpose. Prints "<test>: <hash>, not
-#   in the references" for each output that changed.
+#   file when an output changes on purpose. Prints a "<test>: ..." line
+#   for each test whose output is not among its reference hashes.
 
 set -uo pipefail
 
@@ -40,7 +40,7 @@ shift 2
 vendor=$(awk -F': *' '/^vendor_id/ { print $2; exit }' /proc/cpuinfo)
 model=$(awk -F': *' '/^model name/ { print $2; exit }' /proc/cpuinfo)
 ref="$refs/$vendor.txt"
-[ -f "$ref" ] || echo "no reference file for CPU vendor '$vendor': hashes recorded, not compared"
+[ -f "$ref" ] || echo "no reference file for CPU vendor '$vendor'"
 
 : > "$out"
 differ=()
@@ -48,8 +48,8 @@ for test in "$@"; do
   hash=missing
   [ -f "$test/output.png" ] && hash=$(identify -format '%#' "$test/output.png" 2> /dev/null || echo unreadable)
   echo "$test $hash" >> "$out"
-  [ -f "$ref" ] || continue
-  expected=$(sed 's/#.*//' "$ref" | awk -v t="$test" '$1 == t { $1 = ""; print }')
+  expected=
+  [ -f "$ref" ] && expected=$(sed 's/#.*//' "$ref" | awk -v t="$test" '$1 == t { $1 = ""; print }')
   if [ -z "$expected" ]; then
     echo "$test: no reference hash for $vendor"
   elif [[ " $expected " != *" $hash "* ]]; then
