@@ -74,6 +74,14 @@ case "${1:-}" in
                  <(sed 's/#.*//' "$bench/integration-known-failures.txt" | awk 'NF { print $1 }' | sort -u))
          [ -z "$new" ] || { echo "new failures: $new"; exit 1; }
          echo "pixel-fast: ${#tests[@]} tests, no new failure" ;;
+  # tests=<t>+<t>...: these tests in one ./run, in this order (state the
+  # runner keeps between tests shows up there), with their output hashes
+  tests) need_build
+         [ -n "${RUN_TESTS:-}" ] || { echo "usage: tests tests=<test>+<test>..."; exit 2; }
+         HELIOS_KEEP_OUTPUTS=/out/outputs "$bench/integration.sh" "$prefix" /out/pixel.log ${RUN_TESTS//+/ }
+         for t in ${RUN_TESTS//+/ }; do
+           echo "$t $(identify -format '%#' "/out/outputs/$t.png" 2> /dev/null | cut -c1-12)"
+         done | tee /out/hashes.txt ;;
   # one test's history rendered on the CPU, <reps> times per step, with
   # threads=<n> OpenMP threads; the reference's hash comes first
   sweep) need_build
