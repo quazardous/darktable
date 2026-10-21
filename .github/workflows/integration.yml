@@ -89,9 +89,9 @@ jobs:
       CMAKE_BUILD_TYPE: RelWithDebInfo
       GENERATOR: Ninja
       TARGET: skiptest
-      # generic code rather than -march=native: a result must not depend on
-      # the CPU of the runner the job lands on
-      ECO: -DDONT_USE_INTERNAL_LIBRAW=ON -DBINARY_PACKAGE_BUILD=ON
+      # generic code rather than -march=native, and no target_clones: a
+      # result must not depend on the CPU of the runner the job lands on
+      ECO: -DDONT_USE_INTERNAL_LIBRAW=ON -DBINARY_PACKAGE_BUILD=ON -DCMAKE_C_FLAGS=-DDT_NO_CLONE_TARGETS -DCMAKE_CXX_FLAGS=-DDT_NO_CLONE_TARGETS
       DEBIAN_FRONTEND: noninteractive
     steps:
       - name: Update base packages
@@ -169,7 +169,8 @@ jobs:
             python3-jsonschema \
             xsltproc \
             zlib1g-dev \
-            python3-venv;
+            python3-venv \
+            imagemagick;
       - uses: actions/checkout@v7
         with:
           submodules: false
@@ -197,3 +198,26 @@ jobs:
             echo "::warning title=integration test::$test differs from its reference"
           done
           grep -q '^Errors *[0-9]' run.log || { echo "::error::the suite did not report its results"; exit 1; }
+      - name: Compare the outputs with the reference hashes
+        working-directory: src/src/tests/integration
+        shell: bash
+        run: |
+          status=0
+          ../../../.ci/integration-hashes.sh ../../../.ci/integration-hashes "$GITHUB_WORKSPACE/hashes.txt" \
+            ${{ matrix.tests }} > hashes.log || status=$?
+          cat hashes.log
+          { echo '```'; cat hashes.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          # the outputs that differ, for a human to look at
+          sed -n 's/^\([0-9][^:]*\): .*, expected .*/\1/p' hashes.log | while read -r test; do
+            echo "::error title=integration test::$test: output differs from its reference hash"
+            mkdir -p "$GITHUB_WORKSPACE/differ/$test"
+            cp "$test/output.png" "$GITHUB_WORKSPACE/differ/$test/" 2> /dev/null || true
+          done
+          exit $status
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hashes-${{ strategy.job-index }}
+          path: |
+            hashes.txt
+            differ
