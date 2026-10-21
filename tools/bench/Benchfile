@@ -142,6 +142,15 @@ command = "SWEEP_TEST=${test:-} SWEEP_STEPS=${steps:-} SWEEP_REPS=${reps:-} tool
 mounts = { "build/${branch:-main}" = "/build" }
 timeout = "1h"
 
+# tests=<test>+<test>...: these tests in one run of the suite, in order
+[jobs.tests]
+cores = 4
+memory = "4g"
+cwd = "/work/darktable"
+command = "RUN_TESTS=${tests:-} tools/bench/job tests"
+mounts = { "build/${branch:-main}" = "/build" }
+timeout = "1h"
+
 # test=<test> steps=<N>+<N>... reps=<n> threads=<n>: one test's history
 # on the CPU with a chosen OpenMP thread count (default 4, as the runner)
 [jobs.sweep]
