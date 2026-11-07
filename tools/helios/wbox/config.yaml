@@ -6,6 +6,9 @@ compositor: labwc
 screen: 1600x1000
 input_backend: hybrid
 headless: true
+# darktable plays no sound: the bench container has no audio server, and a
+# headless session would otherwise need PipeWire in the image (wbox 0.13.0)
+audio: host
 keyboard_layout: us
 clipboard_bridge: false
 log:
