@@ -254,6 +254,12 @@ GList *dt_presets_list_params(const char *operation,
                               const gboolean user_only);
 void dt_presets_params_free(gpointer data);
 
+/** the name and module parameters of the module's user presets at that
+    version, by name.
+    Free with g_list_free_full(list, dt_presets_params_free) */
+GList *dt_presets_list_user_params_by_name(const char *operation,
+                                           const int op_version);
+
 /** delete all the module's presets at that version, built-in ones too */
 void dt_presets_delete_version(const char *operation, const int op_version);
 
@@ -309,6 +315,18 @@ void dt_presets_insert_lib_preset(const char *name,
                                   const int op_version,
                                   const void *op_params,
                                   const int op_params_size);
+
+/** insert, or replace, a user preset of the module with these module
+    parameters: no description, no blend parameters, no filter and every
+    range at zero */
+void dt_presets_replace_user_plain(const char *name,
+                                   const char *operation,
+                                   const int op_version,
+                                   const void *op_params,
+                                   const int op_params_size);
+
+/** delete the module's user preset of that name, whatever its version */
+void dt_presets_delete_user_any_version(const char *operation, const char *name);
 
 /** the module parameters of the module's preset of that name, whatever
     its version; FALSE when there is none. Free *op_params with g_free() */

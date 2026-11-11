@@ -1060,6 +1060,30 @@ void dt_presets_params_free(gpointer data)
   g_free(data);
 }
 
+GList *dt_presets_list_user_params_by_name(const char *operation,
+                                           const int op_version)
+{
+  GList *list = NULL;
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "SELECT name, op_params FROM data.presets"
+                              " WHERE operation = ?1 AND writeprotect = 0"
+                              "   AND op_version = ?2"
+                              " ORDER BY name",
+                              -1, &stmt, NULL);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, operation, -1, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, op_version);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    dt_presets_params_t *p = g_new0(dt_presets_params_t, 1);
+    p->name = g_strdup((const char *)sqlite3_column_text(stmt, 0));
+    p->op_params = _blob_copy(stmt, 1, &p->op_params_size);
+    list = g_list_prepend(list, p);
+  }
+  sqlite3_finalize(stmt);
+  return g_list_reverse(list);
+}
+
 void dt_presets_delete_version(const char *operation, const int op_version)
 {
   sqlite3_stmt *stmt;
@@ -1286,6 +1310,46 @@ void dt_presets_insert_lib_preset(const char *name,
   DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 2, operation, -1, SQLITE_TRANSIENT);
   DT_DEBUG_SQLITE3_BIND_INT(stmt, 3, op_version);
   DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 4, op_params, op_params_size, SQLITE_TRANSIENT);
+  sqlite3_step(stmt);
+  sqlite3_finalize(stmt);
+}
+
+void dt_presets_replace_user_plain(const char *name,
+                                   const char *operation,
+                                   const int op_version,
+                                   const void *op_params,
+                                   const int op_params_size)
+{
+  sqlite3_stmt *stmt;
+  // clang-format off
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+      "INSERT OR REPLACE INTO data.presets"
+      " (name, description, operation, op_version, op_params, enabled,"
+      "  blendop_params, blendop_version, multi_priority, multi_name,"
+      "  model, maker, lens, iso_min, iso_max, exposure_min, exposure_max,"
+      "  aperture_min, aperture_max, focal_length_min, focal_length_max,"
+      "  writeprotect, autoapply, filter, def, format, multi_name_hand_edited)"
+      " VALUES (?1, '', ?2, ?3, ?4, 1, NULL, 0, 0, '', '%', '%', '%', 0, 0, 0, 0,"
+      "         0, 0, 0, 0, 0, 0, 0, 0, 0, 0)",
+      -1, &stmt, NULL);
+  // clang-format on
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, name, -1, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 2, operation, -1, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 3, op_version);
+  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 4, op_params, op_params_size, SQLITE_TRANSIENT);
+  sqlite3_step(stmt);
+  sqlite3_finalize(stmt);
+}
+
+void dt_presets_delete_user_any_version(const char *operation, const char *name)
+{
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(
+    dt_database_get(darktable.db),
+    "DELETE FROM data.presets WHERE operation = ?1 AND name = ?2 AND writeprotect = 0",
+    -1, &stmt, NULL);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, operation, -1, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 2, name, -1, SQLITE_TRANSIENT);
   sqlite3_step(stmt);
   sqlite3_finalize(stmt);
 }

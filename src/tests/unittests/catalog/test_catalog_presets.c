@@ -415,6 +415,44 @@ static void test_lib_presets(void **state)
   dt_presets_delete_module(OP);
 }
 
+static void test_user_plain_presets(void **state)
+{
+  // the flexi mask layout presets: user presets of one version, by name
+  const char text[] = "x|y";
+  dt_presets_replace_user_plain("b", OP, 1, text, sizeof(text) - 1);
+  dt_presets_replace_user_plain("a", OP, 1, "z", 1);
+  dt_presets_replace_user_plain("c", OP, 2, text, sizeof(text) - 1);
+  dt_presets_add_lib("builtin", OP, 1, text, sizeof(text) - 1, TRUE, 0);
+  // replacing keeps one row and takes the new parameters
+  dt_presets_replace_user_plain("a", OP, 1, text, sizeof(text) - 1);
+
+  GList *rows = dt_presets_list_user_params_by_name(OP, 1);
+  assert_int_equal(g_list_length(rows), 2);
+  const dt_presets_params_t *first = rows->data;
+  assert_string_equal(first->name, "a");
+  assert_int_equal(first->op_params_size, sizeof(text) - 1);
+  assert_memory_equal(first->op_params, text, sizeof(text) - 1);
+  assert_string_equal(((dt_presets_params_t *)rows->next->data)->name, "b");
+  g_list_free_full(rows, dt_presets_params_free);
+
+  dt_presets_details_t d = { 0 };
+  assert_true(dt_presets_get_details("b", OP, 1, &d));
+  assert_string_equal(d.description, "");
+  assert_string_equal(d.maker, "%");
+  dt_presets_details_clear(&d);
+
+  // deleting spares the built-in preset, and reaches every version
+  dt_presets_delete_user_any_version(OP, "builtin");
+  assert_true(dt_presets_exists("builtin", OP, 1));
+  dt_presets_delete_user_any_version(OP, "c");
+  assert_false(dt_presets_exists("c", OP, 2));
+  dt_presets_delete_user_any_version(OP, "a");
+  rows = dt_presets_list_user_params_by_name(OP, 1);
+  assert_int_equal(g_list_length(rows), 1);
+  g_list_free_full(rows, dt_presets_params_free);
+  dt_presets_delete_module(OP);
+}
+
 static void test_stage_auto_apply(void **state)
 {
   // a user preset auto-applied to everything is staged in memory.history
@@ -459,6 +497,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_legacy_upgrade),
     cmocka_unit_test(test_builtin),
     cmocka_unit_test(test_lib_presets),
+    cmocka_unit_test(test_user_plain_presets),
     cmocka_unit_test(test_stage_auto_apply),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
