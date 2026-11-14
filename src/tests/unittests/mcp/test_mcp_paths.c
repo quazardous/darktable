@@ -273,33 +273,51 @@ static void test_canonical_missing_file(void **state)
 }
 
 // ---------------------------------------------------------------------------
-// _sql_like_escape
+// list_images folder filter (dt_image_query_run)
 // ---------------------------------------------------------------------------
 
 // '_' matched any character, so a folder filter of "Pictures_MCP" also matched
 // "Pictures/MCP"
-static void test_like_escape(void **state)
+static void test_folder_filter_is_literal(void **state)
 {
   (void)state;
-  struct { const char *in, *want; } cases[] = {
-    { "plain",      "plain"       },
-    { "a_b",        "a\\_b"       },
-    { "100%",       "100\\%"      },
-    { "a\\b",       "a\\\\b"      },
-    { "_%\\",       "\\_\\%\\\\"  },
-    { "",           ""            },
+  sqlite3 *db = NULL;
+  assert_int_equal(sqlite3_open(":memory:", &db), SQLITE_OK);
+  assert_int_equal(sqlite3_exec(db,
+      "CREATE TABLE main.film_rolls (id INTEGER PRIMARY KEY, folder TEXT);"
+      "CREATE TABLE main.images (id INTEGER PRIMARY KEY, film_id INTEGER,"
+      "                          filename TEXT, flags INTEGER);"
+      "CREATE TABLE main.color_labels (imgid INTEGER, color INTEGER);"
+      "INSERT INTO main.film_rolls VALUES (1, '/p/Pictures_MCP'), (2, '/p/Pictures/MCP'),"
+      "                                   (3, '/p/100%'), (4, '/p/1000'),"
+      "                                   (5, '/p/a\\b'), (6, '/p/ab');"
+      "INSERT INTO main.images VALUES (11, 1, 'a.raw', 0), (12, 2, 'a.raw', 0),"
+      "                               (13, 3, 'a.raw', 0), (14, 4, 'a.raw', 0),"
+      "                               (15, 5, 'a.raw', 0), (16, 6, 'a.raw', 0)",
+      NULL, NULL, NULL), SQLITE_OK);
+
+  struct { const char *folder; dt_imgid_t want; } cases[] = {
+    { "Pictures_MCP", 11 },
+    { "100%",         13 },
+    { "a\\b",       15 },
   };
   for(size_t i = 0; i < G_N_ELEMENTS(cases); i++)
   {
-    gchar *got = _sql_like_escape(cases[i].in);
-    assert_non_null(got);
-    assert_string_equal(got, cases[i].want);
-    g_free(got);
+    const dt_image_query_t query = { .folder = cases[i].folder, .film_id = 0,
+                                     .min_rating = -1, .color = -1,
+                                     .rejected_only = FALSE };
+    GList *rows = NULL;
+    assert_true(dt_image_query_run(db, &query, 0, &rows));
+    assert_int_equal(g_list_length(rows), 1);
+    assert_int_equal(((dt_image_query_row_t *)rows->data)->id, cases[i].want);
+    dt_image_query_rows_free(rows);
   }
+
+  sqlite3_close(db);
 }
 
 // ---------------------------------------------------------------------------
-// _film_images_since
+// dt_image_get_film_images_since
 // ---------------------------------------------------------------------------
 
 // dt_image_import() files a row per "<name>_NN.<ext>.xmp" sidecar besides the
@@ -322,7 +340,7 @@ static void test_film_images_since_lists_duplicates(void **state)
       "INSERT INTO main.images VALUES (10, 1, 'other.raw', 0),"
       "                               (11, 2, 'pre.raw', 0)",
       NULL, NULL, NULL), SQLITE_OK);
-  const dt_imgid_t high = 11;   // what _max_image_id() reads before the import
+  const dt_imgid_t high = 11;   // what dt_image_get_max_id() reads before the import
 
   // what one import adds: the image, then a row per sidecar duplicate
   assert_int_equal(sqlite3_exec(db,
@@ -331,7 +349,7 @@ static void test_film_images_since_lists_duplicates(void **state)
       "                               (14, 2, 'a.raw', 2)",
       NULL, NULL, NULL), SQLITE_OK);
 
-  GList *got = _film_images_since(db, 2, high);
+  GList *got = dt_image_get_film_images_since(db, 2, high);
   assert_int_equal(g_list_length(got), 3);
   const int want[] = { 12, 13, 14 };
   int i = 0;
@@ -340,18 +358,18 @@ static void test_film_images_since_lists_duplicates(void **state)
   g_list_free(got);
 
   // an import that added nothing owns nothing
-  assert_null(_film_images_since(db, 2, 14));
+  assert_null(dt_image_get_film_images_since(db, 2, 14));
   // and a roll this request never touched is never swept
-  assert_null(_film_images_since(db, 1, high));
+  assert_null(dt_image_get_film_images_since(db, 1, high));
 
   // 0 is a real baseline: an empty library, so every row in the roll is ours
-  GList *all = _film_images_since(db, 2, 0);
+  GList *all = dt_image_get_film_images_since(db, 2, 0);
   assert_int_equal(g_list_length(all), 4);   // 11 was already there
   g_list_free(all);
 
-  // -1 is _max_image_id() saying it could not answer. it must not read as 0:
+  // -1 is dt_image_get_max_id() saying it could not answer. it must not read as 0:
   // _drop_scratch() would delete the rows the user had before the import
-  assert_null(_film_images_since(db, 2, -1));
+  assert_null(dt_image_get_film_images_since(db, 2, -1));
 
   sqlite3_close(db);
 }
@@ -363,11 +381,11 @@ static void test_max_image_id_without_database(void **state)
 {
   (void)state;
   assert_null(darktable.db);   // the precondition this test is about
-  assert_int_equal(_max_image_id(), -1);
+  assert_int_equal(dt_image_get_max_id(dt_database_get(darktable.db)), -1);
 }
 
 // ---------------------------------------------------------------------------
-// _image_is_undeveloped
+// dt_image_is_undeveloped
 // ---------------------------------------------------------------------------
 
 // this decides which images --read-only may roll back, and has to be exact both
@@ -401,20 +419,20 @@ static void test_undeveloped_only_when_nothing_is_filed(void **state)
       "INSERT INTO main.history_hash VALUES (6, NULL)",
       NULL, NULL, NULL), SQLITE_OK);
 
-  assert_true(_image_is_undeveloped(db, 1));
-  assert_true(_image_is_undeveloped(db, 7));
+  assert_true(dt_image_is_undeveloped(db, 1));
+  assert_true(dt_image_is_undeveloped(db, 7));
 
-  assert_false(_image_is_undeveloped(db, 2));   // presets already applied
-  assert_false(_image_is_undeveloped(db, 3));   // has history
-  assert_false(_image_is_undeveloped(db, 4));   // has a mask
-  assert_false(_image_is_undeveloped(db, 5));   // has a module order
-  assert_false(_image_is_undeveloped(db, 6));   // has a history hash
-  assert_false(_image_is_undeveloped(db, 8));   // history_end past the rows
+  assert_false(dt_image_is_undeveloped(db, 2));   // presets already applied
+  assert_false(dt_image_is_undeveloped(db, 3));   // has history
+  assert_false(dt_image_is_undeveloped(db, 4));   // has a mask
+  assert_false(dt_image_is_undeveloped(db, 5));   // has a module order
+  assert_false(dt_image_is_undeveloped(db, 6));   // has a history hash
+  assert_false(dt_image_is_undeveloped(db, 8));   // history_end past the rows
   // clearing this flag would have darktable auto-apply all over again
-  assert_false(_image_is_undeveloped(db, 9));
+  assert_false(dt_image_is_undeveloped(db, 9));
 
   // an id the catalog does not know is not an image to roll back
-  assert_false(_image_is_undeveloped(db, 99));
+  assert_false(dt_image_is_undeveloped(db, 99));
 
   sqlite3_close(db);
 }
@@ -424,11 +442,11 @@ static void test_undeveloped_only_when_nothing_is_filed(void **state)
 static void test_undeveloped_without_database(void **state)
 {
   (void)state;
-  assert_false(_image_is_undeveloped(NULL, 1));
+  assert_false(dt_image_is_undeveloped(NULL, 1));
 
   sqlite3 *db = NULL;
   assert_int_equal(sqlite3_open(":memory:", &db), SQLITE_OK);
-  assert_false(_image_is_undeveloped(db, 1));   // no tables to prepare against
+  assert_false(dt_image_is_undeveloped(db, 1));   // no tables to prepare against
   sqlite3_close(db);
 }
 
@@ -611,7 +629,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_canonical_cannot_escape_root),
     cmocka_unit_test(test_canonical_is_idempotent),
     cmocka_unit_test(test_canonical_missing_file),
-    cmocka_unit_test(test_like_escape),
+    cmocka_unit_test(test_folder_filter_is_literal),
     cmocka_unit_test(test_film_images_since_lists_duplicates),
     cmocka_unit_test(test_max_image_id_without_database),
     cmocka_unit_test(test_undeveloped_only_when_nothing_is_filed),

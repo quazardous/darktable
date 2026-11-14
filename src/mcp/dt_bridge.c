@@ -43,7 +43,6 @@
 #include <cairo/cairo.h>
 #include <json-glib/json-glib.h>
 #include <limits.h>
-#include <sqlite3.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -595,119 +594,17 @@ char *dt_bridge_encode_params_hex(const char *op, void *fields_jsonobject, char 
 // import + render
 // ---------------------------------------------------------------------------
 
-// the image cache hands back a blank entry for any positive id, so only the
-// database can say whether an image is real
-static gboolean _image_exists(dt_imgid_t imgid)
-{
-  sqlite3 *db = dt_database_get(darktable.db);
-  sqlite3_stmt *st = NULL;
-  gboolean found = FALSE;
-  if(db && sqlite3_prepare_v2(db, "SELECT 1 FROM main.images WHERE id = ?1",
-                              -1, &st, NULL) == SQLITE_OK)
-  {
-    sqlite3_bind_int(st, 1, imgid);
-    found = sqlite3_step(st) == SQLITE_ROW;
-    sqlite3_finalize(st);
-  }
-  return found;
-}
-
 // every tool naming a single image goes through this: dt_is_valid_imgid() only
 // rejects the sentinel, and the cache leaks a read lock on an unknown id
 static gboolean _require_image(int imgid, const char *tool, char **err)
 {
-  if(dt_is_valid_imgid((dt_imgid_t)imgid) && _image_exists((dt_imgid_t)imgid))
+  // the image cache hands back a blank entry for any positive id, so only the
+  // database can say whether an image is real
+  if(dt_is_valid_imgid((dt_imgid_t)imgid)
+     && dt_image_exists_in_db(dt_database_get(darktable.db), (dt_imgid_t)imgid))
     return TRUE;
   _seterr(err, "%s: no image with imgid %d", tool, imgid);
   return FALSE;
-}
-
-// is this film roll free of images?
-static gboolean _film_is_empty(dt_filmid_t filmid)
-{
-  sqlite3 *db = dt_database_get(darktable.db);
-  sqlite3_stmt *st = NULL;
-  gboolean empty = FALSE;
-  if(db && sqlite3_prepare_v2(db,
-        "SELECT COUNT(*) FROM main.images WHERE film_id = ?1", -1, &st, NULL)
-     == SQLITE_OK)
-  {
-    sqlite3_bind_int(st, 1, filmid);
-    if(sqlite3_step(st) == SQLITE_ROW) empty = sqlite3_column_int(st, 0) == 0;
-    sqlite3_finalize(st);
-  }
-  return empty;
-}
-
-// where the rows an import is about to create begin. -1 when the catalog could
-// not be asked: 0 is a real answer (an empty library), and sharing the two
-// would make every row in a roll look new
-static dt_imgid_t _max_image_id(void)
-{
-  sqlite3 *db = dt_database_get(darktable.db);
-  sqlite3_stmt *st = NULL;
-  dt_imgid_t high = -1;
-  if(db && sqlite3_prepare_v2(db, "SELECT IFNULL(MAX(id), 0) FROM main.images",
-                              -1, &st, NULL) == SQLITE_OK)
-  {
-    if(sqlite3_step(st) == SQLITE_ROW) high = sqlite3_column_int(st, 0);
-    sqlite3_finalize(st);
-  }
-  return high;
-}
-
-// every row filed under `filmid` after `since`. one dt_image_import() adds more
-// than the image asked for: _image_read_duplicates() (image.c:2068) files a row
-// per "<name>_NN.<ext>.xmp" sidecar. db is a parameter so the tests can drive it
-static GList *_film_images_since(sqlite3 *db, dt_filmid_t filmid, dt_imgid_t since)
-{
-  // a negative baseline is _max_image_id() saying it could not answer, and
-  // "every row in the roll" is the one reply that must never be guessed:
-  // _drop_scratch() would delete the user's own images
-  if(since < 0) return NULL;
-
-  GList *out = NULL;
-  sqlite3_stmt *st = NULL;
-  if(db && sqlite3_prepare_v2(db,
-        "SELECT id FROM main.images WHERE film_id = ?1 AND id > ?2 ORDER BY id",
-        -1, &st, NULL) == SQLITE_OK)
-  {
-    sqlite3_bind_int(st, 1, filmid);
-    sqlite3_bind_int(st, 2, since);
-    while(sqlite3_step(st) == SQLITE_ROW)
-      out = g_list_prepend(out, GINT_TO_POINTER(sqlite3_column_int(st, 0)));
-    sqlite3_finalize(st);
-  }
-  return g_list_reverse(out);
-}
-
-// nothing filed for this image but its own row. that is the one state the first
-// pipeline run only adds to, so taking back what it added restores the image
-// exactly; anywhere else a rollback would lose work
-static gboolean _image_is_undeveloped(sqlite3 *db, dt_imgid_t imgid)
-{
-  sqlite3_stmt *st = NULL;
-  gboolean bare = FALSE;
-  if(db && sqlite3_prepare_v2(db,
-        "SELECT i.history_end, i.flags,"
-        "       (SELECT COUNT(*) FROM main.history WHERE imgid = i.id)"
-        "     + (SELECT COUNT(*) FROM main.masks_history WHERE imgid = i.id)"
-        "     + (SELECT COUNT(*) FROM main.module_order WHERE imgid = i.id)"
-        "     + (SELECT COUNT(*) FROM main.history_hash WHERE imgid = i.id)"
-        " FROM main.images i"
-        " WHERE i.id = ?1",
-        -1, &st, NULL) == SQLITE_OK)
-  {
-    sqlite3_bind_int(st, 1, imgid);
-    // a query that could not run leaves this FALSE: nothing is rolled back
-    // that was not first read back
-    if(sqlite3_step(st) == SQLITE_ROW)
-      bare = sqlite3_column_int(st, 0) == 0
-          && !(sqlite3_column_int(st, 1) & DT_IMAGE_AUTO_PRESETS_APPLIED)
-          && sqlite3_column_int(st, 2) == 0;
-    sqlite3_finalize(st);
-  }
-  return bare;
 }
 
 // the catalog matches on the literal folder string (image.c:2138) and
@@ -804,7 +701,7 @@ static dt_imgid_t _import_file(const char *path, dt_filmid_t *created_film,
   // dt_image_import() hands back the existing id when the file is already in
   // the library, and the caller must not then delete the user's image
   const gboolean had_image = dt_is_valid_imgid(dt_image_get_id_full_path(path));
-  const dt_imgid_t high = _max_image_id();
+  const dt_imgid_t high = dt_image_get_max_id(dt_database_get(darktable.db));
   const dt_imgid_t id = dt_image_import(filmid, path, TRUE, FALSE);
   if(created_image) *created_image = dt_is_valid_imgid(id) && !had_image;
   // sidecar duplicates are rows of their own, so the caller owns all of them.
@@ -813,7 +710,8 @@ static dt_imgid_t _import_file(const char *path, dt_filmid_t *created_film,
   if(created_ids && dt_is_valid_imgid(id) && !had_image)
   {
     if(high >= 0)
-      *created_ids = _film_images_since(dt_database_get(darktable.db), filmid, high);
+      *created_ids = dt_image_get_film_images_since(dt_database_get(darktable.db),
+                                                    filmid, high);
     // the row just filed is always above the baseline, so an empty answer is
     // the query failing, not the roll being bare. owning nothing would leave
     // the scratch row behind and refuse every later render of that path
@@ -825,7 +723,8 @@ static dt_imgid_t _import_file(const char *path, dt_filmid_t *created_film,
     _seterr(err, "could not import '%s'", path);
     // the roll was created for this file alone, so a failed import would
     // otherwise leave an empty one behind
-    if(!film_existed && _film_is_empty(filmid)) dt_film_remove(filmid);
+    if(!film_existed && dt_film_is_empty(dt_database_get(darktable.db), filmid))
+      dt_film_remove(filmid);
     if(created_film) *created_film = NO_FILMID;
   }
   g_free(norm);
@@ -880,7 +779,7 @@ static dt_imgid_t _resolve_input(const char *path, int imgid_in,
   {
     // the image cache allocates a blank entry for any positive id and leaks its
     // read lock doing so, wedging the next writer
-    if(!_image_exists((dt_imgid_t)imgid_in))
+    if(!dt_image_exists_in_db(dt_database_get(darktable.db), (dt_imgid_t)imgid_in))
     {
       _seterr(err, "no image with imgid %d", imgid_in);
       return NO_IMGID;
@@ -913,7 +812,8 @@ static dt_imgid_t _resolve_input(const char *path, int imgid_in,
   if(!created)
   {
     // a roll made for this request has no image of its own to hold it
-    if(dt_is_valid_filmid(sc->film) && _film_is_empty(sc->film))
+    if(dt_is_valid_filmid(sc->film)
+       && dt_film_is_empty(dt_database_get(darktable.db), sc->film))
       dt_film_remove(sc->film);
     sc->film = NO_FILMID;
     g_list_free(sc->imgids);
@@ -939,14 +839,7 @@ static void _drop_scratch(dt_mcp_scratch_t *sc)
     const dt_imgid_t imgid = GPOINTER_TO_INT(i->data);
     // main.module_order carries no foreign key (database.c:3535), so unlike
     // history and tags it does not go with the image
-    sqlite3_stmt *st = NULL;
-    if(db && sqlite3_prepare_v2(db, "DELETE FROM main.module_order WHERE imgid = ?1",
-                                -1, &st, NULL) == SQLITE_OK)
-    {
-      sqlite3_bind_int(st, 1, imgid);
-      sqlite3_step(st);
-      sqlite3_finalize(st);
-    }
+    dt_ioppr_delete_iop_order(db, imgid);
     dt_image_remove(imgid);
   }
   g_list_free(sc->imgids);
@@ -954,7 +847,8 @@ static void _drop_scratch(dt_mcp_scratch_t *sc)
 
   // only the roll this request created, and only while empty:
   // dt_film_remove_empty() sweeps every empty roll and rmdirs each folder
-  if(dt_is_valid_filmid(sc->film) && _film_is_empty(sc->film))
+  if(dt_is_valid_filmid(sc->film)
+     && dt_film_is_empty(dt_database_get(darktable.db), sc->film))
     dt_film_remove(sc->film);
   sc->film = NO_FILMID;
 
@@ -979,7 +873,7 @@ static void _pristine_hold(dt_imgid_t imgid, dt_mcp_pristine_t *pr)
   pr->mute.active = FALSE;
   if(!_read_only
      || !dt_is_valid_imgid(imgid)
-     || !_image_is_undeveloped(dt_database_get(darktable.db), imgid))
+     || !dt_image_is_undeveloped(dt_database_get(darktable.db), imgid))
     return;
 
   pr->imgid = imgid;
@@ -1608,48 +1502,29 @@ char *dt_bridge_list_film_rolls_json(void)
   JsonBuilder *b = json_builder_new();
   json_builder_begin_array(b);
 
-  sqlite3_stmt *st = NULL;
-  const char *q =
-    "SELECT f.id, f.folder, COUNT(i.id)"
-    "  FROM main.film_rolls f LEFT JOIN main.images i ON i.film_id = f.id"
-    " GROUP BY f.id, f.folder ORDER BY f.folder";
-  if(db && sqlite3_prepare_v2(db, q, -1, &st, NULL) == SQLITE_OK)
+  GList *rolls = dt_film_get_rolls(db);
+  for(GList *l = rolls; l; l = g_list_next(l))
   {
-    while(sqlite3_step(st) == SQLITE_ROW)
-    {
-      json_builder_begin_object(b);
-      json_builder_set_member_name(b, "film_roll");
-      json_builder_add_int_value(b, sqlite3_column_int(st, 0));
-      const char *fold = (const char *)sqlite3_column_text(st, 1);
-      // the name darktable itself shows: the last show_folder_levels components
-      // of the path, not the whole thing
-      json_builder_set_member_name(b, "name");
-      json_builder_add_string_value(b, fold ? dt_image_film_roll_name(fold) : "");
-      json_builder_set_member_name(b, "folder");
-      json_builder_add_string_value(b, fold);
-      json_builder_set_member_name(b, "images");
-      json_builder_add_int_value(b, sqlite3_column_int(st, 2));
-      json_builder_end_object(b);
-    }
-    sqlite3_finalize(st);
+    const dt_film_roll_count_t *roll = l->data;
+    json_builder_begin_object(b);
+    json_builder_set_member_name(b, "film_roll");
+    json_builder_add_int_value(b, roll->id);
+    // the name darktable itself shows: the last show_folder_levels components
+    // of the path, not the whole thing
+    json_builder_set_member_name(b, "name");
+    json_builder_add_string_value(b, roll->folder ? dt_image_film_roll_name(roll->folder) : "");
+    json_builder_set_member_name(b, "folder");
+    json_builder_add_string_value(b, roll->folder);
+    json_builder_set_member_name(b, "images");
+    json_builder_add_int_value(b, roll->images);
+    json_builder_end_object(b);
   }
+  g_list_free_full(rolls, dt_film_roll_count_free);
 
   json_builder_end_array(b);
   char *out = _builder_to_string(b);
   g_object_unref(b);
   return out;
-}
-
-// escape the LIKE metacharacters in a caller-supplied substring
-static gchar *_sql_like_escape(const char *in)
-{
-  GString *o = g_string_new(NULL);
-  for(const char *p = in; p && *p; p++)
-  {
-    if(*p == '%' || *p == '_' || *p == '\\') g_string_append_c(o, '\\');
-    g_string_append_c(o, *p);
-  }
-  return g_string_free(o, FALSE);
 }
 
 char *dt_bridge_list_images_json(int limit, const char *folder, int rating,
@@ -1660,96 +1535,60 @@ char *dt_bridge_list_images_json(int limit, const char *folder, int rating,
   JsonBuilder *b = json_builder_new();
   json_builder_begin_array(b);
 
-  // flags carries the star rating in its low 3 bits and DT_IMAGE_REJECTED (8)
-  // separately, so a rejected image still holds whatever stars it had
-  GString *q = g_string_new(
-    "SELECT i.id, f.folder, i.filename, i.flags & 7, i.flags & 8,"
-    "       (SELECT group_concat(c.color) FROM main.color_labels c WHERE c.imgid = i.id)"
-    "  FROM main.images i JOIN main.film_rolls f ON i.film_id = f.id"
-    " WHERE 1=1");
-
-  if(folder && *folder)     g_string_append(q, " AND f.folder LIKE ?1 ESCAPE '\\'");
-  if(film_roll > 0)         g_string_append(q, " AND f.id = ?4");
-  if(rating >= 0)           g_string_append(q, " AND (i.flags & 7) >= ?2");
-  if(rejected_only)         g_string_append(q, " AND (i.flags & 8) != 0");
-  if(color && *color)
-    g_string_append(q, " AND EXISTS (SELECT 1 FROM main.color_labels c"
-                       "              WHERE c.imgid = i.id AND c.color = ?3)");
-  g_string_append(q, " ORDER BY i.id");
-
   int color_idx = -1;
   for(int i = 0; color && dt_colorlabels_name[i]; i++)
     if(!g_ascii_strcasecmp(color, dt_colorlabels_name[i])) { color_idx = i; break; }
-  // an unmatched name would bind -1 and return an empty list, which reads as
-  // "no images carry that label" rather than "that is not a label"
+  // an unmatched name is an error: an empty list would read as "no images
+  // carry that label", and dropping the filter would list every image
   if(color && *color && color_idx < 0)
   {
     _seterr(err, "color must be one of red, yellow, green, blue, purple");
-    g_string_free(q, TRUE);
     g_object_unref(b);
     return NULL;
   }
 
-  sqlite3_stmt *st = NULL;
-  if(db && sqlite3_prepare_v2(db, q->str, -1, &st, NULL) == SQLITE_OK)
+  // the folder is matched as a literal substring: '_' and '%' do not act as
+  // wildcards inside the caller's string
+  const dt_image_query_t query = { .folder = folder,
+                                   .film_id = film_roll,
+                                   .min_rating = rating,
+                                   .color = (color && *color) ? color_idx : -1,
+                                   .rejected_only = rejected_only };
+  GList *rows = NULL;
+  dt_image_query_run(db, &query, limit, &rows);
+  for(GList *l = rows; l; l = g_list_next(l))
   {
-    if(folder && *folder)
+    const dt_image_query_row_t *row = l->data;
+    gchar *path = g_build_filename(row->folder ? row->folder : "",
+                                   row->filename ? row->filename : "", NULL);
+    json_builder_begin_object(b);
+    json_builder_set_member_name(b, "imgid");
+    json_builder_add_int_value(b, row->id);
+    json_builder_set_member_name(b, "path");
+    json_builder_add_string_value(b, path);
+    json_builder_set_member_name(b, "rating");
+    json_builder_add_int_value(b, row->rating);
+    if(row->rejected)
     {
-      // '_' and '%' would otherwise act as wildcards inside the caller's string
-      gchar *esc = _sql_like_escape(folder);
-      gchar *like = g_strdup_printf("%%%s%%", esc);
-      sqlite3_bind_text(st, 1, like, -1, SQLITE_TRANSIENT);
-      g_free(like);
-      g_free(esc);
+      json_builder_set_member_name(b, "rejected");
+      json_builder_add_boolean_value(b, TRUE);
     }
-    if(rating >= 0) sqlite3_bind_int(st, 2, rating);
-    if(color && *color) sqlite3_bind_int(st, 3, color_idx);
-    if(film_roll > 0) sqlite3_bind_int(st, 4, film_roll);
-
-    int n = 0;
-    while(sqlite3_step(st) == SQLITE_ROW && (limit <= 0 || n < limit))
+    if(row->color_labels)
     {
-      const int id = sqlite3_column_int(st, 0);
-      const char *fold = (const char *)sqlite3_column_text(st, 1);
-      const char *fn = (const char *)sqlite3_column_text(st, 2);
-      const int stars = sqlite3_column_int(st, 3);
-      const int rej = sqlite3_column_int(st, 4);
-      const char *labels = (const char *)sqlite3_column_text(st, 5);
-
-      gchar *path = g_build_filename(fold ? fold : "", fn ? fn : "", NULL);
-      json_builder_begin_object(b);
-      json_builder_set_member_name(b, "imgid");
-      json_builder_add_int_value(b, id);
-      json_builder_set_member_name(b, "path");
-      json_builder_add_string_value(b, path);
-      json_builder_set_member_name(b, "rating");
-      json_builder_add_int_value(b, stars);
-      if(rej)
+      json_builder_set_member_name(b, "color_labels");
+      json_builder_begin_array(b);
+      for(GList *c = row->color_labels; c; c = g_list_next(c))
       {
-        json_builder_set_member_name(b, "rejected");
-        json_builder_add_boolean_value(b, TRUE);
+        const int label = GPOINTER_TO_INT(c->data);
+        json_builder_add_string_value(
+          b, (label >= 0 && label < DT_COLORLABELS_LAST) ? dt_colorlabels_name[label] : "?");
       }
-      if(labels && *labels)
-      {
-        json_builder_set_member_name(b, "color_labels");
-        json_builder_begin_array(b);
-        gchar **parts = g_strsplit(labels, ",", -1);
-        for(int i = 0; parts[i]; i++)
-        {
-          const int c = atoi(parts[i]);
-          json_builder_add_string_value(
-            b, (c >= 0 && c < DT_COLORLABELS_LAST) ? dt_colorlabels_name[c] : "?");
-        }
-        g_strfreev(parts);
-        json_builder_end_array(b);
-      }
-      json_builder_end_object(b);
-      g_free(path);
-      n++;
+      json_builder_end_array(b);
     }
-    sqlite3_finalize(st);
+    json_builder_end_object(b);
+    g_free(path);
   }
-  g_string_free(q, TRUE);
+  dt_image_query_rows_free(rows);
 
   json_builder_end_array(b);
   char *out = _builder_to_string(b);
@@ -1762,16 +1601,9 @@ char *dt_bridge_get_history_json(int imgid, char **err)
   // an empty array would otherwise read as "this image has no edits"
   if(!_require_image(imgid, "get_history", err)) return NULL;
 
-  sqlite3 *db = dt_database_get(darktable.db);
-  sqlite3_stmt *st = NULL;
-  const char *q = "SELECT num, operation, op_params, module, enabled, multi_priority, multi_name"
-                  " FROM main.history WHERE imgid = ?1 ORDER BY num";
-  if(!db || sqlite3_prepare_v2(db, q, -1, &st, NULL) != SQLITE_OK)
-  {
-    _seterr(err, "could not query history");
-    return NULL;
-  }
-  sqlite3_bind_int(st, 1, imgid);
+  // _require_image() has read the image from this library, so an empty list
+  // is an image without history, not a library that could not be read
+  GList *rows = dt_history_get_rows(dt_database_get(darktable.db), imgid, -1);
 
   // where each module runs; the history's own `num` is the order edits were
   // made, a different thing entirely
@@ -1779,16 +1611,17 @@ char *dt_bridge_get_history_json(int imgid, char **err)
 
   JsonBuilder *b = json_builder_new();
   json_builder_begin_array(b);
-  while(sqlite3_step(st) == SQLITE_ROW)
+  for(GList *l = rows; l; l = g_list_next(l))
   {
-    const int num = sqlite3_column_int(st, 0);
-    const char *op = (const char *)sqlite3_column_text(st, 1);
-    const void *blob = sqlite3_column_blob(st, 2);
-    const int blen = sqlite3_column_bytes(st, 2);
-    const int version = sqlite3_column_int(st, 3);
-    const int enabled = sqlite3_column_int(st, 4);
-    const int mp = sqlite3_column_int(st, 5);
-    const char *mname = (const char *)sqlite3_column_text(st, 6);
+    const dt_history_row_t *row = l->data;
+    const int num = row->num;
+    const char *op = row->operation;
+    const void *blob = row->op_params;
+    const int blen = row->op_params_size;
+    const int version = row->module_version;
+    const int enabled = row->enabled;
+    const int mp = row->multi_priority;
+    const char *mname = row->multi_name;
 
     json_builder_begin_object(b);
     json_builder_set_member_name(b, "num");
@@ -1822,7 +1655,7 @@ char *dt_bridge_get_history_json(int imgid, char **err)
     }
     json_builder_end_object(b);
   }
-  sqlite3_finalize(st);
+  g_list_free_full(rows, dt_history_row_free);
   dt_ioppr_iop_order_list_free(order_list);
   json_builder_end_array(b);
   char *out = _builder_to_string(b);
@@ -2115,7 +1948,7 @@ static GList *_imgids_from_json(JsonArray *arr, char **err)
     const dt_imgid_t id = (dt_imgid_t)json_array_get_int_element(arr, i);
     // must exist, not merely look plausible: the image cache hands back a blank
     // entry for any positive id and leaks its read lock doing so
-    if(!dt_is_valid_imgid(id) || !_image_exists(id))
+    if(!dt_is_valid_imgid(id) || !dt_image_exists_in_db(dt_database_get(darktable.db), id))
     {
       _seterr(err, "imgids[%u]: no image with imgid %d", i, id);
       g_list_free(l);
