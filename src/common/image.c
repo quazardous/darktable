@@ -1352,6 +1352,187 @@ void dt_image_insert_bare(const dt_imgid_t imgid,
   sqlite3_finalize(stmt);
 }
 
+gboolean dt_image_exists_in_db(sqlite3 *db, const dt_imgid_t imgid)
+{
+  sqlite3_stmt *stmt = NULL;
+  gboolean found = FALSE;
+  if(db && sqlite3_prepare_v2(db, "SELECT 1 FROM main.images WHERE id = ?1",
+                              -1, &stmt, NULL) == SQLITE_OK)
+  {
+    sqlite3_bind_int(stmt, 1, imgid);
+    found = sqlite3_step(stmt) == SQLITE_ROW;
+    sqlite3_finalize(stmt);
+  }
+  return found;
+}
+
+dt_imgid_t dt_image_get_max_id(sqlite3 *db)
+{
+  sqlite3_stmt *stmt = NULL;
+  dt_imgid_t high = -1;
+  if(db && sqlite3_prepare_v2(db, "SELECT IFNULL(MAX(id), 0) FROM main.images",
+                              -1, &stmt, NULL) == SQLITE_OK)
+  {
+    if(sqlite3_step(stmt) == SQLITE_ROW) high = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+  }
+  return high;
+}
+
+GList *dt_image_get_film_images_since(sqlite3 *db,
+                                      const dt_filmid_t film_id,
+                                      const dt_imgid_t since)
+{
+  // a negative baseline is dt_image_get_max_id() without an answer, and
+  // "every image of the roll" must never be guessed in its place
+  if(since < 0) return NULL;
+
+  GList *out = NULL;
+  sqlite3_stmt *stmt = NULL;
+  if(db && sqlite3_prepare_v2(db,
+        "SELECT id FROM main.images WHERE film_id = ?1 AND id > ?2 ORDER BY id",
+        -1, &stmt, NULL) == SQLITE_OK)
+  {
+    sqlite3_bind_int(stmt, 1, film_id);
+    sqlite3_bind_int(stmt, 2, since);
+    while(sqlite3_step(stmt) == SQLITE_ROW)
+      out = g_list_prepend(out, GINT_TO_POINTER(sqlite3_column_int(stmt, 0)));
+    sqlite3_finalize(stmt);
+  }
+  return g_list_reverse(out);
+}
+
+gboolean dt_image_is_undeveloped(sqlite3 *db, const dt_imgid_t imgid)
+{
+  sqlite3_stmt *stmt = NULL;
+  gboolean bare = FALSE;
+  // clang-format off
+  if(db && sqlite3_prepare_v2(db,
+        "SELECT i.history_end, i.flags,"
+        "       (SELECT COUNT(*) FROM main.history WHERE imgid = i.id)"
+        "     + (SELECT COUNT(*) FROM main.masks_history WHERE imgid = i.id)"
+        "     + (SELECT COUNT(*) FROM main.module_order WHERE imgid = i.id)"
+        "     + (SELECT COUNT(*) FROM main.history_hash WHERE imgid = i.id)"
+        " FROM main.images i"
+        " WHERE i.id = ?1",
+        -1, &stmt, NULL) == SQLITE_OK)
+  // clang-format on
+  {
+    sqlite3_bind_int(stmt, 1, imgid);
+    if(sqlite3_step(stmt) == SQLITE_ROW)
+      bare = sqlite3_column_int(stmt, 0) == 0
+          && !(sqlite3_column_int(stmt, 1) & DT_IMAGE_AUTO_PRESETS_APPLIED)
+          && sqlite3_column_int(stmt, 2) == 0;
+    sqlite3_finalize(stmt);
+  }
+  return bare;
+}
+
+gchar *dt_image_query_sql(const dt_image_query_t *query)
+{
+  // flags carries the star rating in its low 3 bits and DT_IMAGE_REJECTED (8)
+  // apart, so a rejected image still holds whatever stars it had
+  // clang-format off
+  GString *q = g_string_new(
+    "SELECT i.id, f.folder, i.filename, i.flags & 7, i.flags & 8,"
+    "       (SELECT group_concat(c.color) FROM main.color_labels c WHERE c.imgid = i.id)"
+    "  FROM main.images i JOIN main.film_rolls f ON i.film_id = f.id"
+    " WHERE 1=1");
+
+  if(query->folder && *query->folder)
+    g_string_append(q, " AND f.folder LIKE ?1 ESCAPE '\\'");
+  if(query->film_id > 0)
+    g_string_append(q, " AND f.id = ?4");
+  if(query->min_rating >= 0)
+    g_string_append(q, " AND (i.flags & 7) >= ?2");
+  if(query->rejected_only)
+    g_string_append(q, " AND (i.flags & 8) != 0");
+  if(query->color >= 0)
+    g_string_append(q, " AND EXISTS (SELECT 1 FROM main.color_labels c"
+                       "              WHERE c.imgid = i.id AND c.color = ?3)");
+  g_string_append(q, " ORDER BY i.id");
+  // clang-format on
+  return g_string_free(q, FALSE);
+}
+
+// the folder is a literal substring: '%', '_' and '\' lose their LIKE meaning
+static gchar *_image_query_like(const char *folder)
+{
+  GString *o = g_string_new("%");
+  for(const char *p = folder; *p; p++)
+  {
+    if(*p == '%' || *p == '_' || *p == '\\') g_string_append_c(o, '\\');
+    g_string_append_c(o, *p);
+  }
+  g_string_append_c(o, '%');
+  return g_string_free(o, FALSE);
+}
+
+gboolean dt_image_query_run(sqlite3 *db,
+                            const dt_image_query_t *query,
+                            const int limit,
+                            GList **rows)
+{
+  *rows = NULL;
+  gchar *sql = dt_image_query_sql(query);
+  sqlite3_stmt *stmt = NULL;
+  const gboolean ok =
+    db && sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK;
+  g_free(sql);
+  if(!ok) return FALSE;
+
+  if(query->folder && *query->folder)
+  {
+    gchar *like = _image_query_like(query->folder);
+    sqlite3_bind_text(stmt, 1, like, -1, SQLITE_TRANSIENT);
+    g_free(like);
+  }
+  if(query->min_rating >= 0) sqlite3_bind_int(stmt, 2, query->min_rating);
+  if(query->color >= 0) sqlite3_bind_int(stmt, 3, query->color);
+  if(query->film_id > 0) sqlite3_bind_int(stmt, 4, query->film_id);
+
+  GList *out = NULL;
+  int n = 0;
+  while((limit <= 0 || n < limit) && sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    dt_image_query_row_t *row = g_new0(dt_image_query_row_t, 1);
+    row->id = sqlite3_column_int(stmt, 0);
+    row->folder = g_strdup((const char *)sqlite3_column_text(stmt, 1));
+    row->filename = g_strdup((const char *)sqlite3_column_text(stmt, 2));
+    row->rating = sqlite3_column_int(stmt, 3);
+    row->rejected = sqlite3_column_int(stmt, 4) != 0;
+    const char *labels = (const char *)sqlite3_column_text(stmt, 5);
+    if(labels && *labels)
+    {
+      gchar **parts = g_strsplit(labels, ",", -1);
+      for(int i = 0; parts[i]; i++)
+        row->color_labels = g_list_prepend(row->color_labels,
+                                           GINT_TO_POINTER(atoi(parts[i])));
+      g_strfreev(parts);
+      row->color_labels = g_list_reverse(row->color_labels);
+    }
+    out = g_list_prepend(out, row);
+    n++;
+  }
+  sqlite3_finalize(stmt);
+  *rows = g_list_reverse(out);
+  return TRUE;
+}
+
+static void _image_query_row_free(gpointer data)
+{
+  dt_image_query_row_t *row = data;
+  g_free(row->folder);
+  g_free(row->filename);
+  g_list_free(row->color_labels);
+  g_free(row);
+}
+
+void dt_image_query_rows_free(GList *rows)
+{
+  g_list_free_full(rows, _image_query_row_free);
+}
+
 void dt_image_update_final_size(const dt_imgid_t imgid)
 {
   if(!dt_is_valid_imgid(imgid)) return;

@@ -52,7 +52,7 @@ static int film_delete(lua_State *L)
   dt_lua_film_t film_id;
   luaA_to(L, dt_lua_film_t, &film_id, 1);
   gboolean force = lua_toboolean(L, 2);
-  if(force || dt_film_is_empty(film_id))
+  if(force || dt_film_is_empty(dt_database_get(darktable.db), film_id))
   {
     dt_film_remove(film_id);
   }

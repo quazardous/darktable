@@ -40,7 +40,7 @@ static int32_t dt_film_import1_run(dt_job_t *job)
   dt_pthread_mutex_unlock(&params->film->images_mutex);
   if(params->film->ref <= 0)
   {
-    if(dt_film_is_empty(params->film->id))
+    if(dt_film_is_empty(dt_database_get(darktable.db), params->film->id))
     {
       dt_film_remove(params->film->id);
     }
@@ -316,7 +316,7 @@ static void _film_import1(dt_job_t *job, dt_film_t *film, GList *images)
       /* cleanup previously imported filmroll*/
       if(cfr && cfr != film)
       {
-        if(dt_film_is_empty(cfr->id))
+        if(dt_film_is_empty(dt_database_get(darktable.db), cfr->id))
         {
           dt_film_remove(cfr->id);
         }

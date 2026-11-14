@@ -1885,14 +1885,17 @@ static void *_column_blob_dup(sqlite3_stmt *stmt, const int col, int *size)
   return copy;
 }
 
-GList *dt_history_get_rows(const dt_imgid_t imgid, const int snapshot_id)
+GList *dt_history_get_rows(sqlite3 *db,
+                           const dt_imgid_t imgid,
+                           const int snapshot_id)
 {
+  if(!db) return NULL;
   sqlite3_stmt *stmt;
   // clang-format off
   if(snapshot_id == -1)
   {
     // not a snapshot, read from main history
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+    DT_DEBUG_SQLITE3_PREPARE_V2(db,
                                 "SELECT imgid, num, module, operation,"
                                 "       op_params, enabled, blendop_params,"
                                 "       blendop_version, multi_priority, multi_name,"
@@ -1906,7 +1909,7 @@ GList *dt_history_get_rows(const dt_imgid_t imgid, const int snapshot_id)
   else
   {
     // a snapshot, read from history_snapshot
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+    DT_DEBUG_SQLITE3_PREPARE_V2(db,
                                 "SELECT id, num, module, operation,"
                                 "       op_params, enabled, blendop_params,"
                                 "       blendop_version, multi_priority, multi_name,"

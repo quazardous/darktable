@@ -27,8 +27,10 @@
 #include "common/debug.h"
 #include "common/film.h"
 #include "common/grouping.h"
+#include "common/history.h"
 #include "common/image.h"
 #include "common/image_cache.h"
+#include "common/iop_order.h"
 #include "common/selection.h"
 
 static int _count(const char *query)
@@ -434,6 +436,165 @@ static void test_bare_rows(void **state)
   g_free(sql);
 }
 
+static GList *_query_ids(const dt_image_query_t *query, const int limit)
+{
+  GList *rows = NULL;
+  assert_true(dt_image_query_run(dt_database_get(darktable.db), query, limit, &rows));
+  GList *ids = NULL;
+  for(GList *r = rows; r; r = g_list_next(r))
+    ids = g_list_append(ids, GINT_TO_POINTER(((dt_image_query_row_t *)r->data)->id));
+  dt_image_query_rows_free(rows);
+  return ids;
+}
+
+// the reads the MCP bridge makes, on the database it is handed: none gives
+// the documented "no answer", never a guess
+static void test_handle_queries(void **state)
+{
+  assert_false(dt_image_exists_in_db(NULL, 1));
+  assert_int_equal(dt_image_get_max_id(NULL), -1);
+  assert_null(dt_image_get_film_images_since(NULL, 1, 0));
+  assert_false(dt_image_is_undeveloped(NULL, 1));
+  assert_false(dt_film_is_empty(NULL, 1));
+  assert_null(dt_film_get_rolls(NULL));
+  assert_null(dt_history_get_rows(NULL, 1, -1));
+  dt_ioppr_delete_iop_order(NULL, 1);
+  const dt_image_query_t any = { NULL, 0, -1, -1, FALSE };
+  GList *rows = GINT_TO_POINTER(1);
+  assert_false(dt_image_query_run(NULL, &any, 0, &rows));
+  assert_null(rows);
+
+  sqlite3 *db = dt_database_get(darktable.db);
+  const dt_filmid_t film = 4252;
+  const dt_imgid_t a = 4253, b = 4254;
+  dt_film_insert_with_id(film, "/helios/scratch_roll");
+  assert_true(dt_film_is_empty(db, film));
+  dt_image_insert_bare(a, film, 600, 400, "a.raw");
+  dt_image_insert_bare(b, film, 600, 400, "b.raw");
+  assert_false(dt_film_is_empty(db, film));
+  assert_true(dt_image_exists_in_db(db, a));
+  assert_false(dt_image_exists_in_db(db, 4299));
+  assert_int_equal(dt_image_get_max_id(db), _count("SELECT MAX(id) FROM main.images"));
+
+  GList *since = dt_image_get_film_images_since(db, film, film);
+  assert_int_equal(g_list_length(since), 2);
+  assert_int_equal(GPOINTER_TO_INT(since->data), a);
+  assert_int_equal(GPOINTER_TO_INT(since->next->data), b);
+  g_list_free(since);
+  since = dt_image_get_film_images_since(db, film, a);
+  assert_int_equal(g_list_length(since), 1);
+  assert_int_equal(GPOINTER_TO_INT(since->data), b);
+  g_list_free(since);
+  assert_null(dt_image_get_film_images_since(db, film, -1));
+
+  gboolean seen = FALSE;
+  GList *rolls = dt_film_get_rolls(db);
+  for(GList *r = rolls; r; r = g_list_next(r))
+  {
+    const dt_film_roll_count_t *roll = r->data;
+    if(roll->id != film) continue;
+    seen = TRUE;
+    assert_string_equal(roll->folder, "/helios/scratch_roll");
+    assert_int_equal(roll->images, 2);
+  }
+  g_list_free_full(rolls, dt_film_roll_count_free);
+  assert_true(seen);
+
+  // a bare row has history_end 1: developed until it is reset
+  assert_false(dt_image_is_undeveloped(db, a));
+  gchar *sql = g_strdup_printf("UPDATE main.images SET history_end = 0, flags = 3"
+                               " WHERE id = %d;"
+                               "UPDATE main.images SET history_end = 0, flags = 8"
+                               " WHERE id = %d;"
+                               "INSERT INTO main.color_labels (imgid, color)"
+                               " VALUES (%d, 2), (%d, 4)", a, b, b, b);
+  DT_DEBUG_SQLITE3_EXEC(db, sql, NULL, NULL, NULL);
+  g_free(sql);
+  assert_true(dt_image_is_undeveloped(db, a));
+  sql = g_strdup_printf("INSERT INTO main.module_order (imgid, version, iop_list)"
+                        " VALUES (%d, 1, NULL)", a);
+  DT_DEBUG_SQLITE3_EXEC(db, sql, NULL, NULL, NULL);
+  g_free(sql);
+  assert_false(dt_image_is_undeveloped(db, a));
+  dt_ioppr_delete_iop_order(db, a);
+  assert_true(dt_image_is_undeveloped(db, a));
+  sql = g_strdup_printf("UPDATE main.images SET flags = flags | %d WHERE id = %d",
+                        DT_IMAGE_AUTO_PRESETS_APPLIED, a);
+  DT_DEBUG_SQLITE3_EXEC(db, sql, NULL, NULL, NULL);
+  g_free(sql);
+  assert_false(dt_image_is_undeveloped(db, a));
+  assert_false(dt_image_is_undeveloped(db, 4299));
+
+  // the SQL of each filter, as the bridge has always sent it
+  gchar *q = dt_image_query_sql(&any);
+  assert_string_equal(q,
+    "SELECT i.id, f.folder, i.filename, i.flags & 7, i.flags & 8,"
+    "       (SELECT group_concat(c.color) FROM main.color_labels c WHERE c.imgid = i.id)"
+    "  FROM main.images i JOIN main.film_rolls f ON i.film_id = f.id"
+    " WHERE 1=1 ORDER BY i.id");
+  g_free(q);
+  const dt_image_query_t all = { "x", 3, 0, 1, TRUE };
+  q = dt_image_query_sql(&all);
+  assert_non_null(strstr(q,
+    " WHERE 1=1 AND f.folder LIKE ?1 ESCAPE '\\' AND f.id = ?4"
+    " AND (i.flags & 7) >= ?2 AND (i.flags & 8) != 0"
+    " AND EXISTS (SELECT 1 FROM main.color_labels c"
+    "              WHERE c.imgid = i.id AND c.color = ?3) ORDER BY i.id"));
+  g_free(q);
+
+  dt_image_query_t query = { NULL, film, -1, -1, FALSE };
+  GList *ids = _query_ids(&query, 0);
+  assert_int_equal(g_list_length(ids), 2);
+  g_list_free(ids);
+  ids = _query_ids(&query, 1);
+  assert_int_equal(g_list_length(ids), 1);
+  assert_int_equal(GPOINTER_TO_INT(ids->data), a);
+  g_list_free(ids);
+
+  query.min_rating = 3;
+  ids = _query_ids(&query, 0);
+  assert_int_equal(g_list_length(ids), 1);
+  assert_int_equal(GPOINTER_TO_INT(ids->data), a);
+  g_list_free(ids);
+
+  query.min_rating = -1;
+  query.rejected_only = TRUE;
+  ids = _query_ids(&query, 0);
+  assert_int_equal(g_list_length(ids), 1);
+  assert_int_equal(GPOINTER_TO_INT(ids->data), b);
+  g_list_free(ids);
+
+  query.rejected_only = FALSE;
+  query.color = 4;
+  assert_true(dt_image_query_run(db, &query, 0, &rows));
+  assert_int_equal(g_list_length(rows), 1);
+  const dt_image_query_row_t *row = rows->data;
+  assert_int_equal(row->id, b);
+  assert_string_equal(row->folder, "/helios/scratch_roll");
+  assert_string_equal(row->filename, "b.raw");
+  assert_int_equal(row->rating, 0);
+  assert_true(row->rejected);
+  assert_int_equal(g_list_length(row->color_labels), 2);
+  dt_image_query_rows_free(rows);
+
+  // the folder is a literal substring: '_' is no wildcard
+  query.color = -1;
+  query.film_id = 0;
+  query.folder = "scratch_roll";
+  ids = _query_ids(&query, 0);
+  assert_int_equal(g_list_length(ids), 2);
+  g_list_free(ids);
+  query.folder = "scratch_rol_";
+  ids = _query_ids(&query, 0);
+  assert_null(ids);
+
+  sql = g_strdup_printf("DELETE FROM main.color_labels WHERE imgid = %d;"
+                        "DELETE FROM main.images WHERE id IN (%d, %d);"
+                        "DELETE FROM main.film_rolls WHERE id = %d", b, a, b, film);
+  DT_DEBUG_SQLITE3_EXEC(db, sql, NULL, NULL, NULL);
+  g_free(sql);
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -451,6 +612,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_jobs_queries),
     cmocka_unit_test(test_group_members),
     cmocka_unit_test(test_bare_rows),
+    cmocka_unit_test(test_handle_queries),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }

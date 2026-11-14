@@ -124,7 +124,7 @@ static void test_get_rows(void **state)
   _exec(sql);
   g_free(sql);
 
-  GList *rows = dt_history_get_rows(imgid, -1);
+  GList *rows = dt_history_get_rows(dt_database_get(darktable.db), imgid, -1);
   assert_int_equal(g_list_length(rows), base + 3);
 
   // by num, whatever the insertion order
@@ -157,7 +157,7 @@ static void test_get_rows(void **state)
   assert_int_equal(r2->multi_name_hand_edited, 1);
   g_list_free_full(rows, dt_history_row_free);
 
-  assert_null(dt_history_get_rows(imgid, 4242));
+  assert_null(dt_history_get_rows(dt_database_get(darktable.db), imgid, 4242));
 }
 
 static void test_snapshot_memory(void **state)
@@ -181,8 +181,8 @@ static void test_snapshot_memory(void **state)
   assert_int_equal(_count("SELECT COUNT(*) FROM memory.history"), 0);
 
   // the snapshot rows carry the snapshot id, not the image id
-  GList *rows = dt_history_get_rows(imgid, 17);
-  GList *main_rows = dt_history_get_rows(imgid, -1);
+  GList *rows = dt_history_get_rows(dt_database_get(darktable.db), imgid, 17);
+  GList *main_rows = dt_history_get_rows(dt_database_get(darktable.db), imgid, -1);
   assert_int_equal(g_list_length(rows), n);
   for(GList *r = rows, *m = main_rows; r && m; r = g_list_next(r), m = g_list_next(m))
   {
@@ -275,7 +275,7 @@ static void test_write_item(void **state)
   assert_int_equal(dt_history_count_items(imgid), 2);
   assert_int_equal(dt_history_next_num(imgid), 4);
 
-  GList *rows = dt_history_get_rows(imgid, -1);
+  GList *rows = dt_history_get_rows(dt_database_get(darktable.db), imgid, -1);
   assert_int_equal(g_list_length(rows), 2);
   const dt_history_row_t *r = rows->data;
   assert_int_equal(r->num, 0);
@@ -346,7 +346,7 @@ static void test_merge_memory(void **state)
   assert_int_equal(dt_history_memory_count(), 2);
   dt_history_merge_memory(imgid);
 
-  GList *rows = dt_history_get_rows(imgid, -1);
+  GList *rows = dt_history_get_rows(dt_database_get(darktable.db), imgid, -1);
   assert_int_equal(g_list_length(rows), 3);
   const char *ops[3] = { "colorin", "colorout", "exposure" };
   const char *names[3] = { "preset", "", "" };
@@ -378,7 +378,7 @@ static void test_instance_item_and_order(void **state)
   const char blend[2] = { 7, 8 };
   assert_true(dt_history_insert_instance_item(imgid, 0, 9, "exposure", params, sizeof(params),
                                               blend, sizeof(blend), 13, 2));
-  GList *rows = dt_history_get_rows(imgid, -1);
+  GList *rows = dt_history_get_rows(dt_database_get(darktable.db), imgid, -1);
   assert_int_equal(g_list_length(rows), 1);
   const dt_history_row_t *r = rows->data;
   assert_int_equal(r->num, 0);
@@ -400,7 +400,7 @@ static void test_instance_item_and_order(void **state)
                                imgid, other);
   _exec(sql);
   g_free(sql);
-  dt_ioppr_delete_iop_order(imgid);
+  dt_ioppr_delete_iop_order(dt_database_get(darktable.db), imgid);
   sql = g_strdup_printf("SELECT COUNT(*) FROM main.module_order WHERE imgid = %d", imgid);
   assert_int_equal(_count(sql), 0);
   g_free(sql);

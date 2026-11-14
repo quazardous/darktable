@@ -237,8 +237,12 @@ typedef struct dt_history_row_t
 } dt_history_row_t;
 
 /** history rows of the image, or of the snapshot when snapshot_id is not
-    -1, by num. Free with g_list_free_full(list, dt_history_row_free) */
-GList *dt_history_get_rows(const dt_imgid_t imgid, const int snapshot_id);
+    -1, by num, read from db (darktable's own library is
+    dt_database_get(darktable.db)); NULL without a db. Free with
+    g_list_free_full(list, dt_history_row_free) */
+GList *dt_history_get_rows(sqlite3 *db,
+                           const dt_imgid_t imgid,
+                           const int snapshot_id);
 void dt_history_row_free(gpointer data);
 
 /** a main.masks_history or memory.snapshot_masks_history row, blobs copied */

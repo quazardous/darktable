@@ -24,6 +24,7 @@
 #include "develop/format.h"
 #include <glib.h>
 #include <inttypes.h>
+#include <sqlite3.h>
 
 G_BEGIN_DECLS
 
@@ -646,6 +647,61 @@ void dt_image_insert_bare(const dt_imgid_t imgid,
                           const int width,
                           const int height,
                           const char *filename);
+
+/* the functions below work on the library given as db, so that a caller
+   holding its own database (the MCP bridge's tests) reads it too; the rest
+   of darktable passes dt_database_get(darktable.db). a NULL db, or a query
+   that cannot run, gives the answer each one documents as "no answer" */
+
+/** whether db holds a row for the image; FALSE without an answer */
+gboolean dt_image_exists_in_db(sqlite3 *db, const dt_imgid_t imgid);
+/** the highest image id in db, 0 for an empty library; -1 without an
+    answer, never confused with an empty library */
+dt_imgid_t dt_image_get_max_id(sqlite3 *db);
+/** the ids, ascending, of the images of the film roll above since; NULL
+    when since is negative or without an answer. free with g_list_free() */
+GList *dt_image_get_film_images_since(sqlite3 *db,
+                                      const dt_filmid_t film_id,
+                                      const dt_imgid_t since);
+/** whether nothing is filed for the image but its own row: history_end 0,
+    no auto-applied presets, no history, masks history, module order or
+    history hash rows. FALSE for a missing image and without an answer */
+gboolean dt_image_is_undeveloped(sqlite3 *db, const dt_imgid_t imgid);
+
+/** a filter on the images of a library: the members left at their unset
+    value (NULL or empty, 0 or less, -1, FALSE) do not filter */
+typedef struct dt_image_query_t
+{
+  const char *folder;      // substring of the film roll folder, matched literally
+  dt_filmid_t film_id;     // the film roll, when above 0
+  int min_rating;          // stars at least, when 0 or more
+  int color;               // carries this dt_colorlabels_enum, when 0 or more
+  gboolean rejected_only;  // only the rejected images
+} dt_image_query_t;
+
+/** one image matched by dt_image_query_run() */
+typedef struct dt_image_query_row_t
+{
+  dt_imgid_t id;
+  gchar *folder;
+  gchar *filename;
+  int rating;              // stars, kept while rejected
+  gboolean rejected;
+  GList *color_labels;     // dt_colorlabels_enum values, as GINT_TO_POINTER
+} dt_image_query_row_t;
+
+/** the SQL of a query, with its parameters numbered as dt_image_query_run()
+    binds them; free with g_free() */
+gchar *dt_image_query_sql(const dt_image_query_t *query);
+/** the images matching query, by id, at most limit of them when limit is
+    above 0, in *rows (free with dt_image_query_rows_free()). FALSE, *rows
+    NULL, without an answer */
+gboolean dt_image_query_run(sqlite3 *db,
+                            const dt_image_query_t *query,
+                            const int limit,
+                            GList **rows);
+void dt_image_query_rows_free(GList *rows);
+
 void dt_image_update_final_size(const dt_imgid_t imgid);
 /** set image location lon/lat/ele */
 void dt_image_set_location(const dt_imgid_t imgid,

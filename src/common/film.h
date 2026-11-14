@@ -59,8 +59,21 @@ dt_filmid_t dt_film_get_id(const char *folder);
 dt_filmid_t dt_film_get_id_like(const char *folder);
 /** removes this film and all its images from db. */
 void dt_film_remove(const dt_filmid_t id);
-/** checks if film is empty */
-gboolean dt_film_is_empty(const dt_filmid_t id);
+/** whether the film roll of db holds no image; FALSE without an answer
+    (a NULL db or a query that cannot run). darktable's own library is
+    dt_database_get(darktable.db) */
+gboolean dt_film_is_empty(sqlite3 *db, const dt_filmid_t id);
+/** one film roll of dt_film_get_rolls() */
+typedef struct dt_film_roll_count_t
+{
+  dt_filmid_t id;
+  gchar *folder;
+  int images;
+} dt_film_roll_count_t;
+/** every film roll of db with its image count, by folder; NULL without an
+    answer. free with g_list_free_full(list, dt_film_roll_count_free) */
+GList *dt_film_get_rolls(sqlite3 *db);
+void dt_film_roll_count_free(gpointer roll);
 /** folder of a film roll, or NULL if it does not exist; free with g_free() */
 gchar *dt_film_get_folder(const dt_filmid_t id);
 /** number of images in a film roll */

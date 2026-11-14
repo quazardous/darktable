@@ -106,7 +106,7 @@ gboolean dt_masks_scratch_reset_to_migrated(const dt_imgid_t imgid,
 void dt_masks_scratch_wipe_history(const dt_imgid_t imgid)
 {
   dt_history_delete_rows(imgid);
-  dt_ioppr_delete_iop_order(imgid);
+  dt_ioppr_delete_iop_order(dt_database_get(darktable.db), imgid);
 }
 
 void dt_masks_scratch_seed_iop_order(const dt_imgid_t imgid,

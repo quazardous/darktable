@@ -119,6 +119,8 @@
 
 #pragma once
 
+#include <sqlite3.h>
+
 G_BEGIN_DECLS
 
 struct dt_iop_module_t;
@@ -204,8 +206,9 @@ gboolean dt_ioppr_is_iop_before(GList *iop_order_list,
                                 const char *base_operation,
                                 const char *operation,
                                 const int multi_priority);
-/* remove the image's module_order row */
-void dt_ioppr_delete_iop_order(const dt_imgid_t imgid);
+/* remove the image's module_order row from db, darktable's own library
+   being dt_database_get(darktable.db); nothing without a db */
+void dt_ioppr_delete_iop_order(sqlite3 *db, const dt_imgid_t imgid);
 /* write iop-order list for the given image */
 gboolean dt_ioppr_write_iop_order_list(GList *iop_order_list,
                                        const dt_imgid_t imgid);
