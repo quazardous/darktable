@@ -9453,7 +9453,135 @@
   },
   {
    "file": "common/history.c",
-   "line": 2032,
+   "line": 2047,
+   "function": "dt_history_get_masks_rows_at",
+   "call": "sqlite3_prepare_v2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.masks_history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT formid, form, name, version, points, points_count, source, num FROM main.masks_history WHERE imgid = ?1 AND num = (SELECT MAX(num) FROM main.masks_history WHERE imgid = ?1 AND num <= ?2)"
+  },
+  {
+   "file": "common/history.c",
+   "line": 2075,
+   "function": "dt_history_get_masks_visible_rows",
+   "call": "sqlite3_prepare_v2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.masks_history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT formid, form, name, version, points, points_count, source, MAX(num) FROM main.masks_history WHERE imgid = ?1 AND num <= ?2 GROUP BY formid ORDER BY formid"
+  },
+  {
+   "file": "common/history.c",
+   "line": 2097,
+   "function": "dt_history_get_masks_form_latest",
+   "call": "sqlite3_prepare_v2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.masks_history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT formid, form, name, version, points, points_count, source, num FROM main.masks_history WHERE imgid = ?1 AND formid = ?2 ORDER BY num DESC LIMIT 1"
+  },
+  {
+   "file": "common/history.c",
+   "line": 2120,
+   "function": "dt_history_get_masks_num_below",
+   "call": "sqlite3_prepare_v2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.masks_history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT MAX(num) FROM main.masks_history WHERE imgid = ?1 AND num < ?2"
+  },
+  {
+   "file": "common/history.c",
+   "line": 2140,
+   "function": "dt_history_get_masks_form_ids",
+   "call": "sqlite3_prepare_v2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.masks_history"
+   ],
+   "domains": [
+    "history"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT DISTINCT formid FROM main.masks_history WHERE imgid = ?1"
+  },
+  {
+   "file": "common/history.c",
+   "line": 2164,
+   "function": "dt_history_blend_rows_open",
+   "call": "sqlite3_prepare_v2",
+   "layer": "common",
+   "step": "B",
+   "ops": [
+    "SELECT"
+   ],
+   "write": false,
+   "dynamic": false,
+   "tables": [
+    "main.history",
+    "main.images"
+   ],
+   "domains": [
+    "history",
+    "images"
+   ],
+   "cross_schema": false,
+   "sql": "SELECT h.imgid, h.num, h.operation, h.blendop_params, h.blendop_version, h.multi_priority, h.enabled, i.width, i.height FROM main.history h JOIN main.images i ON i.id = h.imgid WHERE h.blendop_params IS NOT NULL ORDER BY h.imgid, h.num"
+  },
+  {
+   "file": "common/history.c",
+   "line": 2218,
    "function": "dt_history_write_item",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9474,7 +9602,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2040,
+   "line": 2226,
    "function": "dt_history_write_item",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9495,7 +9623,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2050,
+   "line": 2236,
    "function": "dt_history_write_item",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9516,7 +9644,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2088,
+   "line": 2274,
    "function": "dt_history_insert_masks_item",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9537,7 +9665,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2113,
+   "line": 2299,
    "function": "dt_history_next_num",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9558,7 +9686,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2128,
+   "line": 2314,
    "function": "dt_history_delete_rows",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9579,7 +9707,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2135,
+   "line": 2321,
    "function": "dt_history_delete_rows",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9600,7 +9728,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2147,
+   "line": 2333,
    "function": "dt_history_memory_count",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9621,7 +9749,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2164,
+   "line": 2350,
    "function": "dt_history_memory_insert_default",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9642,7 +9770,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2195,
+   "line": 2381,
    "function": "dt_history_merge_memory",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9663,7 +9791,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2205,
+   "line": 2391,
    "function": "dt_history_merge_memory",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9684,7 +9812,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2232,
+   "line": 2418,
    "function": "dt_history_merge_memory",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9705,7 +9833,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2244,
+   "line": 2430,
    "function": "dt_history_merge_memory",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9726,7 +9854,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2257,
+   "line": 2443,
    "function": "dt_history_merge_memory",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9749,7 +9877,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2335,
+   "line": 2521,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9770,7 +9898,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2352,
+   "line": 2538,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9791,7 +9919,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2389,
+   "line": 2575,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9812,7 +9940,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2418,
+   "line": 2604,
    "function": "_history_hash_compute_from_db",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9833,7 +9961,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2499,
+   "line": 2685,
    "function": "dt_history_hash_write_from_history",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9855,7 +9983,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2522,
+   "line": 2708,
    "function": "dt_history_hash_write",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9877,7 +10005,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2550,
+   "line": 2736,
    "function": "dt_history_hash_read",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9898,7 +10026,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2605,
+   "line": 2791,
    "function": "dt_history_hash_is_mipmap_synced",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9919,7 +10047,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2627,
+   "line": 2813,
    "function": "dt_history_hash_set_mipmap",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9940,7 +10068,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2643,
+   "line": 2829,
    "function": "dt_history_hash_unset_mipmap",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -9961,7 +10089,7 @@
   },
   {
    "file": "common/history.c",
-   "line": 2672,
+   "line": 2858,
    "function": "dt_history_hash_get_status",
    "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
    "layer": "common",
@@ -16911,130 +17039,6 @@
    ],
    "cross_schema": false,
    "sql": "SELECT COUNT(1) FROM images AS i1 WHERE EXISTS (SELECT 'y' FROM images AS i2 WHERE i2.id = ?1 AND i1.film_id = i2.film_id AND i1.filename = i2.filename)"
-  },
-  {
-   "file": "develop/masks/blend_blob.c",
-   "line": 422,
-   "function": "dt_masks_read_forms_at",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.masks_history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT formid, form, name, version, points, points_count, source FROM main.masks_history WHERE imgid = ?1 AND num = (SELECT MAX(num) FROM main.masks_history WHERE imgid = ?1 AND num <= ?2)"
-  },
-  {
-   "file": "develop/masks/harvest.c",
-   "line": 458,
-   "function": "_emit_forms",
-   "call": "sqlite3_prepare_v2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.masks_history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "points_blob_bytespoints_errorblob size does not match stride * countSELECT formid, form, version, points, points_count, source, MAX(num) FROM masks_history WHERE imgid = ?1 AND num <= ?2 GROUP BY formid ORDER BY formid"
-  },
-  {
-   "file": "develop/masks/harvest.c",
-   "line": 1195,
-   "function": "dt_masks_harvest_library",
-   "call": "sqlite3_prepare_v2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [],
-   "write": false,
-   "dynamic": true,
-   "tables": [
-    "main.history",
-    "main.images"
-   ],
-   "domains": [
-    "history",
-    "images"
-   ],
-   "cross_schema": false,
-   "sql": "wb[harvest] cannot write output file: %s\\n{formatdarktable-mask-harvestformat_versiondarktable_versioncurrent_blend_versioncurrent_masks_versioncontentsMask configurations only. No file names, no folder or film-roll names, no shape or group names, no module instance names, no image content, no thumbnails, no timestamps, no EXIF. Image identity is reduced to pixel dimensions and a sequential index."
-  },
-  {
-   "file": "develop/masks/migrate_legacy.c",
-   "line": 680,
-   "function": "_form_members",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.masks_history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT form, version, points, points_count FROM main.masks_history WHERE imgid = ?1 AND formid = ?2 ORDER BY num DESC LIMIT 1"
-  },
-  {
-   "file": "develop/masks/migrate_legacy.c",
-   "line": 1146,
-   "function": "_current_masks_history_num",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.masks_history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT MAX(num) FROM main.masks_history WHERE imgid = ?1 AND num < ?2"
-  },
-  {
-   "file": "develop/masks/migrate_legacy.c",
-   "line": 1165,
-   "function": "_stored_form_ids",
-   "call": "DT_DEBUG_SQLITE3_PREPARE_V2",
-   "layer": "develop",
-   "step": "A",
-   "ops": [
-    "SELECT"
-   ],
-   "write": false,
-   "dynamic": false,
-   "tables": [
-    "main.masks_history"
-   ],
-   "domains": [
-    "history"
-   ],
-   "cross_schema": false,
-   "sql": "SELECT DISTINCT formid FROM main.masks_history WHERE imgid = ?1"
   },
   {
    "file": "tests/unittests/catalog/catalog_fixture.c",

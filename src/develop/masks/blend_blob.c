@@ -48,6 +48,7 @@
 
 #include "common/darktable.h"
 #include "common/debug.h"
+#include "common/history.h"
 #include "develop/blend.h"
 #include "develop/develop.h"
 #include "develop/imageop.h"
@@ -417,36 +418,17 @@ gboolean dt_masks_blend_blob_forms_match(const dt_develop_blend_params_t *bp,
 GList *dt_masks_read_forms_at(const dt_imgid_t imgid, const int num)
 {
   GList *forms = NULL;
-  sqlite3_stmt *stmt;
-  // clang-format off
-  DT_DEBUG_SQLITE3_PREPARE_V2
-    (dt_database_get(darktable.db),
-     "SELECT formid, form, name, version, points, points_count, source"
-     " FROM main.masks_history"
-     " WHERE imgid = ?1"
-     "   AND num = (SELECT MAX(num) FROM main.masks_history"
-     "              WHERE imgid = ?1 AND num <= ?2)",
-     -1, &stmt, NULL);
-  // clang-format on
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, num);
-  while(sqlite3_step(stmt) == SQLITE_ROW)
+  GList *rows = dt_history_get_masks_rows_at(dt_database_get(darktable.db), imgid, num);
+  for(const GList *l = rows; l; l = g_list_next(l))
   {
-    const dt_mask_id_t formid = sqlite3_column_int(stmt, 0);
-    const dt_masks_type_t type = sqlite3_column_int(stmt, 1);
-    const char *name = (const char *)sqlite3_column_text(stmt, 2);
-    const int version = sqlite3_column_int(stmt, 3);
-    const void *points = sqlite3_column_blob(stmt, 4);
-    const int points_bytes = sqlite3_column_bytes(stmt, 4);
-    const int nb_points = sqlite3_column_int(stmt, 5);
-    const void *source = sqlite3_column_blob(stmt, 6);
-    const int source_bytes = sqlite3_column_bytes(stmt, 6);
+    const dt_history_masks_row_t *row = l->data;
     dt_masks_form_t *form = dt_masks_form_from_stored
-      (NULL, imgid, formid, type, name, version,
-       points, points_bytes, nb_points, source, source_bytes);
+      (NULL, imgid, row->formid, row->type, row->name, row->version,
+       row->points, row->points_size, row->points_count,
+       row->source, row->source_size);
     if(form) forms = g_list_append(forms, form);
   }
-  sqlite3_finalize(stmt);
+  g_list_free_full(rows, dt_history_masks_row_free);
   return forms;
 }
 

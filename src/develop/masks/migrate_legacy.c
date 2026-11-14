@@ -41,6 +41,7 @@
 
 #include "common/darktable.h"
 #include "common/debug.h"
+#include "common/history.h"
 #include "develop/blend.h"
 #include "develop/develop.h"
 #include "develop/imageop.h"
@@ -676,37 +677,28 @@ static gboolean _form_members(dt_iop_module_t *module,
     return TRUE;
   }
 
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT form, version, points, points_count"
-                              " FROM main.masks_history"
-                              " WHERE imgid = ?1 AND formid = ?2"
-                              " ORDER BY num DESC LIMIT 1",
-                              -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, module->dev->image_storage.id);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, id);
-  const gboolean found = sqlite3_step(stmt) == SQLITE_ROW;
-  if(found)
+  dt_history_masks_row_t *row =
+    dt_history_get_masks_form_latest(dt_database_get(darktable.db),
+                                     module->dev->image_storage.id, id);
+  if(!row) return FALSE;
+  *is_group = (row->type & DT_MASKS_GROUP) != 0;
+  if(*is_group)
   {
-    *is_group = (sqlite3_column_int(stmt, 0) & DT_MASKS_GROUP) != 0;
-    if(*is_group)
+    const size_t stride = dt_masks_point_stride(DT_MASKS_GROUP, row->version,
+                                                sizeof(dt_masks_point_group_t));
+    const char *blob = row->points;
+    const size_t bytes = row->points_size;
+    const int count = row->points_count;
+    for(int i = 0; blob && i < count && (i + 1) * stride <= bytes; i++)
     {
-      const size_t stride = dt_masks_point_stride(DT_MASKS_GROUP, sqlite3_column_int(stmt, 1),
-                                                  sizeof(dt_masks_point_group_t));
-      const char *blob = sqlite3_column_blob(stmt, 2);
-      const size_t bytes = sqlite3_column_bytes(stmt, 2);
-      const int count = sqlite3_column_int(stmt, 3);
-      for(int i = 0; blob && i < count && (i + 1) * stride <= bytes; i++)
-      {
-        dt_mask_id_t member;
-        memcpy(&member, blob + i * stride + offsetof(dt_masks_point_group_t, formid),
-               sizeof(member));
-        g_array_append_val(members, member);
-      }
+      dt_mask_id_t member;
+      memcpy(&member, blob + i * stride + offsetof(dt_masks_point_group_t, formid),
+             sizeof(member));
+      g_array_append_val(members, member);
     }
   }
-  sqlite3_finalize(stmt);
-  return found;
+  dt_history_masks_row_free(row);
+  return TRUE;
 }
 
 // does form `id` render nothing at all: gone, or a group of such members?
@@ -1142,17 +1134,9 @@ void dt_masks_migrate_classic_to_flexi(dt_iop_module_t *module,
 // every other mask would stop resolving
 static int _current_masks_history_num(const dt_develop_t *dev)
 {
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT MAX(num) FROM main.masks_history"
-                              " WHERE imgid = ?1 AND num < ?2",
-                              -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, dev->image_storage.id);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, dev->history_end);
   int num = dev->history_end - 1; // no masks data yet
-  if(sqlite3_step(stmt) == SQLITE_ROW && sqlite3_column_type(stmt, 0) != SQLITE_NULL)
-    num = sqlite3_column_int(stmt, 0);
-  sqlite3_finalize(stmt);
+  dt_history_get_masks_num_below(dt_database_get(darktable.db),
+                                 dev->image_storage.id, dev->history_end, &num);
   return num;
 }
 
@@ -1160,19 +1144,8 @@ static int _current_masks_history_num(const dt_develop_t *dev)
 // is not this image's yet when the history loads
 static GHashTable *_stored_form_ids(const dt_develop_t *dev)
 {
-  GHashTable *ids = g_hash_table_new(NULL, NULL);
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT DISTINCT formid FROM main.masks_history WHERE imgid = ?1",
-                              -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, dev->image_storage.id);
-  while(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    const dt_mask_id_t formid = sqlite3_column_int(stmt, 0);
-    g_hash_table_add(ids, GINT_TO_POINTER(formid));
-  }
-  sqlite3_finalize(stmt);
-  return ids;
+  return dt_history_get_masks_form_ids(dt_database_get(darktable.db),
+                                       dev->image_storage.id);
 }
 
 void dt_masks_import_stored_forms(dt_iop_module_t *module,

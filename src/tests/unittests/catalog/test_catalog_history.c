@@ -319,6 +319,114 @@ static void test_masks_item_and_delete(void **state)
   assert_int_equal(dt_history_count_items(other), keep);
 }
 
+// the masks history reads the flexi masks code makes, on the database it is
+// handed: the mask harvest opens a library of its own
+static void test_masks_handle_reads(void **state)
+{
+  sqlite3 *db = dt_database_get(darktable.db);
+  const dt_imgid_t imgid = dt_test_catalog_image("mire1.cr2");
+  assert_true(dt_is_valid_imgid(imgid));
+  dt_history_delete_rows(imgid);
+
+  const float points[2] = { 1, 2 };
+  // form 10 at num 0 and changed at num 2; group 20 at num 0 only
+  dt_history_insert_masks_item(imgid, 0, 10, 1, "circle", 6, points, sizeof(points), 1,
+                               NULL, 0);
+  dt_history_insert_masks_item(imgid, 0, 20, DT_MASKS_GROUP, "grp", 6, points,
+                               sizeof(points), 1, NULL, 0);
+  dt_history_insert_masks_item(imgid, 2, 10, 1, "circle", 7, points, sizeof(points), 1,
+                               NULL, 0);
+
+  // the forms of the latest snapshot at or below num
+  GList *rows = dt_history_get_masks_rows_at(db, imgid, 1);
+  assert_int_equal(g_list_length(rows), 2);
+  g_list_free_full(rows, dt_history_masks_row_free);
+  rows = dt_history_get_masks_rows_at(db, imgid, 5);
+  assert_int_equal(g_list_length(rows), 1);
+  assert_int_equal(((dt_history_masks_row_t *)rows->data)->version, 7);
+  g_list_free_full(rows, dt_history_masks_row_free);
+  assert_null(dt_history_get_masks_rows_at(NULL, imgid, 5));
+
+  // every form visible at num, the latest row of each, by formid
+  assert_true(dt_history_get_masks_visible_rows(db, imgid, 2, &rows));
+  assert_int_equal(g_list_length(rows), 2);
+  const dt_history_masks_row_t *v0 = rows->data;
+  const dt_history_masks_row_t *v1 = rows->next->data;
+  assert_int_equal(v0->formid, 10);
+  assert_int_equal(v0->version, 7);
+  assert_int_equal(v0->num, 2);
+  assert_int_equal(v1->formid, 20);
+  assert_int_equal(v1->type, DT_MASKS_GROUP);
+  g_list_free_full(rows, dt_history_masks_row_free);
+  assert_true(dt_history_get_masks_visible_rows(db, imgid, 0, &rows));
+  assert_int_equal(((dt_history_masks_row_t *)rows->data)->version, 6);
+  g_list_free_full(rows, dt_history_masks_row_free);
+  rows = GINT_TO_POINTER(1);
+  assert_false(dt_history_get_masks_visible_rows(NULL, imgid, 2, &rows));
+  assert_null(rows);
+
+  // the latest row of one form
+  dt_history_masks_row_t *latest = dt_history_get_masks_form_latest(db, imgid, 10);
+  assert_non_null(latest);
+  assert_int_equal(latest->num, 2);
+  assert_int_equal(latest->points_count, 1);
+  assert_memory_equal(latest->points, points, sizeof(points));
+  dt_history_masks_row_free(latest);
+  assert_null(dt_history_get_masks_form_latest(db, imgid, 99));
+  assert_null(dt_history_get_masks_form_latest(NULL, imgid, 10));
+
+  // the highest num below a bound, and none below the first
+  int num = -7;
+  assert_true(dt_history_get_masks_num_below(db, imgid, 2, &num));
+  assert_int_equal(num, 0);
+  assert_true(dt_history_get_masks_num_below(db, imgid, 3, &num));
+  assert_int_equal(num, 2);
+  num = -7;
+  assert_false(dt_history_get_masks_num_below(db, imgid, 0, &num));
+  assert_false(dt_history_get_masks_num_below(NULL, imgid, 3, &num));
+  assert_int_equal(num, -7);
+
+  GHashTable *ids = dt_history_get_masks_form_ids(db, imgid);
+  assert_int_equal(g_hash_table_size(ids), 2);
+  assert_true(g_hash_table_contains(ids, GINT_TO_POINTER(10)));
+  assert_true(g_hash_table_contains(ids, GINT_TO_POINTER(20)));
+  g_hash_table_destroy(ids);
+  ids = dt_history_get_masks_form_ids(NULL, imgid);
+  assert_int_equal(g_hash_table_size(ids), 0);
+  g_hash_table_destroy(ids);
+
+  // the history rows carrying blend params, this image's among them
+  const int params[2] = { 1, 2 };
+  const char blend[3] = { 9, 8, 7 };
+  dt_history_write_item(imgid, 0, "exposure", params, sizeof(params), 6, 1,
+                        blend, sizeof(blend), 13, 1, "", 0);
+  dt_history_write_item(imgid, 1, "colorin", params, sizeof(params), 2, 0,
+                        NULL, 0, 13, 0, "", 0);
+  int seen = 0;
+  dt_history_blend_rows_t *cursor = dt_history_blend_rows_open(db);
+  assert_non_null(cursor);
+  const dt_history_blend_row_t *b;
+  while((b = dt_history_blend_rows_next(cursor)))
+  {
+    if(b->imgid != imgid) continue;
+    seen++;
+    assert_int_equal(b->num, 0);
+    assert_string_equal(b->operation, "exposure");
+    assert_int_equal(b->blendop_params_size, sizeof(blend));
+    assert_memory_equal(b->blendop_params, blend, sizeof(blend));
+    assert_int_equal(b->blendop_version, 13);
+    assert_int_equal(b->multi_priority, 1);
+    assert_int_equal(b->enabled, 1);
+  }
+  dt_history_blend_rows_close(cursor);
+  assert_int_equal(seen, 1);
+  assert_null(dt_history_blend_rows_open(NULL));
+  assert_null(dt_history_blend_rows_next(NULL));
+  dt_history_blend_rows_close(NULL);
+
+  dt_history_delete_rows(imgid);
+}
+
 static void test_merge_memory(void **state)
 {
   const dt_imgid_t imgid = dt_test_catalog_image("bayer4.crw");
@@ -420,6 +528,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_get_masks_rows),
     cmocka_unit_test(test_write_item),
     cmocka_unit_test(test_masks_item_and_delete),
+    cmocka_unit_test(test_masks_handle_reads),
     cmocka_unit_test(test_merge_memory),
     cmocka_unit_test(test_instance_item_and_order),
   };

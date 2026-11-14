@@ -2014,6 +2014,192 @@ void dt_history_masks_row_free(gpointer data)
   g_free(row);
 }
 
+// the masks history columns read in this order, from column 0:
+// formid, form, name, version, points, points_count, source, num
+static dt_history_masks_row_t *_masks_row_read(sqlite3_stmt *stmt)
+{
+  dt_history_masks_row_t *row = g_malloc0(sizeof(dt_history_masks_row_t));
+  row->formid = sqlite3_column_int(stmt, 0);
+  row->type = sqlite3_column_int(stmt, 1);
+  row->name = g_strdup((const char *)sqlite3_column_text(stmt, 2));
+  row->version = sqlite3_column_int(stmt, 3);
+  row->points = _column_blob_dup(stmt, 4, &row->points_size);
+  row->points_count = sqlite3_column_int(stmt, 5);
+  row->source = _column_blob_dup(stmt, 6, &row->source_size);
+  row->num = sqlite3_column_int(stmt, 7);
+  return row;
+}
+
+static GList *_masks_rows_read(sqlite3_stmt *stmt)
+{
+  GList *rows = NULL;
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+    rows = g_list_prepend(rows, _masks_row_read(stmt));
+  return g_list_reverse(rows);
+}
+
+GList *dt_history_get_masks_rows_at(sqlite3 *db,
+                                    const dt_imgid_t imgid,
+                                    const int num)
+{
+  sqlite3_stmt *stmt = NULL;
+  // clang-format off
+  if(!db || sqlite3_prepare_v2(db,
+       "SELECT formid, form, name, version, points, points_count, source, num"
+       " FROM main.masks_history"
+       " WHERE imgid = ?1"
+       "   AND num = (SELECT MAX(num) FROM main.masks_history"
+       "              WHERE imgid = ?1 AND num <= ?2)",
+       -1, &stmt, NULL) != SQLITE_OK)
+    return NULL;
+  // clang-format on
+  sqlite3_bind_int(stmt, 1, imgid);
+  sqlite3_bind_int(stmt, 2, num);
+  GList *rows = _masks_rows_read(stmt);
+  sqlite3_finalize(stmt);
+  return rows;
+}
+
+gboolean dt_history_get_masks_visible_rows(sqlite3 *db,
+                                           const dt_imgid_t imgid,
+                                           const int num,
+                                           GList **rows)
+{
+  *rows = NULL;
+  sqlite3_stmt *stmt = NULL;
+  // a form has a row where it was created or changed, and a later entry that
+  // only refers to a mask writes none. as dt_masks_read_masks_history() does,
+  // every row up to num is read and the latest per form wins: with MAX(num)
+  // selected, SQLite takes the other columns from the row holding the maximum
+  // clang-format off
+  if(!db || sqlite3_prepare_v2(db,
+       "SELECT formid, form, name, version, points, points_count, source,"
+       "       MAX(num)"
+       " FROM main.masks_history WHERE imgid = ?1 AND num <= ?2"
+       " GROUP BY formid"
+       " ORDER BY formid",
+       -1, &stmt, NULL) != SQLITE_OK)
+    return FALSE;
+  // clang-format on
+  sqlite3_bind_int(stmt, 1, imgid);
+  sqlite3_bind_int(stmt, 2, num);
+  *rows = _masks_rows_read(stmt);
+  sqlite3_finalize(stmt);
+  return TRUE;
+}
+
+dt_history_masks_row_t *dt_history_get_masks_form_latest(sqlite3 *db,
+                                                         const dt_imgid_t imgid,
+                                                         const dt_mask_id_t formid)
+{
+  sqlite3_stmt *stmt = NULL;
+  // clang-format off
+  if(!db || sqlite3_prepare_v2(db,
+       "SELECT formid, form, name, version, points, points_count, source, num"
+       " FROM main.masks_history"
+       " WHERE imgid = ?1 AND formid = ?2"
+       " ORDER BY num DESC LIMIT 1",
+       -1, &stmt, NULL) != SQLITE_OK)
+    return NULL;
+  // clang-format on
+  sqlite3_bind_int(stmt, 1, imgid);
+  sqlite3_bind_int(stmt, 2, formid);
+  dt_history_masks_row_t *row =
+    sqlite3_step(stmt) == SQLITE_ROW ? _masks_row_read(stmt) : NULL;
+  sqlite3_finalize(stmt);
+  return row;
+}
+
+gboolean dt_history_get_masks_num_below(sqlite3 *db,
+                                        const dt_imgid_t imgid,
+                                        const int below,
+                                        int *num)
+{
+  sqlite3_stmt *stmt = NULL;
+  // clang-format off
+  if(!db || sqlite3_prepare_v2(db,
+       "SELECT MAX(num) FROM main.masks_history"
+       " WHERE imgid = ?1 AND num < ?2",
+       -1, &stmt, NULL) != SQLITE_OK)
+    return FALSE;
+  // clang-format on
+  sqlite3_bind_int(stmt, 1, imgid);
+  sqlite3_bind_int(stmt, 2, below);
+  const gboolean found = sqlite3_step(stmt) == SQLITE_ROW
+                         && sqlite3_column_type(stmt, 0) != SQLITE_NULL;
+  if(found) *num = sqlite3_column_int(stmt, 0);
+  sqlite3_finalize(stmt);
+  return found;
+}
+
+GHashTable *dt_history_get_masks_form_ids(sqlite3 *db, const dt_imgid_t imgid)
+{
+  GHashTable *ids = g_hash_table_new(NULL, NULL);
+  sqlite3_stmt *stmt = NULL;
+  // clang-format off
+  if(!db || sqlite3_prepare_v2(db,
+       "SELECT DISTINCT formid FROM main.masks_history WHERE imgid = ?1",
+       -1, &stmt, NULL) != SQLITE_OK)
+    return ids;
+  // clang-format on
+  sqlite3_bind_int(stmt, 1, imgid);
+  while(sqlite3_step(stmt) == SQLITE_ROW)
+    g_hash_table_add(ids, GINT_TO_POINTER(sqlite3_column_int(stmt, 0)));
+  sqlite3_finalize(stmt);
+  return ids;
+}
+
+struct dt_history_blend_rows_t
+{
+  sqlite3_stmt *stmt;
+  dt_history_blend_row_t row;
+};
+
+dt_history_blend_rows_t *dt_history_blend_rows_open(sqlite3 *db)
+{
+  sqlite3_stmt *stmt = NULL;
+  // only what the mask harvest needs, and nothing free-text: no filename, no
+  // multi_name
+  // clang-format off
+  if(!db || sqlite3_prepare_v2(db,
+       "SELECT h.imgid, h.num, h.operation, h.blendop_params, h.blendop_version,"
+       "       h.multi_priority, h.enabled, i.width, i.height"
+       " FROM main.history h JOIN main.images i ON i.id = h.imgid"
+       " WHERE h.blendop_params IS NOT NULL"
+       " ORDER BY h.imgid, h.num",
+       -1, &stmt, NULL) != SQLITE_OK)
+    return NULL;
+  // clang-format on
+  dt_history_blend_rows_t *rows = g_new0(dt_history_blend_rows_t, 1);
+  rows->stmt = stmt;
+  return rows;
+}
+
+const dt_history_blend_row_t *dt_history_blend_rows_next(dt_history_blend_rows_t *rows)
+{
+  if(!rows || sqlite3_step(rows->stmt) != SQLITE_ROW) return NULL;
+  sqlite3_stmt *stmt = rows->stmt;
+  dt_history_blend_row_t *row = &rows->row;
+  row->imgid = sqlite3_column_int(stmt, 0);
+  row->num = sqlite3_column_int(stmt, 1);
+  row->operation = (const char *)sqlite3_column_text(stmt, 2);
+  row->blendop_params = sqlite3_column_blob(stmt, 3);
+  row->blendop_params_size = sqlite3_column_bytes(stmt, 3);
+  row->blendop_version = sqlite3_column_int(stmt, 4);
+  row->multi_priority = sqlite3_column_int(stmt, 5);
+  row->enabled = sqlite3_column_int(stmt, 6);
+  row->width = sqlite3_column_int(stmt, 7);
+  row->height = sqlite3_column_int(stmt, 8);
+  return row;
+}
+
+void dt_history_blend_rows_close(dt_history_blend_rows_t *rows)
+{
+  if(!rows) return;
+  sqlite3_finalize(rows->stmt);
+  g_free(rows);
+}
+
 void dt_history_write_item(const dt_imgid_t imgid,
                            const int num,
                            const char *operation,
