@@ -300,7 +300,7 @@ dt_filmid_t dt_film_import(const char *dirname)
   if(!dt_is_valid_filmid(film->id))
   {
     // if the film is empty => remove it again.
-    if(dt_film_is_empty(film->id))
+    if(dt_film_is_empty(dt_database_get(darktable.db), film->id))
     {
       dt_film_remove(film->id);
     }
@@ -391,6 +391,19 @@ static gboolean ask_and_delete(gpointer user_data)
   return FALSE;
 }
 
+void dt_film_insert_with_id(const dt_filmid_t id, const char *folder)
+{
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "INSERT OR IGNORE INTO main.film_rolls (id, folder)"
+                              " VALUES (?1, ?2)",
+                              -1, &stmt, NULL);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, id);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 2, folder, -1, SQLITE_TRANSIENT);
+  sqlite3_step(stmt);
+  sqlite3_finalize(stmt);
+}
+
 void dt_film_remove_empty()
 {
   // remove all empty film rolls from db:
@@ -434,17 +447,52 @@ void dt_film_remove_empty()
     g_idle_add(ask_and_delete, g_list_reverse(empty_dirs));
 }
 
-gboolean dt_film_is_empty(const dt_filmid_t id)
+gboolean dt_film_is_empty(sqlite3 *db, const dt_filmid_t id)
 {
   gboolean empty = FALSE;
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT id FROM main.images WHERE film_id = ?1", -1,
-                              &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, id);
-  if(sqlite3_step(stmt) != SQLITE_ROW) empty = TRUE;
-  sqlite3_finalize(stmt);
+  sqlite3_stmt *stmt = NULL;
+  if(db && sqlite3_prepare_v2(db, "SELECT id FROM main.images WHERE film_id = ?1",
+                              -1, &stmt, NULL) == SQLITE_OK)
+  {
+    sqlite3_bind_int(stmt, 1, id);
+    // only a query that ran to its end says the roll is empty: removing a
+    // roll on a failed read would take its images with it
+    empty = sqlite3_step(stmt) == SQLITE_DONE;
+    sqlite3_finalize(stmt);
+  }
   return empty;
+}
+
+GList *dt_film_get_rolls(sqlite3 *db)
+{
+  GList *out = NULL;
+  sqlite3_stmt *stmt = NULL;
+  // clang-format off
+  if(db && sqlite3_prepare_v2(db,
+        "SELECT f.id, f.folder, COUNT(i.id)"
+        "  FROM main.film_rolls f LEFT JOIN main.images i ON i.film_id = f.id"
+        " GROUP BY f.id, f.folder ORDER BY f.folder",
+        -1, &stmt, NULL) == SQLITE_OK)
+  // clang-format on
+  {
+    while(sqlite3_step(stmt) == SQLITE_ROW)
+    {
+      dt_film_roll_count_t *roll = g_new0(dt_film_roll_count_t, 1);
+      roll->id = sqlite3_column_int(stmt, 0);
+      roll->folder = g_strdup((const char *)sqlite3_column_text(stmt, 1));
+      roll->images = sqlite3_column_int(stmt, 2);
+      out = g_list_prepend(out, roll);
+    }
+    sqlite3_finalize(stmt);
+  }
+  return g_list_reverse(out);
+}
+
+void dt_film_roll_count_free(gpointer roll)
+{
+  dt_film_roll_count_t *r = roll;
+  g_free(r->folder);
+  g_free(r);
 }
 
 // This is basically the same as dt_image_remove() from common/image.c.

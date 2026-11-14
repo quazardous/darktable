@@ -19,34 +19,21 @@
 #include "develop/masks/scratch_image.h"
 
 #include "common/darktable.h"
-#include "common/debug.h"
+#include "common/film.h"
+#include "common/history.h"
+#include "common/image.h"
 #include "common/iop_order.h"
 #include "develop/imageop.h"
 #include "develop/masks.h"
 
-#include <sqlite3.h>
 #include <string.h>
 
 void dt_masks_scratch_seed_image(const dt_imgid_t imgid,
                                  const int width,
                                  const int height)
 {
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_EXEC(dt_database_get(darktable.db),
-                        "INSERT OR IGNORE INTO main.film_rolls (id, folder)"
-                        " VALUES (1, 'scratch')", NULL, NULL, NULL);
-
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "INSERT OR REPLACE INTO main.images"
-                              " (id, group_id, film_id, width, height, filename,"
-                              "  version, max_version, history_end, flags)"
-                              " VALUES (?1, ?1, 1, ?2, ?3, 'scratch.raw', 0, 0, 1, 0)",
-                              -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, width);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 3, height);
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
+  dt_film_insert_with_id(1, "scratch");
+  dt_image_insert_bare(imgid, 1, width, height, "scratch.raw");
 }
 
 void dt_masks_scratch_open(dt_develop_t *dev, const dt_imgid_t imgid)
@@ -62,17 +49,7 @@ void dt_masks_scratch_open(dt_develop_t *dev, const dt_imgid_t imgid)
   // somewhere far from here
   dev->image_storage.id = imgid;
 
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT width, height FROM main.images WHERE id = ?1",
-                              -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-  if(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    dev->image_storage.width = sqlite3_column_int(stmt, 0);
-    dev->image_storage.height = sqlite3_column_int(stmt, 1);
-  }
-  sqlite3_finalize(stmt);
+  dt_image_get_stored_size(imgid, &dev->image_storage.width, &dev->image_storage.height);
 
   dt_dev_read_history_ext(dev, imgid, TRUE);
 }
@@ -128,19 +105,8 @@ gboolean dt_masks_scratch_reset_to_migrated(const dt_imgid_t imgid,
 
 void dt_masks_scratch_wipe_history(const dt_imgid_t imgid)
 {
-  const char *const stmts[] = {
-    "DELETE FROM main.history WHERE imgid = ?1",
-    "DELETE FROM main.masks_history WHERE imgid = ?1",
-    "DELETE FROM main.module_order WHERE imgid = ?1",
-  };
-  for(size_t i = 0; i < sizeof(stmts) / sizeof(stmts[0]); i++)
-  {
-    sqlite3_stmt *stmt;
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), stmts[i], -1, &stmt, NULL);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-    sqlite3_step(stmt);
-    sqlite3_finalize(stmt);
-  }
+  dt_history_delete_rows(imgid);
+  dt_ioppr_delete_iop_order(dt_database_get(darktable.db), imgid);
 }
 
 void dt_masks_scratch_seed_iop_order(const dt_imgid_t imgid,
@@ -224,26 +190,11 @@ gboolean dt_masks_scratch_seed_history(const dt_imgid_t imgid,
   // note the sense: returns TRUE on failure
   if(dt_iop_load_module_by_so(&module, so, &scratch)) return FALSE;
 
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "INSERT INTO main.history"
-                              " (imgid, num, module, operation, op_params, enabled,"
-                              "  blendop_params, blendop_version, multi_priority,"
-                              "  multi_name, multi_name_hand_edited)"
-                              " VALUES (?1, ?8, ?2, ?3, ?4, 1, ?5, ?6, ?7, '', 0)",
-                              -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, module.version());
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 3, operation, -1, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 4, module.default_params, module.params_size,
-                             SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 5, bp, sizeof(dt_develop_blend_params_t),
-                             SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 6, blendop_version);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 7, multi_priority);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 8, num);
-  const gboolean ok = sqlite3_step(stmt) == SQLITE_DONE;
-  sqlite3_finalize(stmt);
+  const gboolean ok =
+    dt_history_insert_instance_item(imgid, num, module.version(), operation,
+                                    module.default_params, module.params_size,
+                                    bp, sizeof(dt_develop_blend_params_t),
+                                    blendop_version, multi_priority);
 
   dt_iop_cleanup_module(&module);
   if(!ok) return FALSE;

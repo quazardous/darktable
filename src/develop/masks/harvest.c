@@ -20,6 +20,7 @@
 
 #include "common/darktable.h"
 #include "common/exif.h"
+#include "common/history.h"
 #include "develop/blend.h"
 #include "develop/masks.h"
 
@@ -443,40 +444,23 @@ static int _emit_forms(json_t *j,
                        const int num,
                        harvest_stats_t *st)
 {
-  sqlite3_stmt *stmt;
   // every form visible at this history position, not only those written at
-  // it: a form has a row where it was created or changed, and a later entry
-  // that only refers to a mask writes none. As dt_masks_read_masks_history()
-  // does, read every row up to `num` and let the latest per form win. With
-  // MAX(num) selected, SQLite takes the other columns from the row holding
-  // the maximum
-  const char *q = "SELECT formid, form, version, points, points_count, source,"
-                  "       MAX(num)"
-                  " FROM masks_history WHERE imgid = ?1 AND num <= ?2"
-                  " GROUP BY formid"
-                  " ORDER BY formid";
-  if(sqlite3_prepare_v2(db, q, -1, &stmt, NULL) != SQLITE_OK) return 0;
-  sqlite3_bind_int(stmt, 1, imgid);
-  sqlite3_bind_int(stmt, 2, num);
+  // it; the name is read but never emitted
+  GList *rows = NULL;
+  if(!dt_history_get_masks_visible_rows(db, imgid, num, &rows)) return 0;
 
   int n = 0;
   _j_open(j, "forms", '[');
-  while(sqlite3_step(stmt) == SQLITE_ROW)
+  for(const GList *l = rows; l; l = g_list_next(l))
   {
-    const int formid = sqlite3_column_int(stmt, 0);
-    const int type = sqlite3_column_int(stmt, 1);
-    const int version = sqlite3_column_int(stmt, 2);
-    const void *pts = sqlite3_column_blob(stmt, 3);
-    const int pts_bytes = sqlite3_column_bytes(stmt, 3);
-    const int pts_count = sqlite3_column_int(stmt, 4);
-    const void *src = sqlite3_column_blob(stmt, 5);
-    const int src_bytes = sqlite3_column_bytes(stmt, 5);
-    _emit_one_form(j, formid, type, version, pts, pts_bytes, pts_count,
-                   src, src_bytes, st);
+    const dt_history_masks_row_t *row = l->data;
+    _emit_one_form(j, row->formid, row->type, row->version,
+                   row->points, row->points_size, row->points_count,
+                   row->source, row->source_size, st);
     n++;
   }
   _j_close(j, ']');
-  sqlite3_finalize(stmt);
+  g_list_free_full(rows, dt_history_masks_row_free);
   return n;
 }
 
@@ -1183,16 +1167,9 @@ gboolean dt_masks_harvest_library(const char *library_path,
 
   _j_open(&j, "edits", '[');
 
-  sqlite3_stmt *stmt;
-  // Only what is needed, and nothing free-text: no filename, no multi_name.
-  const char *query =
-    "SELECT h.imgid, h.num, h.operation, h.blendop_params, h.blendop_version,"
-    "       h.multi_priority, h.enabled, i.width, i.height"
-    " FROM history h JOIN images i ON i.id = h.imgid"
-    " WHERE h.blendop_params IS NOT NULL"
-    " ORDER BY h.imgid, h.num";
-
-  if(sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK)
+  // only what is needed, and nothing free-text: no filename, no multi_name
+  dt_history_blend_rows_t *rows = dt_history_blend_rows_open(db);
+  if(!rows)
   {
     fprintf(stderr, "[harvest] query failed: %s\n", sqlite3_errmsg(db));
     fclose(f);
@@ -1207,19 +1184,20 @@ gboolean dt_masks_harvest_library(const char *library_path,
   int total_forms = 0, last_imgid = -1, image_index = -1, images_with_masks = 0;
   gboolean counted_this_image = FALSE;
 
-  while(sqlite3_step(stmt) == SQLITE_ROW)
+  const dt_history_blend_row_t *row;
+  while((row = dt_history_blend_rows_next(rows)))
   {
     scanned++;
-    const int imgid = sqlite3_column_int(stmt, 0);
-    const int num = sqlite3_column_int(stmt, 1);
-    const char *operation = (const char *)sqlite3_column_text(stmt, 2);
-    const void *bp = sqlite3_column_blob(stmt, 3);
-    const int bp_bytes = sqlite3_column_bytes(stmt, 3);
-    const int bp_version = sqlite3_column_int(stmt, 4);
-    const int multi_priority = sqlite3_column_int(stmt, 5);
-    const int enabled = sqlite3_column_int(stmt, 6);
-    const int width = sqlite3_column_int(stmt, 7);
-    const int height = sqlite3_column_int(stmt, 8);
+    const int imgid = row->imgid;
+    const int num = row->num;
+    const char *operation = row->operation;
+    const void *bp = row->blendop_params;
+    const int bp_bytes = row->blendop_params_size;
+    const int bp_version = row->blendop_version;
+    const int multi_priority = row->multi_priority;
+    const int enabled = row->enabled;
+    const int width = row->width;
+    const int height = row->height;
 
     if(imgid != last_imgid)
     {
@@ -1279,7 +1257,7 @@ gboolean dt_masks_harvest_library(const char *library_path,
     _j_close(&j, '}');
     harvested++;
   }
-  sqlite3_finalize(stmt);
+  dt_history_blend_rows_close(rows);
 
   _j_close(&j, ']');
 

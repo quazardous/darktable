@@ -29,6 +29,7 @@
 #include "common/darktable.h"
 #include "common/debug.h"
 #include "common/file_location.h"
+#include "common/presets.h"
 #include "control/conf.h"
 #include "control/control.h"
 #include "develop/develop.h"
@@ -36,7 +37,6 @@
 
 #include <glib/gstdio.h>
 #include <json-glib/json-glib.h>
-#include <sqlite3.h>
 
 // ---- group-layout presets --------------------------------------------------
 // a "layout" is the skeleton of a flexi mask: the mask's own group and the
@@ -290,27 +290,21 @@ typedef struct _flexi_preset_t
 static GList *_flexi_preset_list_load(void)
 {
   GList *out = NULL;
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT name, op_params FROM data.presets"
-                              " WHERE operation = ?1 AND writeprotect = 0"
-                              "   AND op_version = ?2"
-                              " ORDER BY name",
-                              -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, FLEXI_GROUP_PRESET_OP, -1, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, FLEXI_GROUP_PRESET_VERSION);
-  while(sqlite3_step(stmt) == SQLITE_ROW)
+  GList *rows = dt_presets_list_user_params_by_name(FLEXI_GROUP_PRESET_OP,
+                                                    FLEXI_GROUP_PRESET_VERSION);
+  for(const GList *r = rows; r; r = g_list_next(r))
   {
-    const int n = sqlite3_column_bytes(stmt, 1) / (int)sizeof(dt_masks_layout_node_t);
+    const dt_presets_params_t *row = r->data;
+    const int n = row->op_params_size / (int)sizeof(dt_masks_layout_node_t);
     if(n <= 0) continue;
     _flexi_preset_t *p = calloc(1, sizeof(_flexi_preset_t));
-    p->name = g_strdup((const gchar *)sqlite3_column_text(stmt, 0));
+    p->name = g_strdup(row->name);
     p->nodes = calloc(n, sizeof(dt_masks_layout_node_t));
-    memcpy(p->nodes, sqlite3_column_blob(stmt, 1), n * sizeof(dt_masks_layout_node_t));
+    memcpy(p->nodes, row->op_params, n * sizeof(dt_masks_layout_node_t));
     p->n = n;
     out = g_list_append(out, p);
   }
-  sqlite3_finalize(stmt);
+  g_list_free_full(rows, dt_presets_params_free);
   return out;
 }
 
@@ -385,40 +379,14 @@ static gboolean _flexi_layout_is_plain(const dt_masks_layout_node_t *nodes, cons
 static void
 _flexi_preset_save_to_db(const gchar *name, const dt_masks_layout_node_t *nodes, int n)
 {
-  sqlite3_stmt *stmt;
-  // clang-format off
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-      "INSERT OR REPLACE INTO data.presets"
-      " (name, description, operation, op_version, op_params, enabled,"
-      "  blendop_params, blendop_version, multi_priority, multi_name,"
-      "  model, maker, lens, iso_min, iso_max, exposure_min, exposure_max,"
-      "  aperture_min, aperture_max, focal_length_min, focal_length_max,"
-      "  writeprotect, autoapply, filter, def, format, multi_name_hand_edited)"
-      " VALUES (?1, '', ?2, ?3, ?4, 1, NULL, 0, 0, '', '%', '%', '%', 0, 0, 0, 0,"
-      "         0, 0, 0, 0, 0, 0, 0, 0, 0, 0)",
-      -1, &stmt, NULL);
-  // clang-format on
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, name, -1, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 2, FLEXI_GROUP_PRESET_OP, -1, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 3, FLEXI_GROUP_PRESET_VERSION);
-  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 4, nodes, (int)(n * sizeof(dt_masks_layout_node_t)),
-                             SQLITE_TRANSIENT);
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
+  dt_presets_replace_user_plain(name, FLEXI_GROUP_PRESET_OP, FLEXI_GROUP_PRESET_VERSION,
+                                nodes, (int)(n * sizeof(dt_masks_layout_node_t)));
   _flexi_user_presets_forget();
 }
 
 static void _flexi_preset_delete_from_db(const gchar *name)
 {
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(
-    dt_database_get(darktable.db),
-    "DELETE FROM data.presets WHERE operation = ?1 AND name = ?2 AND writeprotect = 0",
-    -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, FLEXI_GROUP_PRESET_OP, -1, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 2, name, -1, SQLITE_TRANSIENT);
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
+  dt_presets_delete_user_any_version(FLEXI_GROUP_PRESET_OP, name);
   _flexi_user_presets_forget();
 }
 

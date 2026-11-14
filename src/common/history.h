@@ -191,6 +191,19 @@ void dt_history_insert_item(const dt_imgid_t imgid,
                             const int blend_version,
                             const char *multi_name);
 
+/** append an enabled history item of instance <multi_priority>, with an
+    empty multi_name not hand edited; FALSE when the insert fails */
+gboolean dt_history_insert_instance_item(const dt_imgid_t imgid,
+                                         const int num,
+                                         const int version,
+                                         const char *operation,
+                                         const void *params,
+                                         const int params_size,
+                                         const void *blend_params,
+                                         const int blend_params_size,
+                                         const int blend_version,
+                                         const int multi_priority);
+
 /** module version of a history item of <operation> whose parameters are
     <params>, in any image; FALSE when there is none */
 gboolean dt_history_find_module_version(const char *operation,
@@ -224,8 +237,12 @@ typedef struct dt_history_row_t
 } dt_history_row_t;
 
 /** history rows of the image, or of the snapshot when snapshot_id is not
-    -1, by num. Free with g_list_free_full(list, dt_history_row_free) */
-GList *dt_history_get_rows(const dt_imgid_t imgid, const int snapshot_id);
+    -1, by num, read from db (darktable's own library is
+    dt_database_get(darktable.db)); NULL without a db. Free with
+    g_list_free_full(list, dt_history_row_free) */
+GList *dt_history_get_rows(sqlite3 *db,
+                           const dt_imgid_t imgid,
+                           const int snapshot_id);
 void dt_history_row_free(gpointer data);
 
 /** a main.masks_history or memory.snapshot_masks_history row, blobs copied */
@@ -250,6 +267,62 @@ GList *dt_history_get_masks_rows(const dt_imgid_t imgid,
                                  const int snapshot_id,
                                  const int history_end);
 void dt_history_masks_row_free(gpointer data);
+
+/* the masks history reads below work on the library given as db: the mask
+   harvest reads a library it opened itself, read-only; the rest of
+   darktable passes dt_database_get(darktable.db) */
+
+/** the image's mask forms at the latest masks history num at or below num,
+    by rowid; NULL when there is none or without an answer */
+GList *dt_history_get_masks_rows_at(sqlite3 *db,
+                                    const dt_imgid_t imgid,
+                                    const int num);
+/** every form visible at history position num: per form, its row of the
+    highest num at or below num, by formid, in *rows. FALSE, *rows NULL,
+    without an answer */
+gboolean dt_history_get_masks_visible_rows(sqlite3 *db,
+                                           const dt_imgid_t imgid,
+                                           const int num,
+                                           GList **rows);
+/** the latest row of form formid in the image's masks history, any num;
+    NULL when there is none or without an answer */
+dt_history_masks_row_t *dt_history_get_masks_form_latest(sqlite3 *db,
+                                                         const dt_imgid_t imgid,
+                                                         const dt_mask_id_t formid);
+/** the highest masks history num of the image below below, in *num;
+    FALSE when the image has none there or without an answer */
+gboolean dt_history_get_masks_num_below(sqlite3 *db,
+                                        const dt_imgid_t imgid,
+                                        const int below,
+                                        int *num);
+/** the form ids of the image's masks history, any num, as a set of
+    GINT_TO_POINTER keys; empty without an answer.
+    free with g_hash_table_destroy() */
+GHashTable *dt_history_get_masks_form_ids(sqlite3 *db, const dt_imgid_t imgid);
+
+/** one history row carrying blend params, with its image's size */
+typedef struct dt_history_blend_row_t
+{
+  dt_imgid_t imgid;
+  int num;
+  const char *operation;
+  const void *blendop_params;
+  int blendop_params_size;
+  int blendop_version;
+  int multi_priority;
+  int enabled;
+  int width;
+  int height;
+} dt_history_blend_row_t;
+
+typedef struct dt_history_blend_rows_t dt_history_blend_rows_t;
+
+/** a cursor on every history row of db carrying blend params, by image
+    then num; NULL without an answer */
+dt_history_blend_rows_t *dt_history_blend_rows_open(sqlite3 *db);
+/** the next row, valid until the next call or the close; NULL at the end */
+const dt_history_blend_row_t *dt_history_blend_rows_next(dt_history_blend_rows_t *rows);
+void dt_history_blend_rows_close(dt_history_blend_rows_t *rows);
 
 /** write history item num of the image: insert the row if it is missing,
     then set all its columns */

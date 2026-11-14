@@ -1,0 +1,36 @@
+name: SQL inventory (fork only)
+
+# phase 0 step A keeps every SQL statement in common/ (and the tests):
+# tools/helios/sql_inventory.py --check fails on a statement prepared
+# anywhere else
+
+on:
+  push:
+    branches: ['helios/**']
+    paths:
+      - 'src/**'
+      - 'tools/helios/sql_inventory.py'
+      - '.github/workflows/sql-inventory.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tools/helios/sql_inventory.py'
+      - '.github/workflows/sql-inventory.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: github.repository == 'quazardous/darktable'
+    name: no SQL outside common/
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: false
+          fetch-depth: 1
+
+      - name: sql_inventory.py --check
+        run: python3 -I tools/helios/sql_inventory.py --check

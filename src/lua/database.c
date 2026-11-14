@@ -162,14 +162,14 @@ static int import_images(lua_State *L)
     g_free(final_path);
     if(!dt_is_valid_filmid(result))
     {
-      if(dt_film_is_empty(new_film.id)) dt_film_remove(new_film.id);
+      if(dt_film_is_empty(dt_database_get(darktable.db), new_film.id)) dt_film_remove(new_film.id);
       dt_film_cleanup(&new_film);
       g_free(full_name);
       return luaL_error(L, "error while importing");
     }
 
     result = dt_image_import_lua(new_film.id, full_name, TRUE);
-    if(dt_film_is_empty(new_film.id)) dt_film_remove(new_film.id);
+    if(dt_film_is_empty(dt_database_get(darktable.db), new_film.id)) dt_film_remove(new_film.id);
     dt_film_cleanup(&new_film);
     if(!dt_is_valid_filmid(result))
     {

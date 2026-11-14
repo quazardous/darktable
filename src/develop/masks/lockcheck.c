@@ -21,6 +21,7 @@
 #include "common/darktable.h"
 #include "common/debug.h"
 #include "common/history.h"
+#include "common/image.h"
 #include "common/styles.h"
 #include "develop/blend.h"
 #include "develop/develop.h"
@@ -95,18 +96,6 @@ static void _seed(const dt_imgid_t imgid,
   g_list_free_full(forms, (GDestroyNotify)dt_masks_free_form);
 }
 
-static void _set_history_end(const dt_imgid_t imgid, const int end)
-{
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "UPDATE main.images SET history_end = ?2 WHERE id = ?1",
-                              -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, end);
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
-}
-
 // the destination: exposure with the mask the checks look for. The source:
 // exposure with another mask at num 0, and sharpen at num 1, a module the
 // destination does not have
@@ -121,7 +110,7 @@ static void _setup(const gboolean dest_locked, const gboolean src_locked)
   _seed(LOCK_SRC, 0, "exposure", SRC_GROUP, SRC_FEATHER, SRC_OPACITY, src_locked, 0);
   _seed(LOCK_SRC, 1, "sharpen", SRC_GROUP + 10, SRC_FEATHER, SRC_OPACITY, FALSE,
         SRC_GROUP);
-  _set_history_end(LOCK_SRC, 2);
+  dt_image_set_history_end(LOCK_SRC, 2);
 
   dt_styles_delete_by_name(LOCK_STYLE);
 }
