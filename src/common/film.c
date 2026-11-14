@@ -391,6 +391,19 @@ static gboolean ask_and_delete(gpointer user_data)
   return FALSE;
 }
 
+void dt_film_insert_with_id(const dt_filmid_t id, const char *folder)
+{
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "INSERT OR IGNORE INTO main.film_rolls (id, folder)"
+                              " VALUES (?1, ?2)",
+                              -1, &stmt, NULL);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, id);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 2, folder, -1, SQLITE_TRANSIENT);
+  sqlite3_step(stmt);
+  sqlite3_finalize(stmt);
+}
+
 void dt_film_remove_empty()
 {
   // remove all empty film rolls from db:

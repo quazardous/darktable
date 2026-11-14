@@ -77,6 +77,9 @@ GList *dt_film_get_by_access(void);
 GList *dt_film_get_images(const dt_filmid_t id);
 /** Creating a new filmroll */
 dt_filmid_t dt_film_new(dt_film_t *film, const char *directory);
+/** add film roll <id> on <folder>, nothing if that id exists; for scratch
+    libraries, where the caller picks the id */
+void dt_film_insert_with_id(const dt_filmid_t id, const char *folder);
 /** removes all empty film rolls. */
 void dt_film_remove_empty();
 /** gets all image ids in film. the returned GList has to be freed with g_list_free(). */

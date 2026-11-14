@@ -636,6 +636,16 @@ void dt_image_set_flip(const dt_imgid_t imgid, const dt_image_orientation_t user
 dt_image_orientation_t dt_image_get_orientation(const dt_imgid_t imgid);
 /** get max width and height of the final processed image with its current history stack */
 gboolean dt_image_get_final_size(const dt_imgid_t imgid, int *width, int *height);
+/** the width and height stored in the image's row; FALSE, both untouched,
+    when the image is missing */
+gboolean dt_image_get_stored_size(const dt_imgid_t imgid, int *width, int *height);
+/** insert or replace a bare image row for a scratch library: its own group,
+    version 0, history_end 1, no flags */
+void dt_image_insert_bare(const dt_imgid_t imgid,
+                          const dt_filmid_t film_id,
+                          const int width,
+                          const int height,
+                          const char *filename);
 void dt_image_update_final_size(const dt_imgid_t imgid);
 /** set image location lon/lat/ele */
 void dt_image_set_location(const dt_imgid_t imgid,

@@ -27,6 +27,7 @@
 #include "common/debug.h"
 #include "common/history.h"
 #include "common/image.h"
+#include "common/iop_order.h"
 
 static int _count_history(const dt_imgid_t imgid)
 {
@@ -368,6 +369,47 @@ static void test_merge_memory(void **state)
   dt_history_clear_memory();
 }
 
+static void test_instance_item_and_order(void **state)
+{
+  const dt_imgid_t imgid = dt_test_catalog_image("hlrecovery.arw");
+  dt_history_delete_rows(imgid);
+
+  const int params[2] = { 5, 6 };
+  const char blend[2] = { 7, 8 };
+  assert_true(dt_history_insert_instance_item(imgid, 0, 9, "exposure", params, sizeof(params),
+                                              blend, sizeof(blend), 13, 2));
+  GList *rows = dt_history_get_rows(imgid, -1);
+  assert_int_equal(g_list_length(rows), 1);
+  const dt_history_row_t *r = rows->data;
+  assert_int_equal(r->num, 0);
+  assert_int_equal(r->module_version, 9);
+  assert_string_equal(r->operation, "exposure");
+  assert_int_equal(r->enabled, 1);
+  assert_memory_equal(r->op_params, params, sizeof(params));
+  assert_memory_equal(r->blendop_params, blend, sizeof(blend));
+  assert_int_equal(r->blendop_version, 13);
+  assert_int_equal(r->multi_priority, 2);
+  assert_string_equal(r->multi_name, "");
+  assert_int_equal(r->multi_name_hand_edited, 0);
+  g_list_free_full(rows, dt_history_row_free);
+
+  // the module_order row goes, and nothing of another image
+  const dt_imgid_t other = dt_test_catalog_image("mire1.cr2");
+  gchar *sql = g_strdup_printf("INSERT OR REPLACE INTO main.module_order VALUES (%d, 0, NULL);"
+                               "INSERT OR REPLACE INTO main.module_order VALUES (%d, 0, NULL)",
+                               imgid, other);
+  _exec(sql);
+  g_free(sql);
+  dt_ioppr_delete_iop_order(imgid);
+  sql = g_strdup_printf("SELECT COUNT(*) FROM main.module_order WHERE imgid = %d", imgid);
+  assert_int_equal(_count(sql), 0);
+  g_free(sql);
+  sql = g_strdup_printf("SELECT COUNT(*) FROM main.module_order WHERE imgid = %d", other);
+  assert_int_equal(_count(sql), 1);
+  g_free(sql);
+  dt_history_delete_rows(imgid);
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -379,6 +421,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_write_item),
     cmocka_unit_test(test_masks_item_and_delete),
     cmocka_unit_test(test_merge_memory),
+    cmocka_unit_test(test_instance_item_and_order),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }

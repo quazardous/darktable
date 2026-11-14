@@ -383,6 +383,57 @@ static void test_folder_selection(void **state)
   assert_int_equal(_selected_count(), 0);
 }
 
+// the scratch rows the --*-masks checks seed: a film roll and an image of
+// ids the caller picks, read back and replaced in place
+static void test_bare_rows(void **state)
+{
+  const dt_filmid_t film = 4242;
+  const dt_imgid_t imgid = 4243;
+  const int films = dt_film_count();
+  dt_film_insert_with_id(film, "scratch");
+  assert_int_equal(dt_film_count(), films + 1);
+  // an existing id is left alone
+  dt_film_insert_with_id(film, "other");
+  assert_int_equal(dt_film_count(), films + 1);
+  gchar *folder = dt_film_get_folder(film);
+  assert_string_equal(folder, "scratch");
+  g_free(folder);
+
+  int width = -1, height = -1;
+  assert_false(dt_image_get_stored_size(imgid, &width, &height));
+  assert_int_equal(width, -1);
+  assert_int_equal(height, -1);
+
+  dt_image_insert_bare(imgid, film, 4000, 3000, "scratch.raw");
+  assert_true(dt_image_get_stored_size(imgid, &width, &height));
+  assert_int_equal(width, 4000);
+  assert_int_equal(height, 3000);
+  int end = -1;
+  assert_true(dt_image_get_history_end(imgid, &end));
+  assert_int_equal(end, 1);
+  gchar *sql = g_strdup_printf("SELECT COUNT(*) FROM main.images WHERE id = %d"
+                               " AND group_id = %d AND film_id = %d"
+                               " AND filename = 'scratch.raw' AND version = 0"
+                               " AND max_version = 0 AND flags = 0",
+                               imgid, imgid, film);
+  assert_int_equal(_count(sql), 1);
+  g_free(sql);
+
+  // a second insert replaces the row
+  dt_image_insert_bare(imgid, film, 600, 400, "scratch.raw");
+  assert_true(dt_image_get_stored_size(imgid, &width, &height));
+  assert_int_equal(width, 600);
+  assert_int_equal(height, 400);
+  sql = g_strdup_printf("SELECT COUNT(*) FROM main.images WHERE id = %d", imgid);
+  assert_int_equal(_count(sql), 1);
+  g_free(sql);
+
+  sql = g_strdup_printf("DELETE FROM main.images WHERE id = %d;"
+                        "DELETE FROM main.film_rolls WHERE id = %d", imgid, film);
+  DT_DEBUG_SQLITE3_EXEC(dt_database_get(darktable.db), sql, NULL, NULL, NULL);
+  g_free(sql);
+}
+
 int main(int argc, char *argv[])
 {
   const struct CMUnitTest tests[] = {
@@ -399,6 +450,7 @@ int main(int argc, char *argv[])
     cmocka_unit_test(test_film_by_access),
     cmocka_unit_test(test_jobs_queries),
     cmocka_unit_test(test_group_members),
+    cmocka_unit_test(test_bare_rows),
   };
   return cmocka_run_group_tests(tests, dt_test_catalog_setup, dt_test_catalog_teardown);
 }

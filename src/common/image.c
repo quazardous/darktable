@@ -1310,6 +1310,48 @@ void dt_image_set_images_locations(const GList *imgs,
   DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_MOUSE_OVER_IMAGE_CHANGE);
 }
 
+gboolean dt_image_get_stored_size(const dt_imgid_t imgid, int *width, int *height)
+{
+  gboolean found = FALSE;
+  sqlite3_stmt *stmt;
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "SELECT width, height FROM main.images WHERE id = ?1",
+                              -1, &stmt, NULL);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
+  if(sqlite3_step(stmt) == SQLITE_ROW)
+  {
+    *width = sqlite3_column_int(stmt, 0);
+    *height = sqlite3_column_int(stmt, 1);
+    found = TRUE;
+  }
+  sqlite3_finalize(stmt);
+  return found;
+}
+
+void dt_image_insert_bare(const dt_imgid_t imgid,
+                          const dt_filmid_t film_id,
+                          const int width,
+                          const int height,
+                          const char *filename)
+{
+  sqlite3_stmt *stmt;
+  // clang-format off
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "INSERT OR REPLACE INTO main.images"
+                              " (id, group_id, film_id, width, height, filename,"
+                              "  version, max_version, history_end, flags)"
+                              " VALUES (?1, ?1, ?2, ?3, ?4, ?5, 0, 0, 1, 0)",
+                              -1, &stmt, NULL);
+  // clang-format on
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, film_id);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 3, width);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 4, height);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 5, filename, -1, SQLITE_TRANSIENT);
+  sqlite3_step(stmt);
+  sqlite3_finalize(stmt);
+}
+
 void dt_image_update_final_size(const dt_imgid_t imgid)
 {
   if(!dt_is_valid_imgid(imgid)) return;
