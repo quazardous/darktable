@@ -1797,6 +1797,40 @@ void dt_history_insert_item(const dt_imgid_t imgid,
   sqlite3_finalize(stmt);
 }
 
+gboolean dt_history_insert_instance_item(const dt_imgid_t imgid,
+                                         const int num,
+                                         const int version,
+                                         const char *operation,
+                                         const void *params,
+                                         const int params_size,
+                                         const void *blend_params,
+                                         const int blend_params_size,
+                                         const int blend_version,
+                                         const int multi_priority)
+{
+  sqlite3_stmt *stmt;
+  // clang-format off
+  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                              "INSERT INTO main.history"
+                              " (imgid, num, module, operation, op_params, enabled,"
+                              "  blendop_params, blendop_version, multi_priority,"
+                              "  multi_name, multi_name_hand_edited)"
+                              " VALUES (?1, ?8, ?2, ?3, ?4, 1, ?5, ?6, ?7, '', 0)",
+                              -1, &stmt, NULL);
+  // clang-format on
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, version);
+  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 3, operation, -1, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 4, params, params_size, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 5, blend_params, blend_params_size, SQLITE_TRANSIENT);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 6, blend_version);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 7, multi_priority);
+  DT_DEBUG_SQLITE3_BIND_INT(stmt, 8, num);
+  const gboolean ok = sqlite3_step(stmt) == SQLITE_DONE;
+  sqlite3_finalize(stmt);
+  return ok;
+}
+
 gboolean dt_history_find_module_version(const char *operation,
                                         const void *params,
                                         const int params_size,
@@ -1851,14 +1885,17 @@ static void *_column_blob_dup(sqlite3_stmt *stmt, const int col, int *size)
   return copy;
 }
 
-GList *dt_history_get_rows(const dt_imgid_t imgid, const int snapshot_id)
+GList *dt_history_get_rows(sqlite3 *db,
+                           const dt_imgid_t imgid,
+                           const int snapshot_id)
 {
+  if(!db) return NULL;
   sqlite3_stmt *stmt;
   // clang-format off
   if(snapshot_id == -1)
   {
     // not a snapshot, read from main history
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+    DT_DEBUG_SQLITE3_PREPARE_V2(db,
                                 "SELECT imgid, num, module, operation,"
                                 "       op_params, enabled, blendop_params,"
                                 "       blendop_version, multi_priority, multi_name,"
@@ -1872,7 +1909,7 @@ GList *dt_history_get_rows(const dt_imgid_t imgid, const int snapshot_id)
   else
   {
     // a snapshot, read from history_snapshot
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+    DT_DEBUG_SQLITE3_PREPARE_V2(db,
                                 "SELECT id, num, module, operation,"
                                 "       op_params, enabled, blendop_params,"
                                 "       blendop_version, multi_priority, multi_name,"

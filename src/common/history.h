@@ -191,6 +191,19 @@ void dt_history_insert_item(const dt_imgid_t imgid,
                             const int blend_version,
                             const char *multi_name);
 
+/** append an enabled history item of instance <multi_priority>, with an
+    empty multi_name not hand edited; FALSE when the insert fails */
+gboolean dt_history_insert_instance_item(const dt_imgid_t imgid,
+                                         const int num,
+                                         const int version,
+                                         const char *operation,
+                                         const void *params,
+                                         const int params_size,
+                                         const void *blend_params,
+                                         const int blend_params_size,
+                                         const int blend_version,
+                                         const int multi_priority);
+
 /** module version of a history item of <operation> whose parameters are
     <params>, in any image; FALSE when there is none */
 gboolean dt_history_find_module_version(const char *operation,
@@ -224,8 +237,12 @@ typedef struct dt_history_row_t
 } dt_history_row_t;
 
 /** history rows of the image, or of the snapshot when snapshot_id is not
-    -1, by num. Free with g_list_free_full(list, dt_history_row_free) */
-GList *dt_history_get_rows(const dt_imgid_t imgid, const int snapshot_id);
+    -1, by num, read from db (darktable's own library is
+    dt_database_get(darktable.db)); NULL without a db. Free with
+    g_list_free_full(list, dt_history_row_free) */
+GList *dt_history_get_rows(sqlite3 *db,
+                           const dt_imgid_t imgid,
+                           const int snapshot_id);
 void dt_history_row_free(gpointer data);
 
 /** a main.masks_history or memory.snapshot_masks_history row, blobs copied */

@@ -1068,6 +1068,18 @@ GList *dt_ioppr_get_multiple_instances_iop_order_list(const dt_imgid_t imgid,
   return res;
 }
 
+void dt_ioppr_delete_iop_order(sqlite3 *db, const dt_imgid_t imgid)
+{
+  sqlite3_stmt *stmt = NULL;
+  if(db && sqlite3_prepare_v2(db, "DELETE FROM main.module_order WHERE imgid = ?1",
+                              -1, &stmt, NULL) == SQLITE_OK)
+  {
+    sqlite3_bind_int(stmt, 1, imgid);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+  }
+}
+
 gboolean dt_ioppr_write_iop_order(const dt_iop_order_t kind,
                                   GList *iop_order_list,
                                   const dt_imgid_t imgid)

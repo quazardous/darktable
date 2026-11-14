@@ -2285,7 +2285,7 @@ void dt_dev_read_history_ext(dt_develop_t *dev,
   dt_image_get_history_end(imgid, &history_end_current);
 
   // Load current image history from DB, or the snapshot's
-  GList *rows = dt_history_get_rows(imgid, dev->snapshot_id);
+  GList *rows = dt_history_get_rows(dt_database_get(darktable.db), imgid, dev->snapshot_id);
 
   dev->history_end = 0;
   // both migration queues are drained by the previous call; a stale entry
